@@ -1,42 +1,40 @@
-import streamlit as st
-import pandas as pd
-from google_sheets import cargar_datos_hoja
+from datetime import datetime
+import gspread
+from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
-from paginas.panel_punto import mostrar_panel
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
-PESTAÑA = "Registro"
-
-@st.cache_data
-def cargar_datos():
-    return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
-
-st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
-st.image("https://lostmary-es.com/cdn/shop/files/logo_lostmary.png", width=150)
-st.title("Área de Puntos de Venta")
-st.write("Introduce tu correo para acceder a tu área personalizada:")
-
-correo = st.text_input("Correo electrónico").strip().lower()
-
-if correo:
-    datos = cargar_datos()
-    if correo in datos["Correo electrónico"].str.lower().values:
-        punto = datos[datos["Correo electrónico"].str.lower() == correo].iloc[0]
-
-        promociones = st.number_input("¿Cuántas promociones vas a subir?", min_value=1, step=1)
-        imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-
-        mostrar_panel(punto, promociones, imagenes)
-
-        if st.button("Subir promociones"):
-            if not imagenes:
-                st.warning("Debes seleccionar al menos una imagen.")
-            else:
-                service = conectar_drive("service_account.json")
-                carpeta_id = punto["Carpeta Drive"]
-                for imagen in imagenes:
-                    subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
-                st.success(f"✅ Se subieron {len(imagenes)} imagen(es) a tu carpeta de Drive.")
-                st.write("📁 Carpeta:", carpeta_id)
+if st.button("Subir promociones"):
+    if not imagenes:
+        st.warning("Debes seleccionar al menos una imagen.")
     else:
-        st.error("Correo no encontrado. Asegúrate de que el correo esté registrado en el formulario.")
+        # 📂 Conectar a Drive y subir imágenes a la carpeta privada
+        service = conectar_drive("service_account.json")
+        carpeta_id = punto["Carpeta privada"]
+
+        for imagen in imagenes:
+            subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
+
+        # 📄 Conectar a Google Sheets para actualizar columnas L y M
+        SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
+        creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPE)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_url(SHEET_URL)
+        worksheet = sheet.worksheet(PESTAÑA)
+
+        # 🔍 Buscar la fila del punto de venta por correo
+        correos = worksheet.col_values(3)  # columna C = correo electrónico
+        fila_usuario = next((i + 1 for i, val in enumerate(correos) if val.strip().lower() == correo), None)
+
+        if fila_usuario:
+            # Leer y actualizar columna L (promos acumuladas) y M (fecha)
+            valor_actual = worksheet.cell(fila_usuario, 12).value  # columna L
+            total_actual = int(valor_actual) if valor_actual.isnumeric() else 0
+            nuevo_total = total_actual + promociones
+
+            worksheet.update_cell(fila_usuario, 12, str(nuevo_total))  # columna L
+            worksheet.update_cell(fila_usuario, 13, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))  # columna M
+
+            st.success(f"✅ Se subieron {len(imagenes)} imagen(es) y se actualizaron tus promociones.")
+            st.write("📦 Promociones acumuladas:", nuevo_total)
+        else:
+            st.error("No se pudo localizar tu fila en el Excel.")
