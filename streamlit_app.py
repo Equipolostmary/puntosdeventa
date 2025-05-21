@@ -3,6 +3,11 @@ import gspread
 from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
 
+# 👇 Estos inputs van antes del botón
+promociones = st.number_input("¿Cuántas promociones vas a subir?", min_value=1, step=1)
+imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+
+# 👇 Aquí empieza el botón y el bloque completo
 if st.button("Subir promociones"):
     if not imagenes:
         st.warning("Debes seleccionar al menos una imagen.")
