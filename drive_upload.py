@@ -4,8 +4,8 @@ from googleapiclient.http import MediaIoBaseUpload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-def conectar_drive(json_path):
-    creds = Credentials.from_service_account_file(json_path, scopes=SCOPES)
+def conectar_drive(service_account_info):
+    creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
     service = build("drive", "v3", credentials=creds)
     return service
 
