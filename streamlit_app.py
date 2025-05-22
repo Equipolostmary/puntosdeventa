@@ -11,86 +11,85 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# ✅ ESTILOS Y BARRA SUPERIOR FIJA
+# ✅ Estilos visuales y fondo lila
 st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-
-[data-testid="stAppViewContainer"] > .main {
-    background-color: #e6e0f8 !important;
-}
-html, body, [class*="css"] {
-    font-family: 'Montserrat', sans-serif;
-}
-.stTextInput input, .stButton > button {
-    font-weight: 600;
-}
-
-/* Barra fija */
-.barra-superior {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background-color: white;
-    color: #5a3a8a;
-    font-size: 20px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    z-index: 9999;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-.boton-cerrar {
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 5px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #333;
-}
-.stApp {
-    padding-top: 80px !important;
-}
-</style>
-<div class="barra-superior">
-    ÁREA PRIVADA
-    <form action="" method="post">
-        <button class="boton-cerrar" name="cerrar" type="submit">Cerrar sesión</button>
-    </form>
-</div>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+    html, body, [class*="css"] {
+        font-family: 'Montserrat', sans-serif;
+        background-color: #e6e0f8 !important;
+    }
+    .barra {
+        background-color: white;
+        color: #5a3a8a;
+        font-size: 20px;
+        font-weight: bold;
+        padding: 16px;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .espaciado {
+        margin-top: 80px;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# 🔐 Logout
-if st.session_state.get("auth_email") and st.experimental_get_query_params().get("cerrar") is not None:
-    st.session_state.clear()
-    st.rerun()
+# 🔐 Mostrar barra si está logueado
+nombre_usuario = ""
+if "auth_email" in st.session_state:
+    correo_usuario = st.session_state["auth_email"]
+    nombre_usuario = correo_usuario
+    # extraemos el nombre real desde la hoja
+    def buscar_usuario(email):
+        mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
+        return df[mask].iloc[0] if mask.any() else None
 
-# Logo
-st.image("logo.png", use_container_width=True)
+    # Conectamos a Google
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"], scopes=scopes)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
+    worksheet = sheet.worksheet("Registro")
+    df = pd.DataFrame(worksheet.get_all_records())
+    user = buscar_usuario(correo_usuario)
+    if user is not None:
+        nombre_usuario = user["Expendiduría"]
 
-# 🔗 Conexión Google Sheets
-scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"], scopes=scopes)
-client = gspread.authorize(creds)
-sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
-worksheet = sheet.worksheet("Registro")
-df = pd.DataFrame(worksheet.get_all_records())
-
-def buscar_usuario(email):
-    mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
-    return df[mask].iloc[0] if mask.any() else None
+    # BARRA con botón nativo
+    st.markdown(f"<div class='barra'>ÁREA PRIVADA – {nombre_usuario}  <span></span></div>", unsafe_allow_html=True)
+    st.markdown("<div class='espaciado'></div>", unsafe_allow_html=True)
+    if st.button("Cerrar sesión", key="cerrar_sesion"):
+        st.session_state.clear()
+        st.rerun()
+else:
+    # si no está logueado, solo mostramos logo
+    st.image("logo.png", use_container_width=True)
 
 # 🔑 LOGIN
 if "auth_email" not in st.session_state:
+    st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
     clave = st.text_input("Contraseña", type="password")
     if st.button("Acceder"):
+        # reconectamos hoja
+        scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        creds = service_account.Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"], scopes=scopes)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
+        worksheet = sheet.worksheet("Registro")
+        df = pd.DataFrame(worksheet.get_all_records())
+
+        def buscar_usuario(email):
+            mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
+            return df[mask].iloc[0] if mask.any() else None
+
         if not correo or not clave:
             st.warning("Debes completar ambos campos.")
         else:
@@ -108,9 +107,9 @@ if "auth_email" not in st.session_state:
                     st.session_state["auth_email"] = correo
                     st.rerun()
 
-# 🧾 ÁREA PRIVADA
+# 💼 ZONA PRIVADA
 if "auth_email" in st.session_state:
-    correo_usuario = st.session_state.get("auth_email", "")
+    correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
 
     if user is None:
