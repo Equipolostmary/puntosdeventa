@@ -8,6 +8,7 @@ from drive_upload import conectar_drive, subir_archivo_a_drive
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
+# Estilo visual
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -23,7 +24,7 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# Conectar a Google Sheets
+# Conexión a Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
@@ -35,10 +36,9 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# Logo
 st.image("logo.png", use_container_width=True)
 
-# Botón de cierre de sesión
+# Botón cerrar sesión
 if "auth_email" in st.session_state and st.button("Cerrar sesión"):
     del st.session_state.auth_email
     st.experimental_rerun()
@@ -54,13 +54,17 @@ if "auth_email" not in st.session_state:
             user = buscar_usuario(correo)
             if user is None:
                 st.error("Correo no encontrado.")
-            elif not user.get("Contraseña"):
-                st.error("No hay contraseña configurada para este usuario.")
-            elif str(user["Contraseña"]).strip() != clave:
-                st.error("Contraseña incorrecta.")
             else:
-                st.session_state.auth_email = correo
-                st.experimental_rerun()
+                password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
+                password_introducida = clave.strip().replace(",", "")
+                if not password_guardada:
+                    st.error("No hay contraseña configurada para este usuario.")
+                elif password_guardada != password_introducida:
+                    st.error("Contraseña incorrecta.")
+                else:
+                    st.session_state.auth_email = correo
+                    st.success("Iniciando sesión...")
+                    st.stop()
 
 # Panel privado
 if "auth_email" in st.session_state:
@@ -119,7 +123,7 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.success(f"Se subieron {ok} imagen(es) y se actualizaron los contadores.")
 
-    # Vista para admin
+    # Vista completa para el usuario maestro
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
         cols = [
