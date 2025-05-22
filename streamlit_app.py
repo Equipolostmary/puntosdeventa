@@ -29,8 +29,6 @@ if correo:
 
         st.success(f"¡Bienvenido, {punto['Nombre del punto de venta']}!")
 
-        mostrar_panel(punto, 0, [])
-
         # Inputs de promociones personalizadas
         promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO?", min_value=0, step=1)
         promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000?", min_value=0, step=1)
@@ -43,7 +41,7 @@ if correo:
                 # Subir imágenes a carpeta de Drive
                 service = conectar_drive(st.secrets["gcp_service_account"])
                 carpeta_enlace = punto["Carpeta privada"]
-                carpeta_id = carpeta_enlace.split("/")[-1]  # Extrae solo el ID desde la URL
+                carpeta_id = carpeta_enlace.split("/")[-1]
 
                 imagenes_ok = 0
                 for imagen in imagenes:
@@ -94,10 +92,19 @@ if correo:
                         st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
                         st.write(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
                         st.write(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
+
+                        # 🔄 Recargar datos y volver a mostrar el panel actualizado
+                        datos = cargar_datos()
+                        punto = datos[datos["Correo electrónico"].str.lower() == correo].iloc[0]
+                        mostrar_panel(punto, 0, [])
+
                     else:
                         st.error("No se pudo localizar tu fila en el Excel.")
                 except Exception as e:
                     st.error("⚠️ Las imágenes se subieron, pero ocurrió un error al actualizar el Excel.")
                     st.text(str(e))
+        else:
+            # Mostrar el panel inicial si no ha subido promociones aún
+            mostrar_panel(punto, 0, [])
     else:
         st.error("Correo no encontrado. Asegúrate de que esté registrado en el formulario.")
