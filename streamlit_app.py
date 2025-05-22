@@ -14,7 +14,7 @@ if st.session_state.get("subida_ok"):
     st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
     time.sleep(2.5)
     st.session_state.pop("subida_ok")
-    st.rerun()
+    st.experimental_rerun()
 
 # Estilo visual
 st.markdown("""
@@ -47,12 +47,12 @@ def buscar_usuario(email):
 
 st.image("logo.png", use_container_width=True)
 
-# Cerrar sesión
+# Cerrar sesión (refresca la app)
 if "auth_email" in st.session_state and st.button("Cerrar sesión"):
     st.session_state.clear()
-    st.stop()
+    st.experimental_rerun()
 
-# Login
+# Login (refresca la app)
 if "auth_email" not in st.session_state:
     correo = st.text_input("Correo electrónico").strip().lower()
     clave = st.text_input("Contraseña", type="password")
@@ -73,7 +73,8 @@ if "auth_email" not in st.session_state:
                 else:
                     st.session_state.auth_email = correo
                     st.success("Iniciando sesión...")
-                    st.stop()
+                    time.sleep(1)
+                    st.experimental_rerun()
 
 # Área privada
 if "auth_email" in st.session_state:
@@ -83,7 +84,7 @@ if "auth_email" in st.session_state:
     if user is None:
         st.error("Usuario no encontrado.")
         st.session_state.clear()
-        st.stop()
+        st.experimental_rerun()
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
@@ -134,7 +135,7 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state.subida_ok = True
-                st.stop()
+                st.experimental_rerun()
 
     # Vista completa para administrador
     if correo_usuario == ADMIN_EMAIL:
