@@ -9,7 +9,9 @@ import uuid
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# ✅ ESTILO GLOBAL Y BARRA SUPERIOR
+ADMIN_EMAIL = "equipolostmary@gmail.com"
+
+# ✅ ESTILOS Y BARRA SUPERIOR FIJA
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -24,7 +26,7 @@ html, body, [class*="css"] {
     font-weight: 600;
 }
 
-/* Barra fija superior */
+/* Barra fija */
 .barra-superior {
     position: fixed;
     top: 0;
@@ -63,15 +65,15 @@ html, body, [class*="css"] {
 </div>
 """, unsafe_allow_html=True)
 
-# 🔐 Cerrar sesión si se pulsa botón
+# 🔐 Logout
 if st.session_state.get("auth_email") and st.experimental_get_query_params().get("cerrar") is not None:
     st.session_state.clear()
     st.rerun()
 
-# 📷 Logo
+# Logo
 st.image("logo.png", use_container_width=True)
 
-# 🔗 Conexión con Google Sheets
+# 🔗 Conexión Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -108,7 +110,7 @@ if "auth_email" not in st.session_state:
 
 # 🧾 ÁREA PRIVADA
 if "auth_email" in st.session_state:
-    correo_usuario = st.session_state.auth_email
+    correo_usuario = st.session_state.get("auth_email", "")
     user = buscar_usuario(correo_usuario)
 
     if user is None:
