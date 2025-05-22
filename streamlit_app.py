@@ -11,29 +11,16 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# ✅ Estilos visuales
+# 🔒 Ocultar elementos de Streamlit (barra lateral, footer, etc.)
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-
+    #MainMenu, header, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
+        visibility: hidden !important;
+        height: 0px !important;
+    }
     html, body, [class*="css"] {
-        font-family: 'Montserrat', sans-serif;
         background-color: #e6e0f8 !important;
-    }
-    .barra {
-        background-color: #bda2e0;
-        color: black;
-        font-size: 20px;
-        font-weight: bold;
-        padding: 16px;
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        z-index: 1000;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    .espaciado {
-        margin-top: 90px;
+        font-family: 'Montserrat', sans-serif;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -51,18 +38,28 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# 🧾 ÁREA PRIVADA
+# 🔐 SI LOGUEADO
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    # ✅ Barra con fondo morado y texto negro
-    st.markdown(f"<div class='barra'>ÁREA PRIVADA – {nombre_usuario}</div>", unsafe_allow_html=True)
-    st.markdown("<div class='espaciado'></div>", unsafe_allow_html=True)
+    # ✅ Barra visible y real
+    with st.container():
+        st.markdown(
+            f"""
+            <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
+                        font-weight:bold;font-size:20px;color:black;border-radius:5px;">
+                ÁREA PRIVADA – {nombre_usuario}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-    # ✅ Logo y botón cerrar sesión justo debajo
+    # ✅ Logo debajo de barra
     st.image("logo.png", use_container_width=True)
+
+    # ✅ Botón cerrar sesión justo debajo
     if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.rerun()
@@ -145,7 +142,7 @@ if "auth_email" in st.session_state:
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
 
-# 🔐 LOGIN (si no está logueado)
+# 🟣 LOGIN SI NO ESTÁ DENTRO
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
