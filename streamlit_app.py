@@ -42,7 +42,8 @@ if correo:
             else:
                 # Subir imágenes a carpeta de Drive
                 service = conectar_drive(st.secrets["gcp_service_account"])
-                carpeta_id = punto["Carpeta privada"]
+                carpeta_enlace = punto["Carpeta privada"]
+                carpeta_id = carpeta_enlace.split("/")[-1]  # Extrae solo el ID desde la URL
 
                 imagenes_ok = 0
                 for imagen in imagenes:
