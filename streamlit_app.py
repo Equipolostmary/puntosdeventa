@@ -1,97 +1,95 @@
 import streamlit as st
-import pandas as pd
-import gspread
 from google.oauth2.service_account import Credentials
+import gspread
+import pandas as pd
+from datetime import datetime
 from PIL import Image
+import os
 
-# Configuración de página
-st.set_page_config(page_title="Área Privada - Lost Mary", layout="centered")
-
-# Estilos personalizados
-st.markdown("""
+# ---------- CONFIGURACIÓN DE PÁGINA ----------
+st.set_page_config(page_title="Zona Privada - Lost Mary", page_icon="📦", layout="centered")
+st.markdown(
+    '''
     <style>
-        body {
-            background-color: #f3f0ff;
-            font-family: 'Montserrat', sans-serif;
-        }
-        .stTextInput input {
-            background-color: white;
-            color: black;
-        }
-        .stButton button {
-            background-color: #b47bff;
-            color: white;
-            font-weight: bold;
-            border-radius: 8px;
-        }
+    body {
+        background-color: #f3e8ff;
+    }
+    .block-container {
+        padding-top: 2rem;
+    }
     </style>
-""", unsafe_allow_html=True)
+    ''',
+    unsafe_allow_html=True
+)
 
-# Mostrar logo
-st.image("logo.png", use_column_width=True)
+# ---------- LOGO ----------
+if os.path.exists("logo.png"):
+    st.image("logo.png", width=400)
 
-# Autenticación con Google Sheets
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
-client = gspread.authorize(creds)
-sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet("Registro")
-data = sheet.get_all_records()
-df = pd.DataFrame(data)
-
-# Función auxiliar
-def seguro_a_int(valor):
-    try:
-        return int(valor)
-    except:
-        return 0
-
-# Login
-st.subheader("Iniciar sesión")
+# ---------- AUTENTICACIÓN ----------
+st.header("Iniciar sesión")
 correo = st.text_input("Correo electrónico")
-clave = st.text_input("Contraseña", type="password")
+contraseña = st.text_input("Contraseña", type="password")
 login_btn = st.button("Acceder")
 
-if login_btn and correo:
-    correo = correo.strip().lower()
-    punto = df[df["Dirección de correo electrónico"].str.lower() == correo]
-    if not punto.empty:
-        punto = punto.iloc[0]
-        if str(punto.get("Contraseña", "")).strip() == clave:
-            st.success(f"Bienvenido, {correo}")
-            st.markdown("---")
+if "sesion_iniciada" not in st.session_state:
+    st.session_state.sesion_iniciada = False
+    st.session_state.correo_usuario = ""
 
-            # Mostrar datos personales
-            campos_visibles = [
-                "Marca temporal", "Expendiduría", "Dirección", "Código postal", "POBLACION",
-                "PROVINCIA", "Número de teléfono", "Nombre", "RESPONSABLE DE ZONA", "Carpeta privada"
-            ]
-            for campo in campos_visibles:
-                valor = punto.get(campo, "")
-                st.markdown(f"**{campo}:** {valor}")
+if login_btn:
+    st.session_state.correo_usuario = correo.strip().lower()
+    st.session_state.sesion_iniciada = True
 
-            # Mostrar estado de promociones
-            st.markdown("### 📦 Estado de promociones")
-            promos = {
-                "TAPPO": {
-                    "asignadas": seguro_a_int(punto.get("Promoción 2+1 TAPPO")),
-                    "entregadas": seguro_a_int(punto.get("Entregados promo TAPPO")),
-                    "faltan": seguro_a_int(punto.get("FALTA POR ENTREGAR TAPPO"))
-                },
-                "BM1000": {
-                    "asignadas": seguro_a_int(punto.get("Promoción 3×21 BM1000")),
-                    "entregadas": seguro_a_int(punto.get("Entregados promo BM1000")),
-                    "faltan": seguro_a_int(punto.get("FALTA POR ENTREGAR BM1000"))
-                }
-            }
+if st.session_state.sesion_iniciada and st.session_state.correo_usuario:
+    # ---------- CONEXIÓN CON GOOGLE SHEETS ----------
+    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    gcp_secrets = st.secrets["gcp_service_account"]
 
-            for k, promo in promos.items():
-                st.markdown(
-                    f"- **{k} asignados:** {promo['asignadas']} | ✅ Entregados: {promo['entregados']} | ⏳ Pendientes: {promo['faltan']}"
-                )
+    creds = Credentials.from_service_account_info(gcp_secrets, scopes=scope)
+    client = gspread.authorize(creds)
 
-            ultima = punto.get("Última actualización", "")
-            st.markdown(f"- 🕐 **Última actualización:** {ultima}")
-        else:
-            st.error("Contraseña incorrecta.")
+    sheet_id = gcp_secrets["sheet_id"]
+    sheet = client.open_by_key(sheet_id).worksheet("Registro")
+    df = pd.DataFrame(sheet.get_all_records())
+
+    # ---------- FILTRADO DE USUARIO ----------
+    correo_usuario = st.session_state.correo_usuario
+    punto = df[df["Dirección de correo electrónico"].str.lower() == correo_usuario]
+
+    if punto.empty:
+        st.error("Correo no registrado.")
     else:
-        st.error("Correo no encontrado.")
+        punto = punto.iloc[0]
+        stored_password = str(punto.get("Contraseña", "")).strip()
+        if stored_password != contraseña:
+            st.error("Contraseña incorrecta.")
+        else:
+            # ---------- ZONA PRIVADA ----------
+            st.success(f"Bienvenido, {punto['Expendiduría']}")
+            st.markdown("### 📦 Estado de promociones")
+
+            def safe_int(val):
+                try:
+                    return int(val)
+                except:
+                    return 0
+
+            tappo_asignado = safe_int(punto.get("Promoción 2+1 TAPPO", 0))
+            bm_asignado = safe_int(punto.get("Promoción 3×21 BM1000", 0))
+            tappo_entregado = safe_int(punto.get("Entregados promo TAPPO", 0))
+            bm_entregado = safe_int(punto.get("Entregados promo BM1000", 0))
+            tappo_faltan = safe_int(punto.get("FALTA POR ENTREGAR TAPPO", 0))
+            bm_faltan = safe_int(punto.get("FALTA POR ENTREGAR BM1000", 0))
+            ultima = punto.get("Última actualización", "")
+
+            st.markdown(f"**TAPPO asignados:** {tappo_asignado} ✅ Entregados: {tappo_entregado} ⏳ Pendientes: {tappo_faltan}")
+            st.markdown(f"**BM1000 asignados:** {bm_asignado} ✅ Entregados: {bm_entregado} ⏳ Pendientes: {bm_faltan}")
+            st.markdown(f"🕒 **Última actualización:** {ultima}")
+
+            # ---------- SUBIDA DE ARCHIVOS ----------
+            st.markdown("---")
+            st.markdown("### 📤 Subir promociones")
+            uploaded_files = st.file_uploader("Selecciona imágenes o tickets", accept_multiple_files=True, type=["jpg", "png", "jpeg"])
+
+            if uploaded_files:
+                st.success(f"{len(uploaded_files)} archivo(s) cargado(s) correctamente.")
