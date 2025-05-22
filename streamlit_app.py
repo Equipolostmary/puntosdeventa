@@ -112,7 +112,7 @@ if "auth_email" in st.session_state:
         st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
         time.sleep(2.5)
         st.session_state.pop("subida_ok")
-        st.experimental_rerun()
+        st.rerun()
 
     # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
@@ -139,7 +139,7 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state.subida_ok = True
-                st.experimental_rerun()
+                st.rerun()
 
     # Vista completa para administrador
     if correo_usuario == ADMIN_EMAIL:
@@ -154,4 +154,5 @@ if "auth_email" in st.session_state:
 
 # Al final del todo: ejecuta rerun si está marcado
 if do_rerun:
-    st.experimental_rerun()
+    st.session_state["do_rerun"] = False
+    st.rerun()
