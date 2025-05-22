@@ -30,7 +30,7 @@ st.markdown("""
         z-index: 1000;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
     }
     .espaciado {
@@ -39,7 +39,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🔗 Conexión a Google Sheets (antes de login para usar búsqueda)
+# 🔗 Conexión a Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -58,14 +58,9 @@ if "auth_email" in st.session_state:
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    # ✅ BARRA superior con botón nativo
-    st.markdown(f"<div class='barra'>ÁREA PRIVADA – {nombre_usuario}  <span></span></div>", unsafe_allow_html=True)
+    # ✅ BARRA y logo
+    st.markdown(f"<div class='barra'>ÁREA PRIVADA – {nombre_usuario}</div>", unsafe_allow_html=True)
     st.markdown("<div class='espaciado'></div>", unsafe_allow_html=True)
-    if st.button("Cerrar sesión", key="cerrar_sesion"):
-        st.session_state.clear()
-        st.rerun()
-
-    # ✅ Logo solo en vista privada
     st.image("logo.png", use_container_width=True)
 
     if user is None:
@@ -146,7 +141,13 @@ if "auth_email" in st.session_state:
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
 
-# 🔐 LOGIN
+    # ✅ CERRAR SESIÓN ABAJO
+    st.markdown("---")
+    if st.button("Cerrar sesión"):
+        st.session_state.clear()
+        st.rerun()
+
+# 🔐 LOGIN (logo solo aquí si no hay sesión)
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
