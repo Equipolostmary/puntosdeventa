@@ -5,21 +5,43 @@ import gspread
 from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
-from paginas.panel_punto import mostrar_panel
 
-# ✅ Debe ir primero
+# ✅ CONFIGURACIÓN INICIAL
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# 🎨 Fondo degradado lila y rosa
+# 🎨 DISEÑO: fondo azul claro + fuente Montserrat
 st.markdown("""
     <style>
-    [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #e0bbff, #ffcce6);
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+    html, body, [data-testid="stAppViewContainer"] {
+        background-color: #e6f0ff;
+        font-family: 'Montserrat', sans-serif;
+        color: #0d1b2a;
+    }
+
+    h1, h2, h3, h4 {
+        font-weight: 600;
+        color: #06283D;
+    }
+
+    .stTextInput > div > div > input {
+        font-size: 16px;
+    }
+
+    .stButton > button {
+        font-size: 16px;
+        font-weight: 600;
+        padding: 0.5em 1em;
+    }
+
+    .stMarkdown, .stDataFrame {
+        font-size: 15px;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 🖼 Logo desde Drive
+# 🖼 LOGO Lost Mary
 st.markdown("""
     <div style='text-align: center; margin-top: 20px; margin-bottom: 40px;'>
         <img src='https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf' width='200'>
@@ -29,7 +51,7 @@ st.markdown("""
 st.title("Área de Puntos de Venta")
 st.write("Introduce tu correo para acceder a tu área personalizada:")
 
-# 📄 Config Google Sheet
+# 📄 CONFIG GOOGLE SHEET
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
@@ -37,6 +59,7 @@ PESTAÑA = "Registro"
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
+# Entrada del correo
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -48,6 +71,7 @@ if correo:
         st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
 
         try:
+            # Conexión con Google Sheets
             SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
             service_account_info = st.secrets["gcp_service_account"]
             creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
@@ -55,7 +79,7 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
-            correos = worksheet.col_values(2)  # Columna B: Dirección de correo electrónico
+            correos = worksheet.col_values(2)  # Dirección de correo electrónico (col B)
             fila_usuario = None
 
             for i, val in enumerate(correos):
@@ -64,18 +88,24 @@ if correo:
                     break
 
             if fila_usuario:
-                # 📦 Contadores en columnas M (13) y N (14)
-                val1 = worksheet.cell(fila_usuario, 13).value
-                val2 = worksheet.cell(fila_usuario, 14).value
+                # 📊 Mostrar información del perfil del punto
+                st.subheader("📋 Información del punto de venta")
+                for col in datos.columns:
+                    valor = punto[col]
+                    st.markdown(f"**{col}:** {valor}")
+
+                # 📦 Contadores de promociones
+                val1 = worksheet.cell(fila_usuario, 13).value  # Col M
+                val2 = worksheet.cell(fila_usuario, 14).value  # Col N
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
 
-                st.info(f"📦 Promociones 2+1 TAPPO acumuladas: {total1}")
-                st.info(f"📦 Promociones 3×21 BM1000 acumuladas: {total2}")
+                st.info(f"📦 Promociones 2+1 TAPPO acumuladas: **{total1}**")
+                st.info(f"📦 Promociones 3×21 BM1000 acumuladas: **{total2}**")
 
-                mostrar_panel(punto, total1, [])
-
+                # 📤 Subida de nuevas promociones
+                st.subheader("📸 Subir nuevas promociones")
                 promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
                 promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
                 imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
@@ -102,7 +132,7 @@ if correo:
                         if imagenes_ok == 0:
                             st.stop()
 
-                        # 📈 Recalcular totales
+                        # Actualizar contadores
                         val1 = worksheet.cell(fila_usuario, 13).value
                         val2 = worksheet.cell(fila_usuario, 14).value
 
@@ -117,12 +147,8 @@ if correo:
                         worksheet.update_cell(fila_usuario, 15, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
                         st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
-                        st.info(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
-                        st.info(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
-
-                        mostrar_panel(punto, nuevo1, [])
-            else:
-                st.error("No se pudo localizar tu fila en el Excel.")
+                        st.info(f"📦 2+1 TAPPO acumuladas: **{nuevo1}**")
+                        st.info(f"📦 3×21 BM1000 acumuladas: **{nuevo2}**")
         except Exception as e:
             st.error("⚠️ Error al acceder a tu información.")
             st.text(str(e))
