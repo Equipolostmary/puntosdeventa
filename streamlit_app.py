@@ -11,17 +11,24 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# ✅ Estilo global: fondo morado, fuente Montserrat y ocultar barra Streamlit
+# ✅ Estilo global: fondo morado, fuente Montserrat y ocultar todo lo innecesario
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-    html, body, .main, .block-container, [class*="css"] {
+    html, body, .block-container, .stApp, .main {
         background-color: #e6e0f8 !important;
         font-family: 'Montserrat', sans-serif;
     }
 
-    #MainMenu, header, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
+    section[data-testid="stSidebar"],
+    #MainMenu,
+    header,
+    footer,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    div[data-testid="stActionButtonIcon"] {
+        display: none !important;
         visibility: hidden !important;
         height: 0px !important;
     }
@@ -41,7 +48,7 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# 🔐 SI LOGUEADO
+# 🔐 LOGIN SI ESTÁ LOGUEADO
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -59,7 +66,7 @@ if "auth_email" in st.session_state:
             unsafe_allow_html=True
         )
 
-    # ✅ Logo y botón cerrar sesión
+    # ✅ Logo y cerrar sesión
     st.image("logo.png", use_container_width=True)
     if st.button("Cerrar sesión"):
         st.session_state.clear()
@@ -91,7 +98,7 @@ if "auth_email" in st.session_state:
     st.markdown(f"""
     - **TAPPO asignados:** {tappo_asig} | ✅ Entregados: {tappo_ent} | ⏳ Pendientes: {tappo_falt}
     - **BM1000 asignados:** {bm_asig} | ✅ Entregados: {bm_ent} | ⏳ Pendientes: {bm_falt}
-    - 🕓 **Última actualización:** {user.get('Última actualización', 'N/A')}
+    - 🕓 **Última actualización:** {user.get('Ultima actualización', 'N/A')}
     """)
 
     if st.session_state.get("subida_ok"):
@@ -127,7 +134,7 @@ if "auth_email" in st.session_state:
                 row = user.name + 2
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
-                worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                worksheet.update_cell(row, df.columns.get_loc("Ultima actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
@@ -139,11 +146,11 @@ if "auth_email" in st.session_state:
             "Expendiduría", "Dirección de correo electrónico", "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",
             "Entregados promo TAPPO", "Entregados promo BM1000",
             "Falta por entregar TAPPO", "Falta por entregar BM1000",
-            "Última actualización"
+            "Ultima actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
 
-# 🔐 LOGIN
+# 🔐 LOGIN SI NO ESTÁ LOGUEADO
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
