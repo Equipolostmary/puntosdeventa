@@ -7,10 +7,10 @@ from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 from paginas.panel_punto import mostrar_panel
 
-# ✅ Debe ir el primero
+# ✅ Debe ir primero
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# Fondo degradado
+# 🎨 Fondo degradado lila y rosa
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] {
@@ -19,7 +19,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Logo desde Google Drive (verifica que sea público)
+# 🖼 Logo desde Drive
 st.markdown("""
     <div style='text-align: center; margin-top: 20px; margin-bottom: 40px;'>
         <img src='https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf' width='200'>
@@ -29,7 +29,7 @@ st.markdown("""
 st.title("Área de Puntos de Venta")
 st.write("Introduce tu correo para acceder a tu área personalizada:")
 
-# Configuración
+# 📄 Config Google Sheet
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
@@ -37,7 +37,6 @@ PESTAÑA = "Registro"
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# Entrada del correo
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -46,7 +45,7 @@ if correo:
     if correo in datos["Dirección de correo electrónico"].str.lower().values:
         punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
 
-        st.success(f"¡Bienvenido, {punto['Nombre del punto de venta']}!")
+        st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
 
         try:
             SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -56,7 +55,7 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
-            correos = worksheet.col_values(2)  # Columna B (Dirección de correo)
+            correos = worksheet.col_values(2)  # Columna B: Dirección de correo electrónico
             fila_usuario = None
 
             for i, val in enumerate(correos):
@@ -65,9 +64,9 @@ if correo:
                     break
 
             if fila_usuario:
-                # Contadores en columnas M y N
-                val1 = worksheet.cell(fila_usuario, 13).value  # Columna M
-                val2 = worksheet.cell(fila_usuario, 14).value  # Columna N
+                # 📦 Contadores en columnas M (13) y N (14)
+                val1 = worksheet.cell(fila_usuario, 13).value
+                val2 = worksheet.cell(fila_usuario, 14).value
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
@@ -103,7 +102,7 @@ if correo:
                         if imagenes_ok == 0:
                             st.stop()
 
-                        # Recalcular totales
+                        # 📈 Recalcular totales
                         val1 = worksheet.cell(fila_usuario, 13).value
                         val2 = worksheet.cell(fila_usuario, 14).value
 
