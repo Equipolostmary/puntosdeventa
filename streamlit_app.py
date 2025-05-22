@@ -39,78 +39,34 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🔐 Mostrar barra si está logueado
-nombre_usuario = ""
+# 🔗 Conexión a Google Sheets (antes de login para usar búsqueda)
+scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+creds = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"], scopes=scopes)
+client = gspread.authorize(creds)
+sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
+worksheet = sheet.worksheet("Registro")
+df = pd.DataFrame(worksheet.get_all_records())
+
+def buscar_usuario(email):
+    mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
+    return df[mask].iloc[0] if mask.any() else None
+
+# 🧾 ÁREA PRIVADA
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
-    nombre_usuario = correo_usuario
-    # extraemos el nombre real desde la hoja
-    def buscar_usuario(email):
-        mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
-        return df[mask].iloc[0] if mask.any() else None
-
-    # Conectamos a Google
-    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    creds = service_account.Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"], scopes=scopes)
-    client = gspread.authorize(creds)
-    sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
-    worksheet = sheet.worksheet("Registro")
-    df = pd.DataFrame(worksheet.get_all_records())
     user = buscar_usuario(correo_usuario)
-    if user is not None:
-        nombre_usuario = user["Expendiduría"]
+    nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    # BARRA con botón nativo
+    # ✅ BARRA superior con botón nativo
     st.markdown(f"<div class='barra'>ÁREA PRIVADA – {nombre_usuario}  <span></span></div>", unsafe_allow_html=True)
     st.markdown("<div class='espaciado'></div>", unsafe_allow_html=True)
     if st.button("Cerrar sesión", key="cerrar_sesion"):
         st.session_state.clear()
         st.rerun()
-else:
-    # si no está logueado, solo mostramos logo
+
+    # ✅ Logo solo en vista privada
     st.image("logo.png", use_container_width=True)
-
-# 🔑 LOGIN
-if "auth_email" not in st.session_state:
-    st.image("logo.png", use_container_width=True)
-    correo = st.text_input("Correo electrónico").strip().lower()
-    clave = st.text_input("Contraseña", type="password")
-    if st.button("Acceder"):
-        # reconectamos hoja
-        scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        creds = service_account.Credentials.from_service_account_info(
-            st.secrets["gcp_service_account"], scopes=scopes)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
-        worksheet = sheet.worksheet("Registro")
-        df = pd.DataFrame(worksheet.get_all_records())
-
-        def buscar_usuario(email):
-            mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
-            return df[mask].iloc[0] if mask.any() else None
-
-        if not correo or not clave:
-            st.warning("Debes completar ambos campos.")
-        else:
-            user = buscar_usuario(correo)
-            if user is None:
-                st.error("Correo no encontrado.")
-            else:
-                password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
-                password_introducida = clave.strip().replace(",", "")
-                if not password_guardada:
-                    st.error("No hay contraseña configurada para este usuario.")
-                elif password_guardada != password_introducida:
-                    st.error("Contraseña incorrecta.")
-                else:
-                    st.session_state["auth_email"] = correo
-                    st.rerun()
-
-# 💼 ZONA PRIVADA
-if "auth_email" in st.session_state:
-    correo_usuario = st.session_state["auth_email"]
-    user = buscar_usuario(correo_usuario)
 
     if user is None:
         st.error("Usuario no encontrado.")
@@ -189,3 +145,25 @@ if "auth_email" in st.session_state:
             "Última actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
+
+# 🔐 LOGIN
+else:
+    st.image("logo.png", use_container_width=True)
+    correo = st.text_input("Correo electrónico").strip().lower()
+    clave = st.text_input("Contraseña", type="password")
+    if st.button("Acceder"):
+        user = buscar_usuario(correo)
+        if not correo or not clave:
+            st.warning("Debes completar ambos campos.")
+        elif user is None:
+            st.error("Correo no encontrado.")
+        else:
+            password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
+            password_introducida = clave.strip().replace(",", "")
+            if not password_guardada:
+                st.error("No hay contraseña configurada para este usuario.")
+            elif password_guardada != password_introducida:
+                st.error("Contraseña incorrecta.")
+            else:
+                st.session_state["auth_email"] = correo
+                st.rerun()
