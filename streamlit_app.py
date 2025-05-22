@@ -54,7 +54,7 @@ if correo:
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
 
-                mostrar_panel(punto, total1, total2)
+                mostrar_panel(punto, total1, [])  # <- Aquí se evita el error
 
                 # Inputs de promociones personalizadas
                 promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO?", min_value=0, step=1)
@@ -102,8 +102,9 @@ if correo:
                         st.write(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
                         st.write(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
 
-                        # Volver a mostrar panel con nuevos totales
-                        mostrar_panel(punto, nuevo1, nuevo2)
+                        # Volver a mostrar panel actualizado
+                        mostrar_panel(punto, nuevo1, [])
+
             else:
                 st.error("No se pudo localizar tu fila en el Excel.")
         except Exception as e:
