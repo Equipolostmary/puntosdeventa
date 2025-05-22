@@ -2,94 +2,90 @@ import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import pandas as pd
-from datetime import datetime
+import datetime
 from PIL import Image
-import os
 
-# ---------- CONFIGURACIÓN DE PÁGINA ----------
-st.set_page_config(page_title="Zona Privada - Lost Mary", page_icon="📦", layout="centered")
-st.markdown(
-    '''
+# --- CONFIGURACIÓN GENERAL ---
+st.set_page_config(page_title="Lost Mary - Zona Privada", layout="centered")
+
+# --- CARGA LOGO Y FONDO ---
+st.markdown("""
     <style>
-    body {
-        background-color: #f3e8ff;
+    .stApp {
+        background-color: #f5efff;
+        font-family: 'Montserrat', sans-serif;
     }
-    .block-container {
-        padding-top: 2rem;
+    .title-style {
+        font-size: 28px;
+        font-weight: 700;
+        color: #3a0ca3;
+        text-align: center;
+        margin-top: 1em;
     }
     </style>
-    ''',
-    unsafe_allow_html=True
-)
+""", unsafe_allow_html=True)
 
-# ---------- LOGO ----------
-if os.path.exists("logo.png"):
-    st.image("logo.png", width=400)
+st.image("logo.png", width=400)
 
-# ---------- AUTENTICACIÓN ----------
-st.header("Iniciar sesión")
+# --- AUTENTICACIÓN ---
 correo = st.text_input("Correo electrónico")
-contraseña = st.text_input("Contraseña", type="password")
-login_btn = st.button("Acceder")
+clave = st.text_input("Contraseña", type="password")
+if st.button("Acceder") or (correo and clave):
+    try:
+        gcp_secrets = st.secrets["gcp_service_account"]
+        scope = ["https://www.googleapis.com/auth/spreadsheets",
+                 "https://www.googleapis.com/auth/drive"]
+        creds = Credentials.from_service_account_info(gcp_secrets, scopes=scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet("Registro")
+        data = sheet.get_all_records()
+        df = pd.DataFrame(data)
 
-if "sesion_iniciada" not in st.session_state:
-    st.session_state.sesion_iniciada = False
-    st.session_state.correo_usuario = ""
+        if correo in df['dirección de correo electrónico'].values:
+            punto = df[df['dirección de correo electrónico'] == correo].iloc[0]
+            if str(punto['contraseña']).strip() == clave.strip():
 
-if login_btn:
-    st.session_state.correo_usuario = correo.strip().lower()
-    st.session_state.sesion_iniciada = True
+                st.success(f"Bienvenido, {correo}")
 
-if st.session_state.sesion_iniciada and st.session_state.correo_usuario:
-    # ---------- CONEXIÓN CON GOOGLE SHEETS ----------
-    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    gcp_secrets = st.secrets["gcp_service_account"]
+                # --- INFORMACIÓN PERSONAL ---
+                st.subheader("Información personal")
+                st.markdown(f"**Expendiduría:** {punto['expendiduría']}")
+                st.markdown(f"**Dirección:** {punto['dirección']}")
+                st.markdown(f"**Código postal:** {punto['código postal']}")
+                st.markdown(f"**POBLACION:** {punto['POBLACION']}")
+                st.markdown(f"**PROVINCIA:** {punto['PROVINCIA']}")
+                st.markdown(f"**Número de teléfono:** {punto['número de teléfono']}")
+                st.markdown(f"**Nombre:** {punto['nombre']}")
+                st.markdown(f"**RESPONSABLE DE ZONA:** {punto['RESPONSABLE DE ZONA']}")
+                st.markdown(f"**Carpeta privada:** [Acceder]({punto['carpeta privada']})")
 
-    creds = Credentials.from_service_account_info(gcp_secrets, scopes=scope)
-    client = gspread.authorize(creds)
+                # --- ESTADO DE PROMOCIONES ---
+                st.subheader("🏢 Estado de promociones")
+                promos = {
+                    "TAPPO": {
+                        "asignado": int(punto.get("promoción 2+1 tappo", 0)),
+                        "entregado": int(punto.get("entregados promo tappo", 0))
+                    },
+                    "BM1000": {
+                        "asignado": int(punto.get("promoción 3×21 bm1000", 0)),
+                        "entregado": int(punto.get("entregados promo bm1000", 0))
+                    }
+                }
+                for k, v in promos.items():
+                    pendientes = v["asignado"] - v["entregado"]
+                    st.markdown(f"- **{k} asignados:** {v['asignado']} 👉 💚 Entregados: {v['entregado']} 🕰 Pendientes: {pendientes}")
 
-    sheet_id = gcp_secrets["sheet_id"]
-    sheet = client.open_by_key(sheet_id).worksheet("Registro")
-    df = pd.DataFrame(sheet.get_all_records())
+                ultima = punto.get("última actualización", "-")
+                st.markdown(f"- 🔎 **Última actualización:** {ultima}")
 
-    # ---------- FILTRADO DE USUARIO ----------
-    correo_usuario = st.session_state.correo_usuario
-    punto = df[df["Dirección de correo electrónico"].str.lower() == correo_usuario]
-
-    if punto.empty:
-        st.error("Correo no registrado.")
-    else:
-        punto = punto.iloc[0]
-        stored_password = str(punto.get("Contraseña", "")).strip()
-        if stored_password != contraseña:
-            st.error("Contraseña incorrecta.")
+                if st.button("Cerrar sesión"):
+                    st.session_state.clear()
+                    st.experimental_rerun()
+            else:
+                st.error("Contraseña incorrecta.")
         else:
-            # ---------- ZONA PRIVADA ----------
-            st.success(f"Bienvenido, {punto['Expendiduría']}")
-            st.markdown("### 📦 Estado de promociones")
+            st.error("Usuario no registrado.")
 
-            def safe_int(val):
-                try:
-                    return int(val)
-                except:
-                    return 0
-
-            tappo_asignado = safe_int(punto.get("Promoción 2+1 TAPPO", 0))
-            bm_asignado = safe_int(punto.get("Promoción 3×21 BM1000", 0))
-            tappo_entregado = safe_int(punto.get("Entregados promo TAPPO", 0))
-            bm_entregado = safe_int(punto.get("Entregados promo BM1000", 0))
-            tappo_faltan = safe_int(punto.get("FALTA POR ENTREGAR TAPPO", 0))
-            bm_faltan = safe_int(punto.get("FALTA POR ENTREGAR BM1000", 0))
-            ultima = punto.get("Última actualización", "")
-
-            st.markdown(f"**TAPPO asignados:** {tappo_asignado} ✅ Entregados: {tappo_entregado} ⏳ Pendientes: {tappo_faltan}")
-            st.markdown(f"**BM1000 asignados:** {bm_asignado} ✅ Entregados: {bm_entregado} ⏳ Pendientes: {bm_faltan}")
-            st.markdown(f"🕒 **Última actualización:** {ultima}")
-
-            # ---------- SUBIDA DE ARCHIVOS ----------
-            st.markdown("---")
-            st.markdown("### 📤 Subir promociones")
-            uploaded_files = st.file_uploader("Selecciona imágenes o tickets", accept_multiple_files=True, type=["jpg", "png", "jpeg"])
-
-            if uploaded_files:
-                st.success(f"{len(uploaded_files)} archivo(s) cargado(s) correctamente.")
+    except Exception as e:
+        st.error("Ha ocurrido un error en el acceso.")
+        st.stop()
