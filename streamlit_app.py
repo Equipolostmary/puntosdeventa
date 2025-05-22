@@ -9,9 +9,7 @@ import uuid
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-ADMIN_EMAIL = "equipolostmary@gmail.com"
-
-# ----------- ESTILOS Y BARRA SUPERIOR FIJA -----------
+# ✅ ESTILO GLOBAL Y BARRA SUPERIOR
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -25,7 +23,9 @@ html, body, [class*="css"] {
 .stTextInput input, .stButton > button {
     font-weight: 600;
 }
-#barra-superior {
+
+/* Barra fija superior */
+.barra-superior {
     position: fixed;
     top: 0;
     left: 0;
@@ -35,24 +35,43 @@ html, body, [class*="css"] {
     color: #5a3a8a;
     font-size: 20px;
     font-weight: bold;
-    text-align: center;
-    line-height: 60px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
     z-index: 9999;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.boton-cerrar {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
 }
 .stApp {
-    padding-top: 70px !important;
+    padding-top: 80px !important;
 }
 </style>
-<div id='barra-superior'>ÁREA PRIVADA</div>
+<div class="barra-superior">
+    ÁREA PRIVADA
+    <form action="" method="post">
+        <button class="boton-cerrar" name="cerrar" type="submit">Cerrar sesión</button>
+    </form>
+</div>
 """, unsafe_allow_html=True)
 
-# -------------------------------------------------------
+# 🔐 Cerrar sesión si se pulsa botón
+if st.session_state.get("auth_email") and st.experimental_get_query_params().get("cerrar") is not None:
+    st.session_state.clear()
+    st.rerun()
 
-# Logo
+# 📷 Logo
 st.image("logo.png", use_container_width=True)
 
-# Conexión con Google Sheets
+# 🔗 Conexión con Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -65,7 +84,7 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# LOGIN
+# 🔑 LOGIN
 if "auth_email" not in st.session_state:
     correo = st.text_input("Correo electrónico").strip().lower()
     clave = st.text_input("Contraseña", type="password")
@@ -87,17 +106,13 @@ if "auth_email" not in st.session_state:
                     st.session_state["auth_email"] = correo
                     st.rerun()
 
-# ÁREA PRIVADA
+# 🧾 ÁREA PRIVADA
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state.auth_email
     user = buscar_usuario(correo_usuario)
 
     if user is None:
         st.error("Usuario no encontrado.")
-        st.session_state.clear()
-        st.rerun()
-
-    if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.rerun()
 
