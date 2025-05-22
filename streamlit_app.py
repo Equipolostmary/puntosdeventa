@@ -9,7 +9,7 @@ from google_sheets import cargar_datos_hoja
 # ✅ CONFIGURACIÓN BÁSICA
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# ✅ ESTILO SIMPLE: fondo azul claro + logo centrado
+# ✅ ESTILO SIMPLE: fondo azul claro + logo funcional
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
@@ -47,7 +47,7 @@ st.markdown("""
     </style>
 
     <div id="logo-lostmary">
-        <img src="https://i.imgur.com/qGvKZ7m.png" width="200">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Lost_Mary_Logo.svg/512px-Lost_Mary_Logo.svg.png" width="200">
     </div>
 """, unsafe_allow_html=True)
 
