@@ -1,4 +1,32 @@
 import streamlit as st
+
+# Estilo con fondo lila y rosa
+st.markdown("""
+    <style>
+    body {
+        background: linear-gradient(135deg, #e0bbff, #ffcce6);
+    }
+    .main {
+        background: transparent;
+    }
+    header, footer, .css-18e3th9 {
+        background: transparent;
+    }
+    .block-container {
+        padding-top: 2rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Mostrar logo desde Drive
+st.markdown(f"""
+    <div style="text-align: center; margin-bottom: 30px;">
+        <img src="https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf"
+             alt="Lost Mary Logo"
+             style="width:200px;">
+    </div>
+""", unsafe_allow_html=True)
+import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
