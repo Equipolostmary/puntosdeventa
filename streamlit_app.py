@@ -134,7 +134,8 @@ if "auth_email" in st.session_state:
                 row = user.name + 2
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
-                worksheet.update_cell(row, df.columns.get_loc("Ultima actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
+                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
