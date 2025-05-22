@@ -4,9 +4,17 @@ from datetime import datetime
 import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
+import time
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
+
+# Mostrar mensaje después de subida si está en sesión
+if st.session_state.get("subida_ok"):
+    st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
+    time.sleep(2.5)
+    st.session_state.pop("subida_ok")
+    st.rerun()
 
 # Estilo visual
 st.markdown("""
@@ -80,7 +88,6 @@ if "auth_email" in st.session_state:
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
 
-    # Mostrar columnas hasta 'Carpeta privada' (inclusive)
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
         if str(col).lower() not in ["contraseña", "correo", "correo electrónico", "dirección de correo electrónico"]:
@@ -126,8 +133,8 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                st.success(f"✅ {ok} imagen(es) subidas. Contadores actualizados.")
-                st.rerun()
+                st.session_state.subida_ok = True
+                st.stop()
 
     # Vista completa para administrador
     if correo_usuario == ADMIN_EMAIL:
