@@ -44,46 +44,53 @@ if correo:
                 service = conectar_drive(st.secrets["gcp_service_account"])
                 carpeta_id = punto["Carpeta privada"]
 
+                imagenes_ok = 0
                 for imagen in imagenes:
                     if not imagen.name or imagen.size == 0:
                         st.warning("Uno de los archivos está vacío o no tiene nombre. Intenta con otra imagen.")
                         continue
+                    try:
+                        subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
+                        imagenes_ok += 1
+                    except Exception as e:
+                        st.error(f"❌ Error al subir {imagen.name}: {e}")
 
-                    subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
+                if imagenes_ok == 0:
+                    st.stop()
 
                 # Conectar a Sheets y actualizar columnas L, M, N
-                SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
-                service_account_info = st.secrets["gcp_service_account"]
-                creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
-                client = gspread.authorize(creds)
-                sheet = client.open_by_url(SHEET_URL)
-                worksheet = sheet.worksheet(PESTAÑA)
+                try:
+                    SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
+                    service_account_info = st.secrets["gcp_service_account"]
+                    creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
+                    client = gspread.authorize(creds)
+                    sheet = client.open_by_url(SHEET_URL)
+                    worksheet = sheet.worksheet(PESTAÑA)
 
-                correos = worksheet.col_values(3)
-                fila_usuario = next((i + 1 for i, val in enumerate(correos) if val.strip().lower() == correo), None)
+                    correos = worksheet.col_values(3)
+                    fila_usuario = next((i + 1 for i, val in enumerate(correos) if val.strip().lower() == correo), None)
 
-                if fila_usuario:
-                    # Columna L = 12 → Promos 2+1 TAPPO
-                    # Columna M = 13 → Promos 3×21 BM1000
-                    # Columna N = 14 → Fecha
+                    if fila_usuario:
+                        val1 = worksheet.cell(fila_usuario, 12).value
+                        val2 = worksheet.cell(fila_usuario, 13).value
 
-                    val1 = worksheet.cell(fila_usuario, 12).value
-                    val2 = worksheet.cell(fila_usuario, 13).value
+                        total1 = int(val1) if val1 and val1.isnumeric() else 0
+                        total2 = int(val2) if val2 and val2.isnumeric() else 0
 
-                    total1 = int(val1) if val1.isnumeric() else 0
-                    total2 = int(val2) if val2.isnumeric() else 0
+                        nuevo1 = total1 + promo1
+                        nuevo2 = total2 + promo2
 
-                    nuevo1 = total1 + promo1
-                    nuevo2 = total2 + promo2
+                        worksheet.update_cell(fila_usuario, 12, str(nuevo1))
+                        worksheet.update_cell(fila_usuario, 13, str(nuevo2))
+                        worksheet.update_cell(fila_usuario, 14, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-                    worksheet.update_cell(fila_usuario, 12, str(nuevo1))
-                    worksheet.update_cell(fila_usuario, 13, str(nuevo2))
-                    worksheet.update_cell(fila_usuario, 14, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-                    st.success(f"✅ Se subieron {len(imagenes)} imagen(es) y se actualizaron tus promociones.")
-                    st.write(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
-                    st.write(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
-                else:
-                    st.error("No se pudo localizar tu fila en el Excel.")
+                        st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
+                        st.write(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
+                        st.write(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
+                    else:
+                        st.error("No se pudo localizar tu fila en el Excel.")
+                except Exception as e:
+                    st.error("⚠️ Las imágenes se subieron, pero ocurrió un error al actualizar el Excel.")
+                    st.text(str(e))
     else:
         st.error("Correo no encontrado. Asegúrate de que esté registrado en el formulario.")
