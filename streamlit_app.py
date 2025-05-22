@@ -5,62 +5,51 @@ import gspread
 from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
-from PIL import Image
-import base64
-
-# Función para convertir imagen a base64
-def imagen_a_base64(path):
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
 
 # CONFIGURACIÓN STREAMLIT
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# Cargar imágenes desde rutas absolutas
-logo_base64 = imagen_a_base64("/mnt/data/Captura de pantalla 2025-05-12 131422.png")
-fondo_base64 = imagen_a_base64("/mnt/data/Captura de pantalla 2025-05-22 121825.png")
-
-# Estilo visual y logo
-st.markdown(f"""
+# Estilo visual y logo con URLs públicas
+st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
-    html, body, [data-testid="stAppViewContainer"] {{
-        background: url("data:image/png;base64,{fondo_base64}") no-repeat center center fixed;
+    html, body, [data-testid="stAppViewContainer"] {
+        background: url("https://i.imgur.com/n5ZmYmg.jpg") no-repeat center center fixed;
         background-size: cover;
         font-family: 'Montserrat', sans-serif;
         color: #ffffff;
-    }}
+    }
 
-    h1, h2, h3, h4 {{
+    h1, h2, h3, h4 {
         font-weight: 600;
         color: #ffffff;
-    }}
+    }
 
-    .stTextInput > div > div > input {{
+    .stTextInput > div > div > input {
         font-size: 16px;
-    }}
+    }
 
-    .stButton > button {{
+    .stButton > button {
         font-size: 16px;
         font-weight: 600;
         padding: 0.5em 1em;
-    }}
+    }
 
-    .stMarkdown, .stDataFrame {{
+    .stMarkdown, .stDataFrame {
         font-size: 15px;
         color: #ffffff;
-    }}
+    }
 
-    #logo-lostmary {{
+    #logo-lostmary {
         text-align: center;
         margin-top: 30px;
         margin-bottom: 40px;
-    }}
+    }
     </style>
 
     <div id="logo-lostmary">
-        <img src="data:image/png;base64,{logo_base64}" width="220">
+        <img src="https://i.imgur.com/qGvKZ7m.png" width="220">
     </div>
 """, unsafe_allow_html=True)
 
@@ -71,6 +60,7 @@ PESTAÑA = "Registro"
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
+# Entrada de correo
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -88,6 +78,7 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
+            # Buscar la fila correspondiente
             fila_usuario = None
             for i, row in enumerate(worksheet.get_all_values(), start=1):
                 if i == 1:
@@ -98,12 +89,12 @@ if correo:
 
             if fila_usuario:
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:  # Muestra hasta "Carpeta privada"
+                for col in datos.columns[:12]:  # Hasta columna "Carpeta privada"
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
-                val1 = worksheet.cell(fila_usuario, 13).value  # Columna M
-                val2 = worksheet.cell(fila_usuario, 14).value  # Columna N
+                val1 = worksheet.cell(fila_usuario, 13).value  # Col M
+                val2 = worksheet.cell(fila_usuario, 14).value  # Col N
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
