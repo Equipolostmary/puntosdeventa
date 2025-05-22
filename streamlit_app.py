@@ -6,10 +6,10 @@ from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 
-# CONFIGURACIÓN DE LA APP
+# CONFIGURACIÓN STREAMLIT
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# ESTILO Y LOGO DESDE GOOGLE DRIVE
+# ESTILO Y LOGO FUNCIONAL DESDE IMGUR
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
@@ -41,11 +41,11 @@ st.markdown("""
     </style>
 
     <div style='text-align: center; margin-top: 20px; margin-bottom: 40px;'>
-        <img src='https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf' width='220'>
+        <img src='https://i.imgur.com/T8p4GNR.png' width='220'>
     </div>
 """, unsafe_allow_html=True)
 
-# CONFIGURACIÓN DE LA HOJA DE GOOGLE
+# HOJA DE GOOGLE
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
@@ -70,7 +70,6 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
-            # BUSCAR FILA DEL USUARIO
             fila_usuario = None
             for i, row in enumerate(worksheet.get_all_values(), start=1):
                 if i == 1:
