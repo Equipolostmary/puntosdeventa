@@ -5,6 +5,7 @@ import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
+import uuid  # para claves únicas
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
@@ -108,11 +109,17 @@ if "auth_email" in st.session_state:
         st.session_state.pop("subida_ok")
         st.rerun()
 
+    # 🔁 Inicializar claves únicas para forzar reinicio visual
+    if "widget_key_promos" not in st.session_state:
+        st.session_state.widget_key_promos = str(uuid.uuid4())
+    if "widget_key_imgs" not in st.session_state:
+        st.session_state.widget_key_imgs = str(uuid.uuid4())
+
     # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
-    promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0, key="promo1_val")
-    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key="promo2_val")
-    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key="promo_imgs")
+    promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
+    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
+    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
 
     if st.button("Subir promociones"):
         if not imagenes:
@@ -132,11 +139,10 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                # Limpiar campos tras subir (solo los keys personalizados)
+                # Limpiar claves visuales para forzar widgets nuevos
                 st.session_state["subida_ok"] = True
-                st.session_state.pop("promo1_val", None)
-                st.session_state.pop("promo2_val", None)
-                st.session_state.pop("promo_imgs", None)
+                st.session_state.widget_key_promos = str(uuid.uuid4())
+                st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
     # Vista completa para administrador
