@@ -10,9 +10,6 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Marca si hay que hacer rerun después (se ejecuta al final del script)
-do_rerun = st.session_state.get("do_rerun", False)
-
 # Estilo visual
 st.markdown("""
 <style>
@@ -64,8 +61,7 @@ if "auth_email" not in st.session_state:
                     st.error("Contraseña incorrecta.")
                 else:
                     st.session_state["auth_email"] = correo
-                    st.session_state["do_rerun"] = True
-                    st.stop()
+                    st.rerun()
 
 # ÁREA PRIVADA
 if "auth_email" in st.session_state:
@@ -75,16 +71,14 @@ if "auth_email" in st.session_state:
     if user is None:
         st.error("Usuario no encontrado.")
         st.session_state.clear()
-        st.session_state["do_rerun"] = True
-        st.stop()
+        st.rerun()
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
 
     if st.button("Cerrar sesión"):
         st.session_state.clear()
-        st.session_state["do_rerun"] = True
-        st.stop()
+        st.rerun()
 
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
@@ -151,8 +145,3 @@ if "auth_email" in st.session_state:
             "Última actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
-
-# Al final del todo: ejecuta rerun si está marcado
-if do_rerun:
-    st.session_state["do_rerun"] = False
-    st.rerun()
