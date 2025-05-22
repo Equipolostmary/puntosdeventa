@@ -7,11 +7,10 @@ from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 from paginas.panel_punto import mostrar_panel
 
-# CONFIGURA TU GOOGLE SHEET
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
-PESTAÑA = "Registro"
+# ✅ ESTA LÍNEA DEBE IR AL PRINCIPIO ABSOLUTO
+st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# Fondo degradado personalizado
+# Fondo degradado lila y rosa
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] {
@@ -20,22 +19,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Mostrar logo oficial de Lost Mary (desde Google Drive)
+# Logo oficial desde Google Drive
 st.markdown("""
     <div style='text-align: center; margin-top: 20px; margin-bottom: 40px;'>
         <img src='https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf' width='200'>
     </div>
 """, unsafe_allow_html=True)
 
-st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 st.title("Área de Puntos de Venta")
 st.write("Introduce tu correo para acceder a tu área personalizada:")
+
+# Configura tu Google Sheet
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
+PESTAÑA = "Registro"
 
 @st.cache_data
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# Entrada de correo electrónico
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -57,15 +58,14 @@ if correo:
             fila_usuario = None
 
             for i, val in enumerate(correos):
-                if val and isinstance(val, str):
-                    if val.strip().lower() == correo:
-                        fila_usuario = i + 1
-                        break
+                if val and isinstance(val, str) and val.strip().lower() == correo:
+                    fila_usuario = i + 1
+                    break
 
             if fila_usuario:
-                # Mostrar contadores
-                val1 = worksheet.cell(fila_usuario, 13).value  # Columna M
-                val2 = worksheet.cell(fila_usuario, 14).value  # Columna N
+                # Mostrar contadores (col. M y N)
+                val1 = worksheet.cell(fila_usuario, 13).value
+                val2 = worksheet.cell(fila_usuario, 14).value
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
@@ -73,10 +73,8 @@ if correo:
                 st.info(f"📦 Promociones 2+1 TAPPO acumuladas: {total1}")
                 st.info(f"📦 Promociones 3×21 BM1000 acumuladas: {total2}")
 
-                # Panel privado
                 mostrar_panel(punto, total1, [])
 
-                # Inputs para nuevas promociones
                 promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
                 promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
                 imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
@@ -85,7 +83,7 @@ if correo:
                     if not imagenes:
                         st.warning("Debes seleccionar al menos una imagen.")
                     else:
-                        # Subir imágenes
+                        # Subir imágenes a carpeta
                         service = conectar_drive(st.secrets["gcp_service_account"])
                         carpeta_enlace = punto["Carpeta privada"]
                         carpeta_id = carpeta_enlace.split("/")[-1]
@@ -104,7 +102,7 @@ if correo:
                         if imagenes_ok == 0:
                             st.stop()
 
-                        # Actualizar contadores en hoja
+                        # Recalcular totales
                         val1 = worksheet.cell(fila_usuario, 13).value
                         val2 = worksheet.cell(fila_usuario, 14).value
 
