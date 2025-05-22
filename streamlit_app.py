@@ -7,10 +7,10 @@ from PIL import Image
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 
-# CONFIGURACIÓN STREAMLIT
+# CONFIGURACIÓN DE LA APP
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# ESTILO Y LOGO LOCAL DESDE /mnt/data
+# ESTILO Y LOGO DESDE REPOSITORIO (LOGO LOCAL EN LA RAÍZ)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
@@ -42,18 +42,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Mostrar el logo cargado desde archivo local
-logo = Image.open("/mnt/data/ab5d66d8-c8d2-4ae3-81ba-c5fc7f8fcb52.png")
+# Cargar y mostrar el logo desde el repositorio
+logo = Image.open("logo_lostmary.png")
 st.image(logo, width=220)
 
-# HOJA DE GOOGLE
+# GOOGLE SHEET CONFIG
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# ACCESO POR CORREO
+# FORMULARIO DE ACCESO
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -81,12 +81,12 @@ if correo:
 
             if fila_usuario:
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:  # Hasta "Carpeta privada"
+                for col in datos.columns[:12]:
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
-                val1 = worksheet.cell(fila_usuario, 13).value  # Col M
-                val2 = worksheet.cell(fila_usuario, 14).value  # Col N
+                val1 = worksheet.cell(fila_usuario, 13).value
+                val2 = worksheet.cell(fila_usuario, 14).value
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
