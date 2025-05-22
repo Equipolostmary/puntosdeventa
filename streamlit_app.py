@@ -14,22 +14,31 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
     html, body, [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #b5179e, #7209b7);
+        background: linear-gradient(135deg, #e3aeea, #caa7ff);
         font-family: 'Montserrat', sans-serif;
-        color: #0d1b2a;
+        color: #000000;
     }
     h1, h2, h3, h4 {
+        font-weight: 700;
+        color: #1b0032;
+    }
+    .stTextInput > div > div > input {
+        border: 2px solid #6a0dad;
+        background-color: #ffffff;
+        color: #000000;
         font-weight: 600;
-        color: #06283D;
+        box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    }
+    .stButton > button {
+        background-color: #6a0dad;
+        color: white;
+        font-weight: bold;
+        border-radius: 6px;
+        padding: 8px 20px;
+        font-size: 16px;
     }
     #MainMenu, footer, header {
         visibility: hidden;
-    }
-    input[type="text"] {
-        border: 2px solid white;
-        background-color: rgba(255,255,255,0.8);
-        color: black;
-        box-shadow: 0 0 10px 2px rgba(255,255,255,0.5);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -42,94 +51,94 @@ PESTAÑA = "Registro"
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-correo = st.text_input("Correo electrónico").strip().lower()
+correo = st.text_input("Correo electrónico", placeholder="Introduce tu correo").strip().lower()
 
 if correo:
-    datos = cargar_datos()
-    if correo in datos["Dirección de correo electrónico"].str.lower().values:
-        punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
-        st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
+    if st.button("Acceder"):
+        datos = cargar_datos()
+        if correo in datos["Dirección de correo electrónico"].str.lower().values:
+            punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
+            st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
 
-        try:
-            SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
-            service_account_info = st.secrets["gcp_service_account"]
-            creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
-            client = gspread.authorize(creds)
-            sheet = client.open_by_url(SHEET_URL)
-            worksheet = sheet.worksheet(PESTAÑA)
+            try:
+                SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
+                service_account_info = st.secrets["gcp_service_account"]
+                creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
+                client = gspread.authorize(creds)
+                sheet = client.open_by_url(SHEET_URL)
+                worksheet = sheet.worksheet(PESTAÑA)
 
-            fila_usuario = None
-            for i, row in enumerate(worksheet.get_all_values(), start=1):
-                if i == 1:
-                    continue
-                if len(row) >= 2 and row[1].strip().lower() == correo:
-                    fila_usuario = i
-                    break
+                fila_usuario = None
+                for i, row in enumerate(worksheet.get_all_values(), start=1):
+                    if i == 1:
+                        continue
+                    if len(row) >= 2 and row[1].strip().lower() == correo:
+                        fila_usuario = i
+                        break
 
-            if fila_usuario:
-                st.subheader("📋 Información del punto de venta")
+                if fila_usuario:
+                    st.subheader("📋 Información del punto de venta")
 
-                for col in datos.columns:
-                    if "contraseña" not in col.lower() and col != "Última actualización":
-                        valor = punto[col]
-                        st.markdown(f"**{col}:** {valor}")
+                    for col in datos.columns:
+                        if "contraseña" not in col.lower() and col != "Última actualización":
+                            valor = punto[col]
+                            st.markdown(f"**{col}:** {valor}")
 
-                val1 = worksheet.cell(fila_usuario, 13).value
-                val2 = worksheet.cell(fila_usuario, 14).value
+                    val1 = worksheet.cell(fila_usuario, 13).value
+                    val2 = worksheet.cell(fila_usuario, 14).value
 
-                total1 = int(val1) if val1 and val1.isnumeric() else 0
-                total2 = int(val2) if val2 and val2.isnumeric() else 0
+                    total1 = int(val1) if val1 and val1.isnumeric() else 0
+                    total2 = int(val2) if val2 and val2.isnumeric() else 0
 
-                st.info(f"📦 Promociones 2+1 TAPPO acumuladas: **{total1}**")
-                st.info(f"📦 Promociones 3×21 BM1000 acumuladas: **{total2}**")
+                    st.info(f"📦 Promociones 2+1 TAPPO acumuladas: **{total1}**")
+                    st.info(f"📦 Promociones 3×21 BM1000 acumuladas: **{total2}**")
 
-                st.subheader("📸 Subir nuevas promociones")
-                promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
-                promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
-                imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+                    st.subheader("📸 Subir nuevas promociones")
+                    promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
+                    promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
+                    imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
-                if st.button("Subir promociones"):
-                    if not imagenes:
-                        st.warning("Debes seleccionar al menos una imagen.")
-                    else:
-                        service = conectar_drive(st.secrets["gcp_service_account"])
-                        carpeta_enlace = punto["Carpeta privada"]
-                        carpeta_id = carpeta_enlace.split("/")[-1]
+                    if st.button("Subir promociones"):
+                        if not imagenes:
+                            st.warning("Debes seleccionar al menos una imagen.")
+                        else:
+                            service = conectar_drive(st.secrets["gcp_service_account"])
+                            carpeta_enlace = punto["Carpeta privada"]
+                            carpeta_id = carpeta_enlace.split("/")[-1]
 
-                        imagenes_ok = 0
-                        for imagen in imagenes:
-                            if not imagen.name or imagen.size == 0:
-                                st.warning("Uno de los archivos está vacío o no tiene nombre.")
-                                continue
-                            try:
-                                subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
-                                imagenes_ok += 1
-                            except Exception as e:
-                                st.error(f"❌ Error al subir {imagen.name}: {e}")
+                            imagenes_ok = 0
+                            for imagen in imagenes:
+                                if not imagen.name or imagen.size == 0:
+                                    st.warning("Uno de los archivos está vacío o no tiene nombre.")
+                                    continue
+                                try:
+                                    subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
+                                    imagenes_ok += 1
+                                except Exception as e:
+                                    st.error(f"❌ Error al subir {imagen.name}: {e}")
 
-                        if imagenes_ok == 0:
-                            st.stop()
+                            if imagenes_ok == 0:
+                                st.stop()
 
-                        nuevo1 = total1 + promo1
-                        nuevo2 = total2 + promo2
+                            nuevo1 = total1 + promo1
+                            nuevo2 = total2 + promo2
 
-                        worksheet.update_cell(fila_usuario, 13, str(nuevo1))
-                        worksheet.update_cell(fila_usuario, 14, str(nuevo2))
-                        worksheet.update_cell(fila_usuario, 15, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                            worksheet.update_cell(fila_usuario, 13, str(nuevo1))
+                            worksheet.update_cell(fila_usuario, 14, str(nuevo2))
+                            worksheet.update_cell(fila_usuario, 15, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-                        st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
-                        st.info(f"📦 2+1 TAPPO acumuladas: **{nuevo1}**")
-                        st.info(f"📦 3×21 BM1000 acumuladas: **{nuevo2}**")
+                            st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
+                            st.info(f"📦 2+1 TAPPO acumuladas: **{nuevo1}**")
+                            st.info(f"📦 3×21 BM1000 acumuladas: **{nuevo2}**")
 
-                # RESUMEN para el usuario maestro
-                if correo == ADMIN_EMAIL:
-                    st.subheader("📊 Resumen de promociones por punto de venta")
-                    resumen = datos[["Expendiduría", "Dirección de correo electrónico", datos.columns[12], datos.columns[13], datos.columns[14]]]
-                    resumen.columns = ["Expendiduría", "Correo", "2+1 TAPPO", "3x21 BM1000", "Última actualización"]
-                    resumen = resumen.fillna(0)
-                    st.dataframe(resumen, use_container_width=True)
-        except Exception as e:
-            st.error("⚠️ Error al acceder a tu información.")
-            st.text(str(e))
-    else:
-        st.error("Correo no encontrado. Asegúrate de que esté registrado en el formulario.")
+                    if correo == ADMIN_EMAIL:
+                        st.subheader("📊 Resumen de promociones por punto de venta")
+                        resumen = datos[["Expendiduría", "Dirección de correo electrónico", datos.columns[12], datos.columns[13], datos.columns[14]]]
+                        resumen.columns = ["Expendiduría", "Correo", "2+1 TAPPO", "3x21 BM1000", "Última actualización"]
+                        resumen = resumen.fillna(0)
+                        st.dataframe(resumen, use_container_width=True)
+            except Exception as e:
+                st.error("⚠️ Error al acceder a tu información.")
+                st.text(str(e))
+        else:
+            st.error("Correo no encontrado. Asegúrate de que esté registrado en el formulario.")
