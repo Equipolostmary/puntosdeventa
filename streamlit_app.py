@@ -11,12 +11,12 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual
+# Estilo visual con fondo morado claro
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 [data-testid="stAppViewContainer"] > .main {
-    background: linear-gradient(135deg, #e0bbff, #ffcce6);
+    background-color: #e6e0f8;
 }
 html, body, [class*="css"] {
     font-family: 'Montserrat', sans-serif;
