@@ -45,7 +45,11 @@ if correo:
                 carpeta_id = punto["Carpeta privada"]
 
                 for imagen in imagenes:
-                    subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
+    if not imagen.name or imagen.size == 0:
+        st.warning("Uno de los archivos está vacío o no tiene nombre. Intenta con otra imagen.")
+        continue
+
+    subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
 
                 # Conectar a Sheets y actualizar columnas L, M, N
                 SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
