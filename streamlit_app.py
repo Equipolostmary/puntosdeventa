@@ -9,6 +9,15 @@ import time
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
+# Corrección para iniciar/cerrar sesión sin error
+if "iniciar_sesion" in st.session_state:
+    del st.session_state["iniciar_sesion"]
+    st.experimental_rerun()
+
+if "cerrar_sesion" in st.session_state:
+    st.session_state.clear()
+    st.experimental_rerun()
+
 # Mostrar mensaje después de subida si está en sesión
 if st.session_state.get("subida_ok"):
     st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
@@ -47,12 +56,12 @@ def buscar_usuario(email):
 
 st.image("logo.png", use_container_width=True)
 
-# Cerrar sesión (refresca la app)
+# Cierre de sesión (controlado por bandera)
 if "auth_email" in st.session_state and st.button("Cerrar sesión"):
-    st.session_state.clear()
+    st.session_state["cerrar_sesion"] = True
     st.experimental_rerun()
 
-# Login (refresca la app)
+# Login (solo si no ha iniciado sesión)
 if "auth_email" not in st.session_state:
     correo = st.text_input("Correo electrónico").strip().lower()
     clave = st.text_input("Contraseña", type="password")
@@ -72,8 +81,7 @@ if "auth_email" not in st.session_state:
                     st.error("Contraseña incorrecta.")
                 else:
                     st.session_state.auth_email = correo
-                    st.success("Iniciando sesión...")
-                    time.sleep(1)
+                    st.session_state["iniciar_sesion"] = True
                     st.experimental_rerun()
 
 # Área privada
