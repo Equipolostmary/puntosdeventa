@@ -3,19 +3,20 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
+from PIL import Image
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 
-# ✅ CONFIGURACIÓN BÁSICA
+# CONFIGURACIÓN BÁSICA
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# ✅ ESTILO SIMPLE: fondo azul claro + logo funcional
+# ESTILO VISUAL SIMPLE Y LIMPIO
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
     html, body, [data-testid="stAppViewContainer"] {
-        background-color: #e6f0ff;
+        background-color: #f0f4ff;
         font-family: 'Montserrat', sans-serif;
         color: #0d1b2a;
     }
@@ -38,27 +39,21 @@ st.markdown("""
     .stMarkdown, .stDataFrame {
         font-size: 15px;
     }
-
-    #logo-lostmary {
-        text-align: center;
-        margin-top: 30px;
-        margin-bottom: 40px;
-    }
     </style>
-
-    <div id="logo-lostmary">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Lost_Mary_Logo.svg/512px-Lost_Mary_Logo.svg.png" width="200">
-    </div>
 """, unsafe_allow_html=True)
 
-# CONFIGURACIÓN HOJA GOOGLE
+# LOGO DESDE ARCHIVO LOCAL
+logo = Image.open("/mnt/data/f3545439-58fc-4078-a7db-20df1153a6b0.png")
+st.image(logo, width=220)
+
+# CONFIGURACIÓN GOOGLE SHEET
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# 📩 Entrada de correo
+# INPUT CORREO
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -76,7 +71,6 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
-            # Buscar fila exacta
             fila_usuario = None
             for i, row in enumerate(worksheet.get_all_values(), start=1):
                 if i == 1:
@@ -87,12 +81,12 @@ if correo:
 
             if fila_usuario:
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:  # Solo hasta "Carpeta privada"
+                for col in datos.columns[:12]:
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
-                val1 = worksheet.cell(fila_usuario, 13).value  # Col M
-                val2 = worksheet.cell(fila_usuario, 14).value  # Col N
+                val1 = worksheet.cell(fila_usuario, 13).value
+                val2 = worksheet.cell(fila_usuario, 14).value
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
