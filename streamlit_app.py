@@ -88,9 +88,9 @@ if correo:
                     break
 
             if fila_usuario:
-                # 📊 Mostrar información del perfil del punto
+                # 📊 Mostrar solo hasta "Carpeta privada" (col L / índice 11)
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns:
+                for col in datos.columns[:12]:
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
