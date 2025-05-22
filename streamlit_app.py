@@ -68,8 +68,14 @@ if correo:
                     sheet = client.open_by_url(SHEET_URL)
                     worksheet = sheet.worksheet(PESTAÑA)
 
-                    correos = worksheet.col_values(3)
-                    fila_usuario = next((i + 1 for i, val in enumerate(correos) if val.strip().lower() == correo), None)
+                    correos = worksheet.col_values(2)  # Columna B
+                    fila_usuario = None
+
+                    for i, val in enumerate(correos):
+                        if val and isinstance(val, str):
+                            if val.strip().lower() == correo:
+                                fila_usuario = i + 1
+                                break
 
                     if fila_usuario:
                         val1 = worksheet.cell(fila_usuario, 12).value
