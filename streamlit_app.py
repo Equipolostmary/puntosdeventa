@@ -11,17 +11,18 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# ✅ Estilos visuales y fondo lila
+# ✅ Estilos visuales
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
     html, body, [class*="css"] {
         font-family: 'Montserrat', sans-serif;
         background-color: #e6e0f8 !important;
     }
     .barra {
-        background-color: white;
-        color: #5a3a8a;
+        background-color: #bda2e0;
+        color: black;
         font-size: 20px;
         font-weight: bold;
         padding: 16px;
@@ -29,12 +30,10 @@ st.markdown("""
         top: 0; left: 0; right: 0;
         z-index: 1000;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        text-align: center;
     }
     .espaciado {
-        margin-top: 80px;
+        margin-top: 90px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -58,10 +57,15 @@ if "auth_email" in st.session_state:
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    # ✅ BARRA y logo
+    # ✅ Barra con fondo morado y texto negro
     st.markdown(f"<div class='barra'>ÁREA PRIVADA – {nombre_usuario}</div>", unsafe_allow_html=True)
     st.markdown("<div class='espaciado'></div>", unsafe_allow_html=True)
+
+    # ✅ Logo y botón cerrar sesión justo debajo
     st.image("logo.png", use_container_width=True)
+    if st.button("Cerrar sesión"):
+        st.session_state.clear()
+        st.rerun()
 
     if user is None:
         st.error("Usuario no encontrado.")
@@ -141,13 +145,7 @@ if "auth_email" in st.session_state:
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
 
-    # ✅ CERRAR SESIÓN ABAJO
-    st.markdown("---")
-    if st.button("Cerrar sesión"):
-        st.session_state.clear()
-        st.rerun()
-
-# 🔐 LOGIN (logo solo aquí si no hay sesión)
+# 🔐 LOGIN (si no está logueado)
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
