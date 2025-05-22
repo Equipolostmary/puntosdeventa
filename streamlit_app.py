@@ -11,10 +11,11 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual con fondo morado claro
+# Estilo visual + barra superior fija
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
 [data-testid="stAppViewContainer"] > .main {
     background-color: #e6e0f8;
 }
@@ -24,7 +25,27 @@ html, body, [class*="css"] {
 .stTextInput input, .stButton > button {
     font-weight: 600;
 }
+
+/* Barra fija */
+#barra-superior {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    color: #7a5da7;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 12px 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+.stApp {
+    padding-top: 70px !important;
+}
 </style>
+<div id="barra-superior">ÁREA PRIVADA</div>
 """, unsafe_allow_html=True)
 
 # Conexión con Google Sheets
@@ -40,6 +61,7 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
+# Logo
 st.image("logo.png", use_container_width=True)
 
 # LOGIN
@@ -102,14 +124,13 @@ if "auth_email" in st.session_state:
     - 🕓 **Última actualización:** {user.get('Última actualización', 'N/A')}
     """)
 
-    # Mostrar mensaje después de subida
     if st.session_state.get("subida_ok"):
         st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
         time.sleep(2)
         st.session_state.pop("subida_ok")
         st.rerun()
 
-    # 🔁 Inicializar claves únicas para forzar reinicio visual
+    # Claves únicas para reiniciar widgets tras subir
     if "widget_key_promos" not in st.session_state:
         st.session_state.widget_key_promos = str(uuid.uuid4())
     if "widget_key_imgs" not in st.session_state:
@@ -139,13 +160,11 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                # Limpiar claves visuales para forzar widgets nuevos
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
-    # Vista completa para administrador
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
         columnas = [
