@@ -1,4 +1,4 @@
-        st.dataframe(df[cols].fillna(0), use_container_width=True)import streamlit as st
+import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
@@ -8,7 +8,6 @@ from drive_upload import conectar_drive, subir_archivo_a_drive
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -24,7 +23,7 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# Conexión a Google Sheets
+# Conectar a Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
@@ -39,7 +38,7 @@ def buscar_usuario(email):
 # Logo
 st.image("logo.png", use_container_width=True)
 
-# Botón cerrar sesión
+# Botón de cierre de sesión
 if "auth_email" in st.session_state and st.button("Cerrar sesión"):
     del st.session_state.auth_email
     st.experimental_rerun()
@@ -50,12 +49,14 @@ if "auth_email" not in st.session_state:
     clave = st.text_input("Contraseña", type="password")
     if st.button("Acceder"):
         if not correo or not clave:
-            st.warning("Completa ambos campos.")
+            st.warning("Debes completar ambos campos.")
         else:
             user = buscar_usuario(correo)
             if user is None:
                 st.error("Correo no encontrado.")
-            elif str(user.get("Contraseña", "")).strip() != clave:
+            elif not user.get("Contraseña"):
+                st.error("No hay contraseña configurada para este usuario.")
+            elif str(user["Contraseña"]).strip() != clave:
                 st.error("Contraseña incorrecta.")
             else:
                 st.session_state.auth_email = correo
@@ -78,7 +79,6 @@ if "auth_email" in st.session_state:
         if str(col).lower() not in ["contraseña", "correo", "correo electrónico", "dirección de correo electrónico"]:
             st.markdown(f"**{col}:** {val}")
 
-    # Promociones
     st.subheader("📦 Estado de promociones")
     campos = {
         "Promoción 2+1 TAPPO": "🟣 TAPPO asignados",
@@ -92,7 +92,6 @@ if "auth_email" in st.session_state:
         if key in user:
             st.markdown(f"**{label}:** {user[key]}")
 
-    # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
     promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0)
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0)
@@ -120,7 +119,7 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.success(f"Se subieron {ok} imagen(es) y se actualizaron los contadores.")
 
-    # Vista admin
+    # Vista para admin
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
         cols = [
