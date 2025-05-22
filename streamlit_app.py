@@ -7,19 +7,11 @@ from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
+
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# 🔁 Refrescar tras login/logout
-if st.session_state.get("do_rerun", False):
-    st.session_state["do_rerun"] = False
-    st.experimental_rerun()
-
-# Mostrar mensaje después de subida si está en sesión
-if st.session_state.get("subida_ok"):
-    st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
-    time.sleep(2.5)
-    st.session_state.pop("subida_ok")
-    st.experimental_rerun()
+# Marca si hay que hacer rerun después (se ejecuta al final del script)
+do_rerun = st.session_state.get("do_rerun", False)
 
 # Estilo visual
 st.markdown("""
@@ -52,12 +44,7 @@ def buscar_usuario(email):
 
 st.image("logo.png", use_container_width=True)
 
-# 🔐 Cierre de sesión (con marca para refrescar)
-if "auth_email" in st.session_state and st.button("Cerrar sesión"):
-    st.session_state.clear()
-    st.session_state["do_rerun"] = True
-
-# 🔑 Login
+# LOGIN
 if "auth_email" not in st.session_state:
     correo = st.text_input("Correo electrónico").strip().lower()
     clave = st.text_input("Contraseña", type="password")
@@ -76,10 +63,11 @@ if "auth_email" not in st.session_state:
                 elif password_guardada != password_introducida:
                     st.error("Contraseña incorrecta.")
                 else:
-                    st.session_state.auth_email = correo
+                    st.session_state["auth_email"] = correo
                     st.session_state["do_rerun"] = True
+                    st.stop()
 
-# Área privada
+# ÁREA PRIVADA
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state.auth_email
     user = buscar_usuario(correo_usuario)
@@ -92,6 +80,11 @@ if "auth_email" in st.session_state:
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
+
+    if st.button("Cerrar sesión"):
+        st.session_state.clear()
+        st.session_state["do_rerun"] = True
+        st.stop()
 
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
@@ -113,6 +106,13 @@ if "auth_email" in st.session_state:
     - **BM1000 asignados:** {bm_asig} | ✅ Entregados: {bm_ent} | ⏳ Pendientes: {bm_falt}
     - 🕓 **Última actualización:** {user.get('Última actualización', 'N/A')}
     """)
+
+    # Mostrar mensaje después de subida si está en sesión
+    if st.session_state.get("subida_ok"):
+        st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
+        time.sleep(2.5)
+        st.session_state.pop("subida_ok")
+        st.experimental_rerun()
 
     # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
@@ -151,3 +151,7 @@ if "auth_email" in st.session_state:
             "Última actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
+
+# Al final del todo: ejecuta rerun si está marcado
+if do_rerun:
+    st.experimental_rerun()
