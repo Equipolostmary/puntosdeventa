@@ -48,17 +48,22 @@ if correo:
                         break
 
             if fila_usuario:
+                # Mostrar los contadores actuales al entrar
                 val1 = worksheet.cell(fila_usuario, 12).value
                 val2 = worksheet.cell(fila_usuario, 13).value
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
 
-                mostrar_panel(punto, total1, [])  # <- Aquí se evita el error
+                st.info(f"📦 Promociones 2+1 TAPPO acumuladas: {total1}")
+                st.info(f"📦 Promociones 3×21 BM1000 acumuladas: {total2}")
 
-                # Inputs de promociones personalizadas
-                promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO?", min_value=0, step=1)
-                promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000?", min_value=0, step=1)
+                # Mostrar panel privado (puede incluir acceso a su carpeta, etc.)
+                mostrar_panel(punto, total1, [])
+
+                # Inputs de nuevas promociones
+                promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
+                promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
                 imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
                 if st.button("Subir promociones"):
@@ -99,12 +104,11 @@ if correo:
                         worksheet.update_cell(fila_usuario, 14, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
                         st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
-                        st.write(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
-                        st.write(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
+                        st.info(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
+                        st.info(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
 
-                        # Volver a mostrar panel actualizado
+                        # Mostrar panel nuevamente con totales actualizados
                         mostrar_panel(punto, nuevo1, [])
-
             else:
                 st.error("No se pudo localizar tu fila en el Excel.")
         except Exception as e:
