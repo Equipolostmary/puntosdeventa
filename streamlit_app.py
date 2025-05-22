@@ -24,23 +24,23 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# Cargar datos
+# Cargar datos desde Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
-sheet = client.open_by_key(st.secrets["sheet_id"])
+sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
-# Función de búsqueda
+# Función para encontrar al usuario
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# Logo
+# Mostrar logo
 st.image("logo.png", use_column_width=True)
 
-# LOGIN
+# Login
 correo = st.text_input("Correo electrónico").strip().lower()
 clave = st.text_input("Contraseña", type="password")
 
@@ -57,7 +57,7 @@ if st.button("Acceder"):
             st.session_state.auth_email = correo
             st.experimental_rerun()
 
-# PANEL
+# Panel privado
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state.auth_email
     user = buscar_usuario(correo_usuario)
@@ -88,7 +88,7 @@ if "auth_email" in st.session_state:
         if key in user:
             st.markdown(f"**{label}:** {user[key]}")
 
-    # Subida
+    # Subida de promociones
     st.subheader("📸 Subir nuevas promociones")
     promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0)
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0)
@@ -116,7 +116,7 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.success(f"Se subieron {ok} imagen(es) y se actualizaron los contadores.")
 
-    # ADMIN
+    # Vista admin
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
         cols = [
