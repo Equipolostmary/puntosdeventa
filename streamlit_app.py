@@ -3,14 +3,13 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-from PIL import Image
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 
-# CONFIGURACIÓN BÁSICA
+# CONFIGURACIÓN DE LA APP
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# ESTILO VISUAL SIMPLE Y LIMPIO
+# ESTILO Y LOGO DESDE GOOGLE DRIVE
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
@@ -40,20 +39,20 @@ st.markdown("""
         font-size: 15px;
     }
     </style>
+
+    <div style='text-align: center; margin-top: 20px; margin-bottom: 40px;'>
+        <img src='https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf' width='220'>
+    </div>
 """, unsafe_allow_html=True)
 
-# LOGO DESDE ARCHIVO LOCAL
-logo = Image.open("/mnt/data/f3545439-58fc-4078-a7db-20df1153a6b0.png")
-st.image(logo, width=220)
-
-# CONFIGURACIÓN GOOGLE SHEET
+# CONFIGURACIÓN DE LA HOJA DE GOOGLE
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# INPUT CORREO
+# FORMULARIO DE ACCESO
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -71,6 +70,7 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
+            # BUSCAR FILA DEL USUARIO
             fila_usuario = None
             for i, row in enumerate(worksheet.get_all_values(), start=1):
                 if i == 1:
@@ -81,12 +81,12 @@ if correo:
 
             if fila_usuario:
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:
+                for col in datos.columns[:12]:  # Hasta "Carpeta privada"
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
-                val1 = worksheet.cell(fila_usuario, 13).value
-                val2 = worksheet.cell(fila_usuario, 14).value
+                val1 = worksheet.cell(fila_usuario, 13).value  # Col M
+                val2 = worksheet.cell(fila_usuario, 14).value  # Col N
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
