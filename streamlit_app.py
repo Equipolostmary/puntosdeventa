@@ -11,16 +11,19 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# 🔒 Ocultar elementos de Streamlit (barra lateral, footer, etc.)
+# ✅ Estilo global: fondo morado, fuente Montserrat y ocultar barra Streamlit
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+    html, body, .main, .block-container, [class*="css"] {
+        background-color: #e6e0f8 !important;
+        font-family: 'Montserrat', sans-serif;
+    }
+
     #MainMenu, header, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
         visibility: hidden !important;
         height: 0px !important;
-    }
-    html, body, [class*="css"] {
-        background-color: #e6e0f8 !important;
-        font-family: 'Montserrat', sans-serif;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -44,7 +47,7 @@ if "auth_email" in st.session_state:
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    # ✅ Barra visible y real
+    # ✅ Barra visible superior
     with st.container():
         st.markdown(
             f"""
@@ -56,10 +59,8 @@ if "auth_email" in st.session_state:
             unsafe_allow_html=True
         )
 
-    # ✅ Logo debajo de barra
+    # ✅ Logo y botón cerrar sesión
     st.image("logo.png", use_container_width=True)
-
-    # ✅ Botón cerrar sesión justo debajo
     if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.rerun()
@@ -142,7 +143,7 @@ if "auth_email" in st.session_state:
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
 
-# 🟣 LOGIN SI NO ESTÁ DENTRO
+# 🔐 LOGIN
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
