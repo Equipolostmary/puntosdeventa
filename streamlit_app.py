@@ -31,9 +31,9 @@ if correo:
 
         mostrar_panel(punto, 0, [])
 
-        # Inputs de promociones
-        promo1 = st.number_input("¿Cuántas promociones tipo 1?", min_value=0, step=1)
-        promo2 = st.number_input("¿Cuántas promociones tipo 2?", min_value=0, step=1)
+        # Inputs de promociones personalizadas
+        promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO?", min_value=0, step=1)
+        promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000?", min_value=0, step=1)
         imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
 
         if st.button("Subir promociones"):
@@ -59,8 +59,8 @@ if correo:
                 fila_usuario = next((i + 1 for i, val in enumerate(correos) if val.strip().lower() == correo), None)
 
                 if fila_usuario:
-                    # Columna L = 12 → Promos tipo 1
-                    # Columna M = 13 → Promos tipo 2
+                    # Columna L = 12 → Promos 2+1 TAPPO
+                    # Columna M = 13 → Promos 3×21 BM1000
                     # Columna N = 14 → Fecha
 
                     val1 = worksheet.cell(fila_usuario, 12).value
@@ -77,8 +77,8 @@ if correo:
                     worksheet.update_cell(fila_usuario, 14, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
                     st.success(f"✅ Se subieron {len(imagenes)} imagen(es) y se actualizaron tus promociones.")
-                    st.write(f"📦 Promos tipo 1 acumuladas: {nuevo1}")
-                    st.write(f"📦 Promos tipo 2 acumuladas: {nuevo2}")
+                    st.write(f"📦 Promociones 2+1 TAPPO acumuladas: {nuevo1}")
+                    st.write(f"📦 Promociones 3×21 BM1000 acumuladas: {nuevo2}")
                 else:
                     st.error("No se pudo localizar tu fila en el Excel.")
     else:
