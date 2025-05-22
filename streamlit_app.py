@@ -6,24 +6,23 @@ from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
 
-# CONFIGURACIÓN STREAMLIT
+# ✅ CONFIGURACIÓN BÁSICA
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# Estilo visual y logo con URLs públicas
+# ✅ ESTILO SIMPLE: fondo azul claro + logo centrado
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
     html, body, [data-testid="stAppViewContainer"] {
-        background: url("https://i.imgur.com/n5ZmYmg.jpg") no-repeat center center fixed;
-        background-size: cover;
+        background-color: #e6f0ff;
         font-family: 'Montserrat', sans-serif;
-        color: #ffffff;
+        color: #0d1b2a;
     }
 
     h1, h2, h3, h4 {
         font-weight: 600;
-        color: #ffffff;
+        color: #06283D;
     }
 
     .stTextInput > div > div > input {
@@ -38,7 +37,6 @@ st.markdown("""
 
     .stMarkdown, .stDataFrame {
         font-size: 15px;
-        color: #ffffff;
     }
 
     #logo-lostmary {
@@ -49,7 +47,7 @@ st.markdown("""
     </style>
 
     <div id="logo-lostmary">
-        <img src="https://i.imgur.com/qGvKZ7m.png" width="220">
+        <img src="https://i.imgur.com/qGvKZ7m.png" width="200">
     </div>
 """, unsafe_allow_html=True)
 
@@ -60,7 +58,7 @@ PESTAÑA = "Registro"
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# Entrada de correo
+# 📩 Entrada de correo
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -78,7 +76,7 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
-            # Buscar la fila correspondiente
+            # Buscar fila exacta
             fila_usuario = None
             for i, row in enumerate(worksheet.get_all_values(), start=1):
                 if i == 1:
@@ -89,7 +87,7 @@ if correo:
 
             if fila_usuario:
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:  # Hasta columna "Carpeta privada"
+                for col in datos.columns[:12]:  # Solo hasta "Carpeta privada"
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
