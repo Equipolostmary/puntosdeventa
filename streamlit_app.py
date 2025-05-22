@@ -1,138 +1,97 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
-from PIL import Image
-from drive_upload import conectar_drive, subir_archivo_a_drive
-from google_sheets import cargar_datos_hoja
 
-# CONFIGURACIÓN DE LA APP
-st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
+# Configuración de la página
+st.set_page_config(page_title="Lost Mary Estanco Club", page_icon=":purple_heart:", layout="wide")
 
-# ESTILO Y LOGO DESDE REPOSITORIO (LOGO LOCAL EN LA RAÍZ)
-st.markdown("""
+# Correo del administrador autorizado
+ADMIN_EMAIL = "equipolostmary@gmail.com"
+
+# Estilos globales (fondo degradado morado, ocultar/mostrar menús, resaltar campo de correo)
+page_style = """
+<style>
+/* Fondo morado degradado para la página principal */
+[data-testid="stAppViewContainer"] > .main {
+    background: linear-gradient(to bottom right, #b5179e, #7209b7);
+}
+/* Hacer transparente el encabezado predeterminado de Streamlit (para ver el fondo) */
+[data-testid="stHeader"] {
+    background: rgba(0,0,0,0);
+}
+/* Resaltar campos de texto (especialmente el de correo electrónico) */
+input[type="text"], input[type="password"] {
+    border: 2px solid white;
+    background-color: rgba(255,255,255,0.8);
+    color: black;
+    box-shadow: 0 0 10px 2px rgba(255,255,255,0.5);
+}
+</style>
+"""
+st.markdown(page_style, unsafe_allow_html=True)
+
+# Ocultar menú y pie de página de Streamlit para usuarios no administradores
+if st.session_state.get("email") != ADMIN_EMAIL:
+    hide_menu_style = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-
-    html, body, [data-testid="stAppViewContainer"] {
-        background-color: #f0f4ff;
-        font-family: 'Montserrat', sans-serif;
-        color: #0d1b2a;
-    }
-
-    h1, h2, h3, h4 {
-        font-weight: 600;
-        color: #06283D;
-    }
-
-    .stTextInput > div > div > input {
-        font-size: 16px;
-    }
-
-    .stButton > button {
-        font-size: 16px;
-        font-weight: 600;
-        padding: 0.5em 1em;
-    }
-
-    .stMarkdown, .stDataFrame {
-        font-size: 15px;
-    }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
     </style>
-""", unsafe_allow_html=True)
+    """
+    st.markdown(hide_menu_style, unsafe_allow_html=True)
 
-# Cargar y mostrar el logo desde el repositorio
-logo = Image.open("logo_lostmary.png")
-st.image(logo, width=220)
+# Inicializar estado de sesión para el correo del usuario
+if "email" not in st.session_state:
+    st.session_state.email = None
 
-# GOOGLE SHEET CONFIG
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
-PESTAÑA = "Registro"
+# Pantalla de inicio de sesión
+if st.session_state.email is None:
+    # Mostrar logo centrado en la pantalla de login
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.image("logo.png", use_column_width=True)  # Asegúrate de tener "logo.png" en el directorio
+    st.subheader("Iniciar sesión")
+    email_input = st.text_input("Correo electrónico:", placeholder="Introduce tu correo")
+    login_button = st.button("Acceder")
+    if login_button:
+        if email_input.strip() == "":
+            st.error("Por favor, ingresa un correo válido.")
+        else:
+            # Guardar el correo en el estado de sesión y recargar la app
+            st.session_state.email = email_input.strip().lower()
+            st.experimental_rerun()
 
-def cargar_datos():
-    return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
-
-# FORMULARIO DE ACCESO
-correo = st.text_input("Correo electrónico").strip().lower()
-
-if correo:
-    datos = cargar_datos()
-
-    if correo in datos["Dirección de correo electrónico"].str.lower().values:
-        punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
-        st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
-
-        try:
-            SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
-            service_account_info = st.secrets["gcp_service_account"]
-            creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
-            client = gspread.authorize(creds)
-            sheet = client.open_by_url(SHEET_URL)
-            worksheet = sheet.worksheet(PESTAÑA)
-
-            fila_usuario = None
-            for i, row in enumerate(worksheet.get_all_values(), start=1):
-                if i == 1:
-                    continue
-                if len(row) >= 2 and row[1].strip().lower() == correo:
-                    fila_usuario = i
-                    break
-
-            if fila_usuario:
-                st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:
-                    valor = punto[col]
-                    st.markdown(f"**{col}:** {valor}")
-
-                val1 = worksheet.cell(fila_usuario, 13).value
-                val2 = worksheet.cell(fila_usuario, 14).value
-
-                total1 = int(val1) if val1 and val1.isnumeric() else 0
-                total2 = int(val2) if val2 and val2.isnumeric() else 0
-
-                st.info(f"📦 Promociones 2+1 TAPPO acumuladas: **{total1}**")
-                st.info(f"📦 Promociones 3×21 BM1000 acumuladas: **{total2}**")
-
-                st.subheader("📸 Subir nuevas promociones")
-                promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
-                promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
-                imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-
-                if st.button("Subir promociones"):
-                    if not imagenes:
-                        st.warning("Debes seleccionar al menos una imagen.")
-                    else:
-                        service = conectar_drive(st.secrets["gcp_service_account"])
-                        carpeta_enlace = punto["Carpeta privada"]
-                        carpeta_id = carpeta_enlace.split("/")[-1]
-
-                        imagenes_ok = 0
-                        for imagen in imagenes:
-                            if not imagen.name or imagen.size == 0:
-                                st.warning("Uno de los archivos está vacío o no tiene nombre.")
-                                continue
-                            try:
-                                subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
-                                imagenes_ok += 1
-                            except Exception as e:
-                                st.error(f"❌ Error al subir {imagen.name}: {e}")
-
-                        if imagenes_ok == 0:
-                            st.stop()
-
-                        nuevo1 = total1 + promo1
-                        nuevo2 = total2 + promo2
-
-                        worksheet.update_cell(fila_usuario, 13, str(nuevo1))
-                        worksheet.update_cell(fila_usuario, 14, str(nuevo2))
-                        worksheet.update_cell(fila_usuario, 15, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-                        st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
-                        st.info(f"📦 2+1 TAPPO acumuladas: **{nuevo1}**")
-                        st.info(f"📦 3×21 BM1000 acumuladas: **{nuevo2}**")
-        except Exception as e:
-            st.error("⚠️ Error al acceder a tu información.")
-            st.text(str(e))
+# Zona privada (después de iniciar sesión)
+else:
+    user_email = st.session_state.email
+    if user_email == ADMIN_EMAIL:
+        # Usuario administrador: mostrar funcionalidad completa
+        # Asegurar que el menú y pie de página predeterminados de Streamlit sean visibles para el admin
+        st.markdown(
+            "<style>#MainMenu {visibility: visible !important;} footer {visibility: visible !important;}</style>",
+            unsafe_allow_html=True
+        )
+        # Encabezado con logo centrado
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            st.image("logo.png", use_column_width=True)
+        # Menú de navegación superior (tabs) para el admin
+        tab1, tab2 = st.tabs(["Zona privada", "Gestión de la app"])
+        with tab1:
+            st.subheader(f"Bienvenido a tu zona privada, **{user_email}**.")
+            st.write("Aquí puedes ver tu información personal y contenido exclusivo para miembros.")
+            # ... (contenido privado del usuario administrador)
+        with tab2:
+            st.subheader("Gestión de la aplicación")
+            st.write("Opciones avanzadas de administración de la app:")
+            st.write("- **Gestión de usuarios**: agregar/eliminar usuarios, restablecer contraseñas, etc.")
+            st.write("- **Gestión de contenidos**: crear o editar promociones, actualizaciones, etc.")
+            st.write("- **Otras configuraciones**: ajustes generales de la aplicación.")
+        # Pie de página personalizado para el admin (opcional)
+        st.markdown(
+            "<hr/><p style='text-align:center; font-size:0.8em;'>© 2025 Lost Mary Estanco Club — Panel de Administración</p>",
+            unsafe_allow_html=True
+        )
     else:
-        st.error("Correo no encontrado. Asegúrate de que esté registrado en el formulario.")
+        # Usuario normal: mostrar solo su zona privada (funcionalidad restringida)
+        st.subheader(f"Bienvenido a tu zona privada, **{user_email}**.")
+        st.write("Aquí puedes ver tu información personal y contenido exclusivo para miembros.")
+        # ... (contenido privado del usuario sin opciones avanzadas)
