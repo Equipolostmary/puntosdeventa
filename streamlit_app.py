@@ -127,7 +127,7 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.success(f"✅ {ok} imagen(es) subidas. Contadores actualizados.")
-                st.experimental_rerun()
+                st.rerun()
 
     # Vista completa para administrador
     if correo_usuario == ADMIN_EMAIL:
