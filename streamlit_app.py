@@ -9,13 +9,9 @@ import time
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Corrección para iniciar/cerrar sesión sin error
-if "iniciar_sesion" in st.session_state:
-    del st.session_state["iniciar_sesion"]
-    st.experimental_rerun()
-
-if "cerrar_sesion" in st.session_state:
-    st.session_state.clear()
+# 🔁 Refrescar tras login/logout
+if st.session_state.get("do_rerun", False):
+    st.session_state["do_rerun"] = False
     st.experimental_rerun()
 
 # Mostrar mensaje después de subida si está en sesión
@@ -56,12 +52,12 @@ def buscar_usuario(email):
 
 st.image("logo.png", use_container_width=True)
 
-# Cierre de sesión (controlado por bandera)
+# 🔐 Cierre de sesión (con marca para refrescar)
 if "auth_email" in st.session_state and st.button("Cerrar sesión"):
-    st.session_state["cerrar_sesion"] = True
-    st.experimental_rerun()
+    st.session_state.clear()
+    st.session_state["do_rerun"] = True
 
-# Login (solo si no ha iniciado sesión)
+# 🔑 Login
 if "auth_email" not in st.session_state:
     correo = st.text_input("Correo electrónico").strip().lower()
     clave = st.text_input("Contraseña", type="password")
@@ -81,8 +77,7 @@ if "auth_email" not in st.session_state:
                     st.error("Contraseña incorrecta.")
                 else:
                     st.session_state.auth_email = correo
-                    st.session_state["iniciar_sesion"] = True
-                    st.experimental_rerun()
+                    st.session_state["do_rerun"] = True
 
 # Área privada
 if "auth_email" in st.session_state:
@@ -92,7 +87,8 @@ if "auth_email" in st.session_state:
     if user is None:
         st.error("Usuario no encontrado.")
         st.session_state.clear()
-        st.experimental_rerun()
+        st.session_state["do_rerun"] = True
+        st.stop()
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
