@@ -11,13 +11,13 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual con barra superior
+# ----------- ESTILOS Y BARRA SUPERIOR FIJA -----------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
 [data-testid="stAppViewContainer"] > .main {
-    background-color: #e6e0f8;
+    background-color: #e6e0f8 !important;
 }
 html, body, [class*="css"] {
     font-family: 'Montserrat', sans-serif;
@@ -25,52 +25,31 @@ html, body, [class*="css"] {
 .stTextInput input, .stButton > button {
     font-weight: 600;
 }
-
-/* Barra superior */
 #barra-superior {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    right: 0;
+    height: 60px;
     background-color: white;
     color: #5a3a8a;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
     font-size: 20px;
     font-weight: bold;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    z-index: 1000;
-}
-#cerrar-sesion {
-    font-size: 14px;
-    font-weight: normal;
-    background-color: #f8f8f8;
-    border: 1px solid #ccc;
-    padding: 5px 12px;
-    border-radius: 6px;
-    cursor: pointer;
+    text-align: center;
+    line-height: 60px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 9999;
 }
 .stApp {
     padding-top: 70px !important;
 }
 </style>
+<div id='barra-superior'>ÁREA PRIVADA</div>
 """, unsafe_allow_html=True)
 
-# Mostrar barra superior HTML
-barra_html = "<div id='barra-superior'>ÁREA PRIVADA"
-if "auth_email" in st.session_state:
-    barra_html += "<form method='post'><button name='logout' type='submit' id='cerrar-sesion'>Cerrar sesión</button></form>"
-barra_html += "</div>"
-st.markdown(barra_html, unsafe_allow_html=True)
+# -------------------------------------------------------
 
-# Cerrar sesión funcional
-if st.session_state.get("logout"):
-    st.session_state.clear()
-    st.rerun()
-
-# Logo de la app
+# Logo
 st.image("logo.png", use_container_width=True)
 
 # Conexión con Google Sheets
@@ -118,6 +97,10 @@ if "auth_email" in st.session_state:
         st.session_state.clear()
         st.rerun()
 
+    if st.button("Cerrar sesión"):
+        st.session_state.clear()
+        st.rerun()
+
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
 
@@ -148,13 +131,11 @@ if "auth_email" in st.session_state:
         st.session_state.pop("subida_ok")
         st.rerun()
 
-    # Claves únicas para reiniciar widgets tras subir
     if "widget_key_promos" not in st.session_state:
         st.session_state.widget_key_promos = str(uuid.uuid4())
     if "widget_key_imgs" not in st.session_state:
         st.session_state.widget_key_imgs = str(uuid.uuid4())
 
-    # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
     promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
