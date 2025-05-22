@@ -16,9 +16,9 @@ def imagen_a_base64(path):
 # CONFIGURACIÓN STREAMLIT
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# Cargar imágenes
-logo_base64 = imagen_a_base64("Captura de pantalla 2025-05-12 131422.png")
-fondo_base64 = imagen_a_base64("Captura de pantalla 2025-05-22 121825.png")
+# Cargar imágenes desde rutas absolutas
+logo_base64 = imagen_a_base64("/mnt/data/Captura de pantalla 2025-05-12 131422.png")
+fondo_base64 = imagen_a_base64("/mnt/data/Captura de pantalla 2025-05-22 121825.png")
 
 # Estilo visual y logo
 st.markdown(f"""
@@ -64,7 +64,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# HOJA GOOGLE
+# CONFIGURACIÓN HOJA GOOGLE
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
@@ -98,12 +98,12 @@ if correo:
 
             if fila_usuario:
                 st.subheader("📋 Información del punto de venta")
-                for col in datos.columns[:12]:
+                for col in datos.columns[:12]:  # Muestra hasta "Carpeta privada"
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
-                val1 = worksheet.cell(fila_usuario, 13).value
-                val2 = worksheet.cell(fila_usuario, 14).value
+                val1 = worksheet.cell(fila_usuario, 13).value  # Columna M
+                val2 = worksheet.cell(fila_usuario, 14).value  # Columna N
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
