@@ -1,4 +1,4 @@
-import streamlit as st
+        st.dataframe(df[cols].fillna(0), use_container_width=True)import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
@@ -24,7 +24,7 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# Cargar datos desde Google Sheets
+# Conexión a Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
@@ -32,30 +32,34 @@ sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
-# Función para encontrar al usuario
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# Mostrar logo
-st.image("logo.png", use_column_width=True)
+# Logo
+st.image("logo.png", use_container_width=True)
+
+# Botón cerrar sesión
+if "auth_email" in st.session_state and st.button("Cerrar sesión"):
+    del st.session_state.auth_email
+    st.experimental_rerun()
 
 # Login
-correo = st.text_input("Correo electrónico").strip().lower()
-clave = st.text_input("Contraseña", type="password")
-
-if st.button("Acceder"):
-    if not correo or not clave:
-        st.warning("Completa ambos campos.")
-    else:
-        user = buscar_usuario(correo)
-        if user is None:
-            st.error("Correo no encontrado.")
-        elif str(user.get("Contraseña", "")).strip() != clave:
-            st.error("Contraseña incorrecta.")
+if "auth_email" not in st.session_state:
+    correo = st.text_input("Correo electrónico").strip().lower()
+    clave = st.text_input("Contraseña", type="password")
+    if st.button("Acceder"):
+        if not correo or not clave:
+            st.warning("Completa ambos campos.")
         else:
-            st.session_state.auth_email = correo
-            st.experimental_rerun()
+            user = buscar_usuario(correo)
+            if user is None:
+                st.error("Correo no encontrado.")
+            elif str(user.get("Contraseña", "")).strip() != clave:
+                st.error("Contraseña incorrecta.")
+            else:
+                st.session_state.auth_email = correo
+                st.experimental_rerun()
 
 # Panel privado
 if "auth_email" in st.session_state:
@@ -64,7 +68,7 @@ if "auth_email" in st.session_state:
 
     if user is None:
         st.error("Usuario no encontrado.")
-        st.session_state.pop("auth_email")
+        del st.session_state.auth_email
         st.stop()
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
@@ -88,7 +92,7 @@ if "auth_email" in st.session_state:
         if key in user:
             st.markdown(f"**{label}:** {user[key]}")
 
-    # Subida de promociones
+    # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
     promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0)
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0)
