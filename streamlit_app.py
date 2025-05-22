@@ -1,144 +1,157 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
-from PIL import Image
-from drive_upload import conectar_drive, subir_archivo_a_drive
-from google_sheets import cargar_datos_hoja
 
-st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
-ADMIN_EMAIL = "equipolostmary@gmail.com"
+try:
+    from google.oauth2 import service_account
+    import gspread
+    # Autenticación con Google Sheets mediante una cuenta de servicio
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", 
+              "https://www.googleapis.com/auth/drive"]
+    creds = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"], scopes=scopes)
+    client = gspread.authorize(creds)
+    # Abrir la hoja de cálculo de Google Sheets por su ID
+    spreadsheet = client.open_by_key(st.secrets["sheet_id"])
+    worksheet = spreadsheet.sheet1  # O usar .worksheet("NombreHoja") si no es la primera
+    data = worksheet.get_all_records()
+    df = pd.DataFrame(data)
+except Exception as e:
+    st.error(f"Error cargando datos desde Google Sheet: {e}")
+    st.stop()
 
+# Configuración de la página y estilo (fondo morado claro y fuente Montserrat)
+st.set_page_config(page_title="Puntos de Venta", page_icon="📊", layout="centered")
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-    html, body, [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #e3aeea, #caa7ff);
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+    [data-testid="stAppViewContainer"] > .main {
+        background-color: #E9D5FF;
+    }
+    html, body, [class*="css"] {
         font-family: 'Montserrat', sans-serif;
-        color: #000000;
-    }
-    h1, h2, h3, h4 {
-        font-weight: 700;
-        color: #1b0032;
-    }
-    .stTextInput > div > div > input {
-        border: 2px solid #6a0dad;
-        background-color: #ffffff;
-        color: #000000;
-        font-weight: 600;
-        box-shadow: 0 0 6px rgba(0,0,0,0.2);
-    }
-    .stButton > button {
-        background-color: #6a0dad;
-        color: white;
-        font-weight: bold;
-        border-radius: 6px;
-        padding: 8px 20px;
-        font-size: 16px;
-    }
-    #MainMenu, footer, header {
-        visibility: hidden;
     }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-st.image("logo.png", use_container_width=True)
+# Mostrar el logo centrado (asegúrate de tener un archivo 'logo.png' en el directorio de la app)
+col1, col2, col3 = st.columns([1, 1, 1])
+with col1:
+    st.write("")  # Columna vacía para centrar
+with col2:
+    st.image("logo.png", use_column_width=True)
+with col3:
+    st.write("")
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
-PESTAÑA = "Registro"
+st.title("Acceso a Puntos de Venta")
 
-def cargar_datos():
-    return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
+# Función auxiliar para encontrar la fila de un usuario por correo electrónico
+def encontrar_usuario_por_correo(email):
+    email = email.strip().lower()
+    # Buscar en la primera columna del DataFrame
+    mask = df[df.columns[0]].astype(str).str.lower() == email
+    if mask.any():
+        return mask
+    # Si no está en la primera columna, buscar en columnas posibles de correo
+    posibles = ["email", "correo", "correo electrónico", "correo electronico"]
+    for col in df.columns:
+        if str(col).lower() in posibles:
+            mask = df[col].astype(str).str.lower() == email
+            if mask.any():
+                return mask
+    # Si no se encontró en ninguna columna, devolver máscara vacía
+    return mask  # (serie booleana de False)
 
-correo = st.text_input("Correo electrónico", placeholder="Introduce tu correo").strip().lower()
+# Inicializar estado de autenticación en la sesión
+if "auth_email" not in st.session_state:
+    st.session_state.auth_email = None
 
-if correo:
-    if st.button("Acceder"):
-        datos = cargar_datos()
-        if correo in datos["Dirección de correo electrónico"].str.lower().values:
-            punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
-            st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
-
-            try:
-                SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
-                service_account_info = st.secrets["gcp_service_account"]
-                creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
-                client = gspread.authorize(creds)
-                sheet = client.open_by_url(SHEET_URL)
-                worksheet = sheet.worksheet(PESTAÑA)
-
-                fila_usuario = None
-                for i, row in enumerate(worksheet.get_all_values(), start=1):
-                    if i == 1:
-                        continue
-                    if len(row) >= 2 and row[1].strip().lower() == correo:
-                        fila_usuario = i
-                        break
-
-                if fila_usuario:
-                    st.subheader("📋 Información del punto de venta")
-
-                    for col in datos.columns:
-                        if "contraseña" not in col.lower() and col != "Última actualización":
-                            valor = punto[col]
-                            st.markdown(f"**{col}:** {valor}")
-
-                    val1 = worksheet.cell(fila_usuario, 13).value
-                    val2 = worksheet.cell(fila_usuario, 14).value
-
-                    total1 = int(val1) if val1 and val1.isnumeric() else 0
-                    total2 = int(val2) if val2 and val2.isnumeric() else 0
-
-                    st.info(f"📦 Promociones 2+1 TAPPO acumuladas: **{total1}**")
-                    st.info(f"📦 Promociones 3×21 BM1000 acumuladas: **{total2}**")
-
-                    st.subheader("📸 Subir nuevas promociones")
-                    promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
-                    promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
-                    imagenes = st.file_uploader("Sube las fotos de los tickets o promociones", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
-
-                    if st.button("Subir promociones"):
-                        if not imagenes:
-                            st.warning("Debes seleccionar al menos una imagen.")
-                        else:
-                            service = conectar_drive(st.secrets["gcp_service_account"])
-                            carpeta_enlace = punto["Carpeta privada"]
-                            carpeta_id = carpeta_enlace.split("/")[-1]
-
-                            imagenes_ok = 0
-                            for imagen in imagenes:
-                                if not imagen.name or imagen.size == 0:
-                                    st.warning("Uno de los archivos está vacío o no tiene nombre.")
-                                    continue
-                                try:
-                                    subir_archivo_a_drive(service, imagen, imagen.name, carpeta_id)
-                                    imagenes_ok += 1
-                                except Exception as e:
-                                    st.error(f"❌ Error al subir {imagen.name}: {e}")
-
-                            if imagenes_ok == 0:
-                                st.stop()
-
-                            nuevo1 = total1 + promo1
-                            nuevo2 = total2 + promo2
-
-                            worksheet.update_cell(fila_usuario, 13, str(nuevo1))
-                            worksheet.update_cell(fila_usuario, 14, str(nuevo2))
-                            worksheet.update_cell(fila_usuario, 15, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-                            st.success(f"✅ Se subieron {imagenes_ok} imagen(es) y se actualizaron tus promociones.")
-                            st.info(f"📦 2+1 TAPPO acumuladas: **{nuevo1}**")
-                            st.info(f"📦 3×21 BM1000 acumuladas: **{nuevo2}**")
-
-                    if correo == ADMIN_EMAIL:
-                        st.subheader("📊 Resumen de promociones por punto de venta")
-                        resumen = datos[["Expendiduría", "Dirección de correo electrónico", datos.columns[12], datos.columns[13], datos.columns[14]]]
-                        resumen.columns = ["Expendiduría", "Correo", "2+1 TAPPO", "3x21 BM1000", "Última actualización"]
-                        resumen = resumen.fillna(0)
-                        st.dataframe(resumen, use_container_width=True)
-            except Exception as e:
-                st.error("⚠️ Error al acceder a tu información.")
-                st.text(str(e))
+# Si el usuario ya está autenticado, mostrar su panel; si no, mostrar formulario de login
+if st.session_state.auth_email:
+    # Usuario autenticado: obtener sus datos
+    user_email = st.session_state.auth_email
+    mask = encontrar_usuario_por_correo(user_email)
+    if not mask.any():
+        # Si el correo ya no existe en la hoja (por ejemplo, fue eliminado)
+        st.warning("Usuario no encontrado. Por favor, inicia sesión de nuevo.")
+        st.session_state.auth_email = None
+        st.experimental_rerun()
+    datos_usuario = df[mask].iloc[0]
+    admin_email = "equipolostmary@gmail.com"
+    if user_email == admin_email:
+        # Panel de administrador
+        st.success("Bienvenido, administrador.")
+        st.subheader("Resumen de todos los puntos")
+        df_display = df.copy()
+        # Ocultar columna de contraseña si existe
+        password_cols = [c for c in df_display.columns if str(c).lower() in ["contraseña", "contrasena", "password"]]
+        if password_cols:
+            df_display.drop(password_cols, axis=1, inplace=True)
+        st.dataframe(df_display)
+    else:
+        # Panel de un usuario normal
+        # Saludo con el nombre si está disponible
+        nombre = None
+        for col in datos_usuario.index:
+            if str(col).lower() in ["nombre", "name"]:
+                nombre = datos_usuario[col]
+                break
+        if nombre:
+            st.success(f"Bienvenido, {nombre}!")
         else:
-            st.error("Correo no encontrado. Asegúrate de que esté registrado en el formulario.")
+            st.success("Bienvenido!")
+        # Mostrar datos personales (excepto contraseña y correo)
+        st.subheader("Tus datos personales")
+        for col, val in datos_usuario.items():
+            col_lower = str(col).lower()
+            if col_lower in ["contraseña", "contrasena", "password", "correo", "correo electrónico", "correo electronico", "email"]:
+                continue  # Saltar contraseña y correo
+            st.write(f"**{col}:** {val}")
+        # Mostrar información de promociones
+        st.subheader("Estado de tus promociones")
+        entregados_tappo = entregados_bm1000 = None
+        falta_tappo = falta_bm1000 = None
+        total_tappo = total_bm1000 = None
+        # Extraer contadores y valores de promociones TAPPO y BM1000
+        for col, val in datos_usuario.items():
+            col_lower = str(col).lower()
+            if "tappo" in col_lower and "entregado" in col_lower:
+                entregados_tappo = val
+            elif "bm1000" in col_lower and "entregado" in col_lower:
+                entregados_bm1000 = val
+            elif "tappo" in col_lower and ("falta" in col_lower or "pendiente" in col_lower):
+                falta_tappo = val
+            elif "bm1000" in col_lower and ("falta" in col_lower or "pendiente" in col_lower):
+                falta_bm1000 = val
+            elif "tappo" in col_lower and ("promo" in col_lower or "total" in col_lower) and total_tappo is None:
+                total_tappo = val
+            elif "bm1000" in col_lower and ("promo" in col_lower or "total" in col_lower) and total_bm1000 is None:
+                total_bm1000 = val
+        # Mostrar totales asignados de promociones (si existen)
+        if total_tappo is not None:
+            st.write(f"**Promoción TAPPO asignada:** {total_tappo}")
+        if total_bm1000 is not None:
+            st.write(f"**Promoción BM1000 asignada:** {total_bm1000}")
+        # Mostrar entregados y faltantes con texto destacado
+        if entregados_tappo is not None:
+            st.markdown(f"**📦 TAPPO entregados: {entregados_tappo}**")
+        if falta_tappo is not None:
+            st.markdown(f"**📦 TAPPO por entregar: {falta_tappo}**")
+        if entregados_bm1000 is not None:
+            st.markdown(f"**📦 BM1000 entregados: {entregados_bm1000}**")
+        if falta_bm1000 is not None:
+            st.markdown(f"**📦 BM1000 por entregar: {falta_bm1000}**")
+else:
+    # Formulario de inicio de sesión
+    correo = st.text_input("Correo electrónico:")
+    login_btn = st.button("Acceder")
+    if login_btn:
+        if correo.strip() == "":
+            st.warning("Por favor, introduce un correo electrónico.")
+        else:
+            mask = encontrar_usuario_por_correo(correo)
+            if not mask.any():
+                st.error("Correo no registrado. Por favor, verifica el email o contacta soporte.")
+            else:
+                # Autenticación exitosa: guardar email en la sesión y recargar la interfaz
+                st.session_state.auth_email = correo.strip().lower()
+                st.experimental_rerun()
