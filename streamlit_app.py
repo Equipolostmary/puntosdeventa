@@ -1,108 +1,97 @@
 import streamlit as st
 import pandas as pd
 import gspread
-from datetime import datetime
 from google.oauth2.service_account import Credentials
-from google_sheets import cargar_datos_hoja
-from drive_upload import conectar_drive, subir_archivo_a_drive
+from PIL import Image
 
-# Configuración de la app
-st.set_page_config(page_title="Área de Puntos Lost Mary", layout="centered")
+# Configuración de página
+st.set_page_config(page_title="Área Privada - Lost Mary", layout="centered")
 
-# Estilos visuales
+# Estilos personalizados
 st.markdown("""
     <style>
-    body {
-        background: linear-gradient(135deg, #e0bbff, #ffcce6);
-        font-family: 'Montserrat', sans-serif;
-    }
-    .stTextInput > div > input {
-        font-size: 18px;
-    }
-    .stButton > button {
-        font-size: 18px;
-        padding: 8px 20px;
-    }
-    .promo-box {
-        background-color: #ffffffdd;
-        padding: 20px;
-        border-radius: 15px;
-        margin-top: 20px;
-    }
-    .promo-header {
-        font-size: 28px;
-        margin-bottom: 10px;
-    }
-    .promo-item {
-        font-size: 20px;
-        margin: 5px 0;
-    }
+        body {
+            background-color: #f3f0ff;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .stTextInput input {
+            background-color: white;
+            color: black;
+        }
+        .stButton button {
+            background-color: #b47bff;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# Logo
-st.image("logo_lostmary.png", width=400)
+# Mostrar logo
+st.image("logo.png", use_column_width=True)
 
-# Formulario de inicio de sesión
-st.header("Iniciar sesión")
-correo = st.text_input("Correo electrónico").strip().lower()
+# Autenticación con Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
+client = gspread.authorize(creds)
+sheet = client.open_by_key(st.secrets["sheet_id"]).worksheet("Registro")
+data = sheet.get_all_records()
+df = pd.DataFrame(data)
+
+# Función auxiliar
+def seguro_a_int(valor):
+    try:
+        return int(valor)
+    except:
+        return 0
+
+# Login
+st.subheader("Iniciar sesión")
+correo = st.text_input("Correo electrónico")
 clave = st.text_input("Contraseña", type="password")
+login_btn = st.button("Acceder")
 
-if st.button("Acceder") or (correo and clave):
-    # Cargar datos
-    SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
-    PESTAÑA = "Registro"
-    datos = cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
+if login_btn and correo:
+    correo = correo.strip().lower()
+    punto = df[df["Dirección de correo electrónico"].str.lower() == correo]
+    if not punto.empty:
+        punto = punto.iloc[0]
+        if str(punto.get("Contraseña", "")).strip() == clave:
+            st.success(f"Bienvenido, {correo}")
+            st.markdown("---")
 
-    if correo in datos["Dirección de correo electrónico"].str.lower().values:
-        punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
-        clave_correcta = str(punto["Contraseña"]).strip()
+            # Mostrar datos personales
+            campos_visibles = [
+                "Marca temporal", "Expendiduría", "Dirección", "Código postal", "POBLACION",
+                "PROVINCIA", "Número de teléfono", "Nombre", "RESPONSABLE DE ZONA", "Carpeta privada"
+            ]
+            for campo in campos_visibles:
+                valor = punto.get(campo, "")
+                st.markdown(f"**{campo}:** {valor}")
 
-        if clave.strip() == clave_correcta:
-            st.success("Sesión iniciada correctamente")
-
-            # Datos personales
-            st.markdown("### 👤 Datos del punto")
-            for etiqueta, columna in [
-                ("Expendiduría", "Expendiduría"),
-                ("Dirección", "Dirección"),
-                ("Código postal", "Código postal"),
-                ("POBLACION", "POBLACION"),
-                ("PROVINCIA", "PROVINCIA"),
-                ("Número de teléfono", "Número de teléfono"),
-                ("Nombre", "Nombre"),
-                ("RESPONSABLE DE ZONA", "RESPONSABLE DE ZONA"),
-            ]:
-                st.markdown(f"**{etiqueta}:** {punto.get(columna, '')}")
-
-            # Carpeta privada
-            st.markdown(f"**Carpeta privada:** [Acceder]({punto['Carpeta privada']})")
-
-            # Promociones
+            # Mostrar estado de promociones
             st.markdown("### 📦 Estado de promociones")
-            st.markdown('<div class="promo-box">', unsafe_allow_html=True)
+            promos = {
+                "TAPPO": {
+                    "asignadas": seguro_a_int(punto.get("Promoción 2+1 TAPPO")),
+                    "entregadas": seguro_a_int(punto.get("Entregados promo TAPPO")),
+                    "faltan": seguro_a_int(punto.get("FALTA POR ENTREGAR TAPPO"))
+                },
+                "BM1000": {
+                    "asignadas": seguro_a_int(punto.get("Promoción 3×21 BM1000")),
+                    "entregadas": seguro_a_int(punto.get("Entregados promo BM1000")),
+                    "faltan": seguro_a_int(punto.get("FALTA POR ENTREGAR BM1000"))
+                }
+            }
 
-            asignado_tappo = int(punto.get("Promoción 2+1 TAPPO", 0))
-            entregado_tappo = int(punto.get("Entregados promo TAPPO", 0))
-            pendiente_tappo = int(punto.get("Falta por entregar TAPPO", 0))
+            for k, promo in promos.items():
+                st.markdown(
+                    f"- **{k} asignados:** {promo['asignadas']} | ✅ Entregados: {promo['entregados']} | ⏳ Pendientes: {promo['faltan']}"
+                )
 
-            asignado_bm = int(punto.get("Promoción 3×21 BM1000", 0))
-            entregado_bm = int(punto.get("Entregados promo BM1000", 0))
-            pendiente_bm = int(punto.get("Falta por entregar BM1000", 0))
-
-            st.markdown(f"""
-                <div class="promo-item">✅ <strong>TAPPO asignados:</strong> {asignado_tappo} | Entregados: {entregado_tappo} | ⏳ Pendientes: {pendiente_tappo}</div>
-                <div class="promo-item">✅ <strong>BM1000 asignados:</strong> {asignado_bm} | Entregados: {entregado_bm} | ⏳ Pendientes: {pendiente_bm}</div>
-            """, unsafe_allow_html=True)
-
-            actualizacion = punto.get("Última actualización", "")
-            st.markdown(f"<div class='promo-item'>🕓 <strong>Última actualización:</strong> {actualizacion}</div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-            # Botón cerrar sesión
-            if st.button("Cerrar sesión"):
-                st.experimental_rerun()
+            ultima = punto.get("Última actualización", "")
+            st.markdown(f"- 🕐 **Última actualización:** {ultima}")
         else:
             st.error("Contraseña incorrecta.")
     else:
-        st.error("Correo no encontrado. Revisa si está bien escrito o si estás registrado.")
+        st.error("Correo no encontrado.")
