@@ -5,61 +5,72 @@ import gspread
 from google.oauth2.service_account import Credentials
 from drive_upload import conectar_drive, subir_archivo_a_drive
 from google_sheets import cargar_datos_hoja
+from PIL import Image
+import base64
 
-# ✅ CONFIGURACIÓN INICIAL
+# Función para convertir imagen a base64
+def imagen_a_base64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+# CONFIGURACIÓN STREAMLIT
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
-# 🎨 DISEÑO: fondo azul claro + fuente Montserrat
-st.markdown("""
+# Cargar imágenes
+logo_base64 = imagen_a_base64("Captura de pantalla 2025-05-12 131422.png")
+fondo_base64 = imagen_a_base64("Captura de pantalla 2025-05-22 121825.png")
+
+# Estilo visual y logo
+st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
-    html, body, [data-testid="stAppViewContainer"] {
-        background-color: #e6f0ff;
+    html, body, [data-testid="stAppViewContainer"] {{
+        background: url("data:image/png;base64,{fondo_base64}") no-repeat center center fixed;
+        background-size: cover;
         font-family: 'Montserrat', sans-serif;
-        color: #0d1b2a;
-    }
+        color: #ffffff;
+    }}
 
-    h1, h2, h3, h4 {
+    h1, h2, h3, h4 {{
         font-weight: 600;
-        color: #06283D;
-    }
+        color: #ffffff;
+    }}
 
-    .stTextInput > div > div > input {
+    .stTextInput > div > div > input {{
         font-size: 16px;
-    }
+    }}
 
-    .stButton > button {
+    .stButton > button {{
         font-size: 16px;
         font-weight: 600;
         padding: 0.5em 1em;
-    }
+    }}
 
-    .stMarkdown, .stDataFrame {
+    .stMarkdown, .stDataFrame {{
         font-size: 15px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+        color: #ffffff;
+    }}
 
-# 🖼 LOGO Lost Mary
-st.markdown("""
-    <div style='text-align: center; margin-top: 20px; margin-bottom: 40px;'>
-        <img src='https://drive.google.com/uc?export=view&id=1ucg7pCm0HWExIe_Gv7gu90EoS3Z31WBf' width='200'>
+    #logo-lostmary {{
+        text-align: center;
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }}
+    </style>
+
+    <div id="logo-lostmary">
+        <img src="data:image/png;base64,{logo_base64}" width="220">
     </div>
 """, unsafe_allow_html=True)
 
-st.title("Área de Puntos de Venta")
-st.write("Introduce tu correo para acceder a tu área personalizada:")
-
-# 📄 CONFIG GOOGLE SHEET
+# HOJA GOOGLE
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
 PESTAÑA = "Registro"
 
-@st.cache_data
 def cargar_datos():
     return cargar_datos_hoja(SHEET_URL, pestaña=PESTAÑA)
 
-# Entrada del correo
 correo = st.text_input("Correo electrónico").strip().lower()
 
 if correo:
@@ -67,11 +78,9 @@ if correo:
 
     if correo in datos["Dirección de correo electrónico"].str.lower().values:
         punto = datos[datos["Dirección de correo electrónico"].str.lower() == correo].iloc[0]
-
         st.success(f"¡Bienvenido, {punto['Expendiduría']}!")
 
         try:
-            # Conexión con Google Sheets
             SCOPE = ["https://www.googleapis.com/auth/spreadsheets"]
             service_account_info = st.secrets["gcp_service_account"]
             creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
@@ -79,24 +88,22 @@ if correo:
             sheet = client.open_by_url(SHEET_URL)
             worksheet = sheet.worksheet(PESTAÑA)
 
-            correos = worksheet.col_values(2)  # Dirección de correo electrónico (col B)
             fila_usuario = None
-
-            for i, val in enumerate(correos):
-                if val and isinstance(val, str) and val.strip().lower() == correo:
-                    fila_usuario = i + 1
+            for i, row in enumerate(worksheet.get_all_values(), start=1):
+                if i == 1:
+                    continue
+                if len(row) >= 2 and row[1].strip().lower() == correo:
+                    fila_usuario = i
                     break
 
             if fila_usuario:
-                # 📊 Mostrar solo hasta "Carpeta privada" (col L / índice 11)
                 st.subheader("📋 Información del punto de venta")
                 for col in datos.columns[:12]:
                     valor = punto[col]
                     st.markdown(f"**{col}:** {valor}")
 
-                # 📦 Contadores de promociones
-                val1 = worksheet.cell(fila_usuario, 13).value  # Col M
-                val2 = worksheet.cell(fila_usuario, 14).value  # Col N
+                val1 = worksheet.cell(fila_usuario, 13).value
+                val2 = worksheet.cell(fila_usuario, 14).value
 
                 total1 = int(val1) if val1 and val1.isnumeric() else 0
                 total2 = int(val2) if val2 and val2.isnumeric() else 0
@@ -104,7 +111,6 @@ if correo:
                 st.info(f"📦 Promociones 2+1 TAPPO acumuladas: **{total1}**")
                 st.info(f"📦 Promociones 3×21 BM1000 acumuladas: **{total2}**")
 
-                # 📤 Subida de nuevas promociones
                 st.subheader("📸 Subir nuevas promociones")
                 promo1 = st.number_input("¿Cuántas promociones 2+1 TAPPO quieres registrar?", min_value=0, step=1)
                 promo2 = st.number_input("¿Cuántas promociones 3×21 BM1000 quieres registrar?", min_value=0, step=1)
@@ -131,13 +137,6 @@ if correo:
 
                         if imagenes_ok == 0:
                             st.stop()
-
-                        # Actualizar contadores
-                        val1 = worksheet.cell(fila_usuario, 13).value
-                        val2 = worksheet.cell(fila_usuario, 14).value
-
-                        total1 = int(val1) if val1 and val1.isnumeric() else 0
-                        total2 = int(val2) if val2 and val2.isnumeric() else 0
 
                         nuevo1 = total1 + promo1
                         nuevo2 = total2 + promo2
