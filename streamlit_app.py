@@ -101,18 +101,24 @@ if "auth_email" in st.session_state:
     - 🕓 **Última actualización:** {user.get('Última actualización', 'N/A')}
     """)
 
-    # Mostrar mensaje después de subida si está en sesión
+    # Mostrar mensaje después de subida
     if st.session_state.get("subida_ok"):
         st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
-        time.sleep(2.5)
+        time.sleep(2)
         st.session_state.pop("subida_ok")
         st.rerun()
 
+    # Inicializar valores por defecto
+    if "Promos 2+1 TAPPO" not in st.session_state:
+        st.session_state["Promos 2+1 TAPPO"] = 0
+    if "Promos 3×21 BM1000" not in st.session_state:
+        st.session_state["Promos 3×21 BM1000"] = 0
+
     # Subida de imágenes
     st.subheader("📸 Subir nuevas promociones")
-    promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0)
-    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0)
-    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png"], accept_multiple_files=True)
+    promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0, key="Promos 2+1 TAPPO")
+    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key="Promos 3×21 BM1000")
+    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key="file_uploader")
 
     if st.button("Subir promociones"):
         if not imagenes:
@@ -132,7 +138,11 @@ if "auth_email" in st.session_state:
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
                 worksheet.update_cell(row, df.columns.get_loc("Última actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                st.session_state.subida_ok = True
+                # Limpiar campos tras subir
+                st.session_state["subida_ok"] = True
+                st.session_state["Promos 2+1 TAPPO"] = 0
+                st.session_state["Promos 3×21 BM1000"] = 0
+                st.session_state["file_uploader"] = None
                 st.rerun()
 
     # Vista completa para administrador
