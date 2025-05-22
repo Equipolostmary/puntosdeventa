@@ -5,13 +5,13 @@ import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
-import uuid  # para claves únicas
+import uuid
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual + barra superior fija
+# Estilo visual con barra superior
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -26,27 +26,52 @@ html, body, [class*="css"] {
     font-weight: 600;
 }
 
-/* Barra fija */
+/* Barra superior */
 #barra-superior {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     background-color: white;
-    color: #7a5da7;
-    text-align: center;
-    font-size: 22px;
+    color: #5a3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    font-size: 20px;
     font-weight: bold;
-    padding: 12px 0;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     z-index: 1000;
+}
+#cerrar-sesion {
+    font-size: 14px;
+    font-weight: normal;
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 .stApp {
     padding-top: 70px !important;
 }
 </style>
-<div id="barra-superior">ÁREA PRIVADA</div>
 """, unsafe_allow_html=True)
+
+# Mostrar barra superior HTML
+barra_html = "<div id='barra-superior'>ÁREA PRIVADA"
+if "auth_email" in st.session_state:
+    barra_html += "<form method='post'><button name='logout' type='submit' id='cerrar-sesion'>Cerrar sesión</button></form>"
+barra_html += "</div>"
+st.markdown(barra_html, unsafe_allow_html=True)
+
+# Cerrar sesión funcional
+if st.session_state.get("logout"):
+    st.session_state.clear()
+    st.rerun()
+
+# Logo de la app
+st.image("logo.png", use_container_width=True)
 
 # Conexión con Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -60,9 +85,6 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
-
-# Logo
-st.image("logo.png", use_container_width=True)
 
 # LOGIN
 if "auth_email" not in st.session_state:
@@ -98,10 +120,6 @@ if "auth_email" in st.session_state:
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
-
-    if st.button("Cerrar sesión"):
-        st.session_state.clear()
-        st.rerun()
 
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
