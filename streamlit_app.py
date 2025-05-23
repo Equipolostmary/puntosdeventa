@@ -59,9 +59,9 @@ def buscar_usuario(email):
 def obtener_urls_imagenes(creds, carpeta_id):
     drive = build('drive', 'v3', credentials=creds)
     query = f"'{carpeta_id}' in parents and mimeType contains 'image/' and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, name)").execute()
+    results = drive.files().list(q=query, fields="files(id, name, webContentLink, permissions)").execute()
     archivos = results.get('files', [])
-    urls = [f"https://drive.google.com/uc?id={f['id']}" for f in archivos]
+    urls = [f"https://drive.google.com/uc?id={f['id']}&export=download" for f in archivos]
     return urls
 
 if "auth_email" in st.session_state:
@@ -166,7 +166,7 @@ if "auth_email" in st.session_state:
         cols = st.columns(3)
         for i, url in enumerate(imagenes_urls):
             with cols[i % 3]:
-                st.image(url, use_column_width=True)
+                st.image(url)
     else:
         st.info("No hay imágenes subidas aún.")
 
