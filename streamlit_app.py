@@ -30,7 +30,10 @@ st.markdown("""
     div[data-testid="stActionButtonIcon"],
     iframe[src*="cloud.streamlit.io"],
     div[role="complementary"],
-    div[role="complementary"] + div {
+    div[role="complementary"] + div,
+    .stDeployButton,
+    .st-emotion-cache-13ejsyy,
+    .viewerBadge_link__qRIco {
         display: none !important;
         visibility: hidden !important;
         height: 0px !important;
@@ -63,25 +66,19 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# 🔐 LOGIN SI ESTÁ LOGUEADO
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    # ✅ Barra visible superior
     with st.container():
-        st.markdown(
-            f"""
-            <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
-                        font-weight:bold;font-size:20px;color:black;border-radius:5px;">
+        st.markdown(f"""
+            <div style='background-color:#bda2e0;padding:15px 10px;text-align:center;
+                        font-weight:bold;font-size:20px;color:black;border-radius:5px;'>
                 ÁREA PRIVADA – {nombre_usuario}
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+        """, unsafe_allow_html=True)
 
-    # ✅ Logo y cerrar sesión
     st.image("logo.png", use_container_width=True)
     if st.button("Cerrar sesión"):
         st.session_state.clear()
@@ -170,7 +167,6 @@ if "auth_email" in st.session_state:
         else:
             st.warning("No se encontraron columnas válidas para mostrar.")
 
-# 🔐 LOGIN SI NO ESTÁ LOGUEADO
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
