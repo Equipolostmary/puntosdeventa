@@ -40,9 +40,9 @@ def buscar_usuario(email):
 def obtener_urls_imagenes(creds, folder_id):
     drive = build('drive', 'v3', credentials=creds)
     query = f"'{folder_id}' in parents and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, mimeType, webContentLink)").execute()
+    results = drive.files().list(q=query, fields="files(id, mimeType)").execute()
     archivos = results.get("files", [])
-    return [f["webContentLink"].replace("&export=download", "") for f in archivos if f.get("mimeType", "").startswith("image/")]
+    return [f"https://drive.google.com/uc?export=view&id={f['id']}" for f in archivos if f.get("mimeType", "").startswith("image/")]
 
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
