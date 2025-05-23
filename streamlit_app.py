@@ -1,19 +1,18 @@
-# streamlit_app.py
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2 import service_account
-from googleapiclient.discovery import build
 from drive_upload import conectar_drive, subir_archivo_a_drive
+from googleapiclient.discovery import build
 import time
 import uuid
-from urllib.parse import urlparse, parse_qs
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
+# Estilo visual global y ocultar elementos
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -21,48 +20,58 @@ st.markdown("""
         background-color: #e6e0f8 !important;
         font-family: 'Montserrat', sans-serif;
     }
-    section[data-testid="stSidebar"], #MainMenu, header, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
+    section[data-testid="stSidebar"],
+    #MainMenu, header, footer,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    div[data-testid="stActionButtonIcon"] {
         display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
+# Conexión a Google Sheets y Google Drive
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
+creds = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
+# Funciones auxiliares
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-def extraer_id_carpeta(url):
-    if "folders" in url:
-        return url.split("/folders/")[-1].split("?")[0]
-    elif "id=" in url:
-        return parse_qs(urlparse(url).query).get("id", [""])[0]
-    return ""
+def obtener_urls_imagenes(service, folder_id):
+    try:
+        drive = build('drive', 'v3', credentials=service)
+        query = f"'{folder_id}' in parents and trashed = false"
+        results = drive.files().list(q=query, fields="files(id, name)").execute()
+        files = results.get('files', [])
+        urls = [f"https://drive.google.com/uc?export=view&id={file['id']}" for file in files]
+        return urls
+    except Exception as e:
+        return []
 
-def obtener_urls_imagenes(creds, folder_id):
-    drive = build('drive', 'v3', credentials=creds)
-    query = f"'{folder_id}' in parents and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, mimeType)").execute()
-    archivos = results.get("files", [])
-    return [f"https://drive.google.com/uc?export=view&id={f['id']}" for f in archivos if f.get("mimeType", "").startswith("image/")]
-
+# Login activo
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
                     font-weight:bold;font-size:20px;color:black;border-radius:5px;">
             ÁREA PRIVADA – {nombre_usuario}
         </div>
-        """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
 
     st.image("logo.png", use_container_width=True)
     if st.button("Cerrar sesión"):
@@ -83,6 +92,7 @@ if "auth_email" in st.session_state:
             st.markdown(f"**{col}:** {user.get(col, '')}")
 
     st.subheader("📦 Estado de promociones")
+
     def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
     tappo_asig = val("Promoción 2+1 TAPPO")
     tappo_ent = val("Entregados promo TAPPO")
@@ -118,8 +128,7 @@ if "auth_email" in st.session_state:
             st.warning("Selecciona al menos una imagen.")
         else:
             service = conectar_drive(st.secrets["gcp_service_account"])
-            carpeta_url = str(user.get("Carpeta privada", "")).strip()
-            carpeta_id = extraer_id_carpeta(carpeta_url)
+            carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
             ok = 0
             for img in imagenes:
                 try:
@@ -131,36 +140,32 @@ if "auth_email" in st.session_state:
                 row = user.name + 2
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
-                worksheet.update_cell(row, df.columns.get_loc("Ultima actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
+                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
-    st.subheader("🏪 Galería de imágenes")
+    st.subheader("📷 Galería de imágenes")
+    service = conectar_drive(st.secrets["gcp_service_account"])
+
     if correo_usuario == ADMIN_EMAIL:
-        usuarios = df["Expendiduría"].tolist()
-        seleccionado = st.selectbox("Seleccionar usuario", usuarios)
+        usuarios_opciones = df["Expendiduría"].tolist()
+        seleccionado = st.selectbox("Seleccionar usuario", usuarios_opciones)
         user_sel = df[df["Expendiduría"] == seleccionado].iloc[0]
     else:
         user_sel = user
 
-    carpeta_url_sel = str(user_sel.get("Carpeta privada", "")).strip()
-    carpeta_id_sel = extraer_id_carpeta(carpeta_url_sel)
-
-    if carpeta_id_sel:
-        try:
-            imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
-            if imagenes_urls:
-                cols = st.columns(3)
-                for i, img_url in enumerate(imagenes_urls):
-                    cols[i % 3].image(img_url)
-            else:
-                st.info("No hay imágenes disponibles en la carpeta.")
-        except Exception as e:
-            st.warning(f"No se pudieron cargar imágenes: {e}")
+    if "Carpeta privada" in user_sel and str(user_sel["Carpeta privada"]).startswith("http"):
+        carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/")[-1]
+        imagenes_urls = obtener_urls_imagenes(service, carpeta_id_sel)
+        cols = st.columns(3)
+        for i, url in enumerate(imagenes_urls):
+            with cols[i % 3]:
+                st.image(url)
     else:
-        st.info("Este usuario aún no tiene carpeta configurada.")
+        st.info("Este usuario aún no tiene carpeta de Drive asignada.")
 
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
@@ -171,6 +176,8 @@ if "auth_email" in st.session_state:
             "Ultima actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
+
+# Pantalla de login
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
