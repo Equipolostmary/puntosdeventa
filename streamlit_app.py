@@ -42,8 +42,9 @@ def buscar_usuario(email):
 def obtener_urls_imagenes(creds, folder_id):
     drive = build('drive', 'v3', credentials=creds)
     query = f"'{folder_id}' in parents and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, name, webContentLink, mimeType)").execute()
-    return [file.get("webContentLink") for file in results.get("files", []) if "image" in file.get("mimeType", "")]
+    results = drive.files().list(q=query, fields="files(id, mimeType)").execute()
+    archivos = results.get("files", [])
+    return [f"https://drive.google.com/uc?id={f['id']}&export=download" for f in archivos if f.get("mimeType", "").startswith("image/")]
 
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
@@ -130,8 +131,7 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
-    # 🏛️ Galería de imágenes
-    st.subheader("🏬 Galería de imágenes")
+    st.subheader("🏪 Galería de imágenes")
     if correo_usuario == ADMIN_EMAIL:
         usuarios = df["Expendiduría"].tolist()
         seleccionado = st.selectbox("Seleccionar usuario", usuarios)
@@ -142,13 +142,15 @@ if "auth_email" in st.session_state:
     carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/folders/")[-1].split("?")[0]
     try:
         imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
-        cols = st.columns(3)
-        for i, img_url in enumerate(imagenes_urls):
-            cols[i % 3].image(img_url)
+        if imagenes_urls:
+            cols = st.columns(3)
+            for i, img_url in enumerate(imagenes_urls):
+                cols[i % 3].image(img_url)
+        else:
+            st.info("No hay imágenes disponibles en la carpeta.")
     except Exception as e:
         st.warning(f"No se pudieron cargar imágenes: {e}")
 
-    # Vista completa solo para el maestro
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
         columnas = [
@@ -158,7 +160,6 @@ if "auth_email" in st.session_state:
             "Ultima actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
-
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
