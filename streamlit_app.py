@@ -1,17 +1,19 @@
+# streamlit_app.py
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
 from google.oauth2 import service_account
+from googleapiclient.discovery import build
 from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
 import uuid
-from googleapiclient.discovery import build
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
+
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo global
+# Estilo visual y ocultar menús
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -19,20 +21,15 @@ st.markdown("""
         background-color: #e6e0f8 !important;
         font-family: 'Montserrat', sans-serif;
     }
-    section[data-testid="stSidebar"], #MainMenu, header, footer,
-    [data-testid="stToolbar"], [data-testid="stDecoration"],
-    div[data-testid="stActionButtonIcon"] {
+    section[data-testid="stSidebar"], #MainMenu, header, footer, [data-testid="stToolbar"], [data-testid="stDecoration"] {
         display: none !important;
-        visibility: hidden !important;
-        height: 0px !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # Conexión con Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"], scopes=scopes)
+creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
@@ -44,41 +41,21 @@ def buscar_usuario(email):
 
 def obtener_urls_imagenes(creds, folder_id):
     drive = build('drive', 'v3', credentials=creds)
-    query = f"'{folder_id}' in parents and mimeType contains 'image/' and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, name, webContentLink)").execute()
-    archivos = results.get('files', [])
-    return [f"https://drive.google.com/uc?id={f['id']}" for f in archivos]
+    query = f"'{folder_id}' in parents and trashed = false"
+    results = drive.files().list(q=query, fields="files(id, name, webContentLink, mimeType)").execute()
+    return [file.get("webContentLink") for file in results.get("files", []) if "image" in file.get("mimeType", "")]
 
-# LOGIN
-if "auth_email" not in st.session_state:
-    st.image("logo.png", use_container_width=True)
-    correo = st.text_input("Correo electrónico").strip().lower()
-    clave = st.text_input("Contraseña", type="password")
-    if st.button("Acceder"):
-        user = buscar_usuario(correo)
-        if not correo or not clave:
-            st.warning("Debes completar ambos campos.")
-        elif user is None:
-            st.error("Correo no encontrado.")
-        else:
-            password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
-            password_introducida = clave.strip().replace(",", "")
-            if password_guardada != password_introducida:
-                st.error("Contraseña incorrecta.")
-            else:
-                st.session_state["auth_email"] = correo
-                st.rerun()
-else:
+if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown(f"""
-    <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
-                font-weight:bold;font-size:20px;color:black;border-radius:5px;">
-        ÁREA PRIVADA – {nombre_usuario}
-    </div>
-    """, unsafe_allow_html=True)
+        <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
+                    font-weight:bold;font-size:20px;color:black;border-radius:5px;">
+            ÁREA PRIVADA – {nombre_usuario}
+        </div>
+        """, unsafe_allow_html=True)
 
     st.image("logo.png", use_container_width=True)
     if st.button("Cerrar sesión"):
@@ -92,15 +69,21 @@ else:
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
     st.subheader("📋 Tus datos personales")
+
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
-        if "correo" not in col.lower() and "contraseña" not in col.lower():
+        if str(col).lower() not in ["contraseña", "correo", "correo electrónico", "dirección de correo electrónico"]:
             st.markdown(f"**{col}:** {user.get(col, '')}")
 
     st.subheader("📦 Estado de promociones")
     def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
-    tappo_asig, tappo_ent, tappo_falt = val("Promoción 2+1 TAPPO"), val("Entregados promo TAPPO"), val("Falta por entregar TAPPO")
-    bm_asig, bm_ent, bm_falt = val("Promoción 3×21 BM1000"), val("Entregados promo BM1000"), val("Falta por entregar BM1000")
+    tappo_asig = val("Promoción 2+1 TAPPO")
+    tappo_ent = val("Entregados promo TAPPO")
+    tappo_falt = val("Falta por entregar TAPPO")
+    bm_asig = val("Promoción 3×21 BM1000")
+    bm_ent = val("Entregados promo BM1000")
+    bm_falt = val("Falta por entregar BM1000")
+
     st.markdown(f"""
     - **TAPPO asignados:** {tappo_asig} | ✅ Entregados: {tappo_ent} | ⏳ Pendientes: {tappo_falt}
     - **BM1000 asignados:** {bm_asig} | ✅ Entregados: {bm_ent} | ⏳ Pendientes: {bm_falt}
@@ -128,7 +111,8 @@ else:
             st.warning("Selecciona al menos una imagen.")
         else:
             service = conectar_drive(st.secrets["gcp_service_account"])
-            carpeta_id = str(user["Carpeta privada"]).split("/")[-1].split("?")[0]
+            carpeta_url = str(user["Carpeta privada"])
+            carpeta_id = carpeta_url.split("/folders/")[-1].split("?")[0]
             ok = 0
             for img in imagenes:
                 try:
@@ -140,30 +124,31 @@ else:
                 row = user.name + 2
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
-                col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
-                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                worksheet.update_cell(row, df.columns.get_loc("Ultima actualización")+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
-    st.subheader("📸 Galería de imágenes")
+    # 🏛️ Galería de imágenes
+    st.subheader("🏬 Galería de imágenes")
     if correo_usuario == ADMIN_EMAIL:
-        user_sel = st.selectbox("Seleccionar usuario", df["Expendiduría"].tolist())
-        user_row = df[df["Expendiduría"] == user_sel].iloc[0]
+        usuarios = df["Expendiduría"].tolist()
+        seleccionado = st.selectbox("Seleccionar usuario", usuarios)
+        user_sel = df[df["Expendiduría"] == seleccionado].iloc[0]
     else:
-        user_row = user
+        user_sel = user
 
+    carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/folders/")[-1].split("?")[0]
     try:
-        carpeta_id_sel = str(user_row["Carpeta privada"]).split("/")[-1].split("?")[0]
         imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
         cols = st.columns(3)
-        for idx, url in enumerate(imagenes_urls):
-            with cols[idx % 3]:
-                st.image(url)
+        for i, img_url in enumerate(imagenes_urls):
+            cols[i % 3].image(img_url)
     except Exception as e:
-        st.warning("No se pudieron cargar las imágenes o la carpeta está vacía.")
+        st.warning(f"No se pudieron cargar imágenes: {e}")
 
+    # Vista completa solo para el maestro
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
         columnas = [
@@ -173,3 +158,24 @@ else:
             "Ultima actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
+
+else:
+    st.image("logo.png", use_container_width=True)
+    correo = st.text_input("Correo electrónico").strip().lower()
+    clave = st.text_input("Contraseña", type="password")
+    if st.button("Acceder"):
+        user = buscar_usuario(correo)
+        if not correo or not clave:
+            st.warning("Debes completar ambos campos.")
+        elif user is None:
+            st.error("Correo no encontrado.")
+        else:
+            password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
+            password_introducida = clave.strip().replace(",", "")
+            if not password_guardada:
+                st.error("No hay contraseña configurada para este usuario.")
+            elif password_guardada != password_introducida:
+                st.error("Contraseña incorrecta.")
+            else:
+                st.session_state["auth_email"] = correo
+                st.rerun()
