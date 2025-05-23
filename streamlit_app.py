@@ -31,24 +31,15 @@ st.markdown("""
     iframe[src*="cloud.streamlit.io"],
     div[role="complementary"],
     div[role="complementary"] + div,
+    .viewerBadge_link__qRIco,
     .stDeployButton,
-    .st-emotion-cache-13ejsyy,
-    .viewerBadge_link__qRIco {
+    .st-emotion-cache-1dp5vir,
+    .st-emotion-cache-13ejsyy {
         display: none !important;
         visibility: hidden !important;
         height: 0px !important;
-    }
-
-    button[data-testid="baseButton"].custom-upload > div {
-        background-color: #c084fc !important;
-        color: white !important;
-        border-radius: 10px;
-        font-weight: bold;
-        padding: 0.5em 1.5em;
-        transition: 0.3s;
-    }
-    button[data-testid="baseButton"].custom-upload:hover > div {
-        background-color: #a855f7 !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -129,7 +120,7 @@ if "auth_email" in st.session_state:
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
     imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
 
-    if st.button("📤 Subir promociones", key="subir_btn", kwargs={"className": "custom-upload"}):
+    if st.button("📤 Subir promociones", key="subir_btn"):
         if not imagenes:
             st.warning("Selecciona al menos una imagen.")
         else:
