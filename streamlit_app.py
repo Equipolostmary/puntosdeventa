@@ -27,10 +27,25 @@ st.markdown("""
     footer,
     [data-testid="stToolbar"],
     [data-testid="stDecoration"],
-    div[data-testid="stActionButtonIcon"] {
+    div[data-testid="stActionButtonIcon"],
+    iframe[src*="cloud.streamlit.io"],
+    div[role="complementary"],
+    div[role="complementary"] + div {
         display: none !important;
         visibility: hidden !important;
         height: 0px !important;
+    }
+
+    button[data-testid="baseButton"].custom-upload > div {
+        background-color: #c084fc !important;
+        color: white !important;
+        border-radius: 10px;
+        font-weight: bold;
+        padding: 0.5em 1.5em;
+        transition: 0.3s;
+    }
+    button[data-testid="baseButton"].custom-upload:hover > div {
+        background-color: #a855f7 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -117,7 +132,7 @@ if "auth_email" in st.session_state:
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
     imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
 
-    if st.button("Subir promociones"):
+    if st.button("📤 Subir promociones", key="subir_btn", kwargs={"className": "custom-upload"}):
         if not imagenes:
             st.warning("Selecciona al menos una imagen.")
         else:
@@ -132,10 +147,10 @@ if "auth_email" in st.session_state:
                     st.error(f"Error al subir {img.name}: {e}")
             if ok:
                 row = user.name + 2
-                worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
-                worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
+                worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO") + 1, str(tappo_asig + promo1))
+                worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000") + 1, str(bm_asig + promo2))
                 col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
-                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion) + 1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
@@ -149,7 +164,11 @@ if "auth_email" in st.session_state:
             "Falta por entregar TAPPO", "Falta por entregar BM1000",
             "Ultima actualización"
         ]
-        st.dataframe(df[columnas].fillna(0), use_container_width=True)
+        columnas_existentes = [col for col in columnas if col in df.columns]
+        if columnas_existentes:
+            st.dataframe(df[columnas_existentes].fillna(0), use_container_width=True)
+        else:
+            st.warning("No se encontraron columnas válidas para mostrar.")
 
 # 🔐 LOGIN SI NO ESTÁ LOGUEADO
 else:
