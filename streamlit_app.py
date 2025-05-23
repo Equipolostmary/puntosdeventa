@@ -12,7 +12,6 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# ✅ Estilo global: fondo morado, fuente Montserrat y ocultar todo lo innecesario
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -45,7 +44,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 🔗 Conexión a Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -58,8 +56,8 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-def obtener_urls_imagenes(service, carpeta_id):
-    drive = build('drive', 'v3', credentials=service)
+def obtener_urls_imagenes(creds, carpeta_id):
+    drive = build('drive', 'v3', credentials=creds)
     query = f"'{carpeta_id}' in parents and mimeType contains 'image/' and trashed = false"
     results = drive.files().list(q=query, fields="files(id, name)").execute()
     archivos = results.get('files', [])
@@ -154,17 +152,15 @@ if "auth_email" in st.session_state:
                 st.rerun()
 
     st.subheader("🖼 Galería de imágenes")
-    service = conectar_drive(st.secrets["gcp_service_account"])
-
     if correo_usuario == ADMIN_EMAIL:
         nombres = df["Expendiduría"].tolist()
         seleccionado = st.selectbox("Seleccionar usuario", nombres)
         user_sel = df[df["Expendiduría"] == seleccionado].iloc[0]
         carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/")[-1]
-        imagenes_urls = obtener_urls_imagenes(service, carpeta_id_sel)
+        imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
     else:
         carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-        imagenes_urls = obtener_urls_imagenes(service, carpeta_id)
+        imagenes_urls = obtener_urls_imagenes(creds, carpeta_id)
 
     if imagenes_urls:
         cols = st.columns(3)
