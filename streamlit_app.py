@@ -15,12 +15,10 @@ ADMIN_EMAIL = "equipolostmary@gmail.com"
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-
     html, body, .block-container, .stApp, .main {
         background-color: #e6e0f8 !important;
         font-family: 'Montserrat', sans-serif;
     }
-
     section[data-testid="stSidebar"],
     #MainMenu,
     header,
@@ -56,13 +54,16 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-def obtener_urls_imagenes(creds, carpeta_id):
-    drive = build('drive', 'v3', credentials=creds)
-    query = f"'{carpeta_id}' in parents and mimeType contains 'image/' and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, name, webContentLink, permissions)").execute()
-    archivos = results.get('files', [])
-    urls = [f"https://drive.google.com/uc?id={f['id']}&export=download" for f in archivos]
-    return urls
+def obtener_urls_imagenes(service_account_creds, carpeta_id):
+    try:
+        service = build('drive', 'v3', credentials=service_account_creds)
+        query = f"'{carpeta_id}' in parents and mimeType contains 'image/' and trashed = false"
+        results = service.files().list(q=query, fields="files(id)").execute()
+        archivos = results.get('files', [])
+        urls = [f"https://drive.google.com/uc?id={f['id']}&export=download" for f in archivos]
+        return urls
+    except Exception as e:
+        return []
 
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
@@ -168,7 +169,7 @@ if "auth_email" in st.session_state:
             with cols[i % 3]:
                 st.image(url)
     else:
-        st.info("No hay imágenes subidas aún.")
+        st.info("No hay imágenes subidas aún o no se pudieron cargar.")
 
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
