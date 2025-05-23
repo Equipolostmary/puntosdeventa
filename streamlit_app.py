@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
 import uuid
+from urllib.parse import urlparse, parse_qs
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
@@ -36,6 +37,13 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
+
+def extraer_id_carpeta(url):
+    if "folders" in url:
+        return url.split("/folders/")[-1].split("?")[0]
+    elif "id=" in url:
+        return parse_qs(urlparse(url).query).get("id", [""])[0]
+    return ""
 
 def obtener_urls_imagenes(creds, folder_id):
     drive = build('drive', 'v3', credentials=creds)
@@ -111,7 +119,7 @@ if "auth_email" in st.session_state:
         else:
             service = conectar_drive(st.secrets["gcp_service_account"])
             carpeta_url = str(user.get("Carpeta privada", "")).strip()
-            carpeta_id = carpeta_url.split("/folders/")[-1].split("?")[0] if "/folders/" in carpeta_url else ""
+            carpeta_id = extraer_id_carpeta(carpeta_url)
             ok = 0
             for img in imagenes:
                 try:
@@ -138,8 +146,9 @@ if "auth_email" in st.session_state:
         user_sel = user
 
     carpeta_url_sel = str(user_sel.get("Carpeta privada", "")).strip()
-    if "/folders/" in carpeta_url_sel:
-        carpeta_id_sel = carpeta_url_sel.split("/folders/")[-1].split("?")[0]
+    carpeta_id_sel = extraer_id_carpeta(carpeta_url_sel)
+
+    if carpeta_id_sel:
         try:
             imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
             if imagenes_urls:
