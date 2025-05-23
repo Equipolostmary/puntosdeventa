@@ -13,7 +13,6 @@ st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -27,7 +26,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
@@ -42,9 +40,9 @@ def buscar_usuario(email):
 def obtener_urls_imagenes(creds, folder_id):
     drive = build('drive', 'v3', credentials=creds)
     query = f"'{folder_id}' in parents and trashed = false"
-    results = drive.files().list(q=query, fields="files(id, mimeType)").execute()
+    results = drive.files().list(q=query, fields="files(id, mimeType, webContentLink)").execute()
     archivos = results.get("files", [])
-    return [f"https://drive.google.com/uc?id={f['id']}&export=download" for f in archivos if f.get("mimeType", "").startswith("image/")]
+    return [f["webContentLink"].replace("&export=download", "") for f in archivos if f.get("mimeType", "").startswith("image/")]
 
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
