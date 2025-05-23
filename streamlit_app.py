@@ -110,8 +110,8 @@ if "auth_email" in st.session_state:
             st.warning("Selecciona al menos una imagen.")
         else:
             service = conectar_drive(st.secrets["gcp_service_account"])
-            carpeta_url = str(user["Carpeta privada"])
-            carpeta_id = carpeta_url.split("/folders/")[-1].split("?")[0]
+            carpeta_url = str(user.get("Carpeta privada", "")).strip()
+            carpeta_id = carpeta_url.split("/folders/")[-1].split("?")[0] if "/folders/" in carpeta_url else ""
             ok = 0
             for img in imagenes:
                 try:
@@ -137,17 +137,21 @@ if "auth_email" in st.session_state:
     else:
         user_sel = user
 
-    carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/folders/")[-1].split("?")[0]
-    try:
-        imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
-        if imagenes_urls:
-            cols = st.columns(3)
-            for i, img_url in enumerate(imagenes_urls):
-                cols[i % 3].image(img_url)
-        else:
-            st.info("No hay imágenes disponibles en la carpeta.")
-    except Exception as e:
-        st.warning(f"No se pudieron cargar imágenes: {e}")
+    carpeta_url_sel = str(user_sel.get("Carpeta privada", "")).strip()
+    if "/folders/" in carpeta_url_sel:
+        carpeta_id_sel = carpeta_url_sel.split("/folders/")[-1].split("?")[0]
+        try:
+            imagenes_urls = obtener_urls_imagenes(creds, carpeta_id_sel)
+            if imagenes_urls:
+                cols = st.columns(3)
+                for i, img_url in enumerate(imagenes_urls):
+                    cols[i % 3].image(img_url)
+            else:
+                st.info("No hay imágenes disponibles en la carpeta.")
+        except Exception as e:
+            st.warning(f"No se pudieron cargar imágenes: {e}")
+    else:
+        st.info("Este usuario aún no tiene carpeta configurada.")
 
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
