@@ -4,15 +4,15 @@ from datetime import datetime
 import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
-from googleapiclient.discovery import build
 import time
 import uuid
+from googleapiclient.discovery import build
 
 st.set_page_config(page_title="Lost Mary - Área de Puntos", layout="centered")
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Estilo visual global y ocultar elementos
+# ✅ Estilo global
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -21,7 +21,9 @@ st.markdown("""
         font-family: 'Montserrat', sans-serif;
     }
     section[data-testid="stSidebar"],
-    #MainMenu, header, footer,
+    #MainMenu,
+    header,
+    footer,
     [data-testid="stToolbar"],
     [data-testid="stDecoration"],
     div[data-testid="stActionButtonIcon"] {
@@ -32,32 +34,28 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Conexión a Google Sheets y Google Drive
-scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+# 🔗 Conexión a Google Sheets
+gscopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"], scopes=scopes)
+    st.secrets["gcp_service_account"], scopes=gscopes)
 client = gspread.authorize(creds)
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
-# Funciones auxiliares
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
 def obtener_urls_imagenes(service, folder_id):
-    try:
-        drive = build('drive', 'v3', credentials=service)
-        query = f"'{folder_id}' in parents and trashed = false"
-        results = drive.files().list(q=query, fields="files(id, name)").execute()
-        files = results.get('files', [])
-        urls = [f"https://drive.google.com/uc?export=view&id={file['id']}" for file in files]
-        return urls
-    except Exception as e:
-        return []
+    drive = build('drive', 'v3', credentials=service)
+    query = f"'{folder_id}' in parents and mimeType contains 'image/' and trashed = false"
+    results = drive.files().list(q=query, fields="files(id, name)").execute()
+    files = results.get('files', [])
+    urls = [f"https://drive.google.com/uc?id={file['id']}" for file in files]
+    return urls
 
-# Login activo
+# 🔐 LOGIN SI ESTÁ LOGUEADO
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -128,7 +126,7 @@ if "auth_email" in st.session_state:
             st.warning("Selecciona al menos una imagen.")
         else:
             service = conectar_drive(st.secrets["gcp_service_account"])
-            carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+            carpeta_id = str(user["Carpeta privada"]).split("/")[-1] if user["Carpeta privada"] else None
             ok = 0
             for img in imagenes:
                 try:
@@ -147,25 +145,17 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
-    st.subheader("📷 Galería de imágenes")
-    service = conectar_drive(st.secrets["gcp_service_account"])
-
-    if correo_usuario == ADMIN_EMAIL:
-        usuarios_opciones = df["Expendiduría"].tolist()
-        seleccionado = st.selectbox("Seleccionar usuario", usuarios_opciones)
-        user_sel = df[df["Expendiduría"] == seleccionado].iloc[0]
-    else:
-        user_sel = user
-
-    if "Carpeta privada" in user_sel and str(user_sel["Carpeta privada"]).startswith("http"):
-        carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/")[-1]
-        imagenes_urls = obtener_urls_imagenes(service, carpeta_id_sel)
+    # 🖼️ Galería
+    st.subheader("🖼️ Galería de imágenes")
+    try:
+        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+        service = conectar_drive(st.secrets["gcp_service_account"])
+        urls = obtener_urls_imagenes(service, carpeta_id)
         cols = st.columns(3)
-        for i, url in enumerate(imagenes_urls):
-            with cols[i % 3]:
-                st.image(url)
-    else:
-        st.info("Este usuario aún no tiene carpeta de Drive asignada.")
+        for i, url in enumerate(urls):
+            cols[i % 3].image(url)
+    except Exception as e:
+        st.warning("No se pudieron cargar imágenes.")
 
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
@@ -177,7 +167,6 @@ if "auth_email" in st.session_state:
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
 
-# Pantalla de login
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
