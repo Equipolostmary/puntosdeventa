@@ -4,6 +4,7 @@ from datetime import datetime
 import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
+from googleapiclient.discovery import build
 import time
 import uuid
 
@@ -56,6 +57,14 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
+
+def obtener_urls_imagenes(service, carpeta_id):
+    drive = build('drive', 'v3', credentials=service)
+    query = f"'{carpeta_id}' in parents and mimeType contains 'image/' and trashed = false"
+    results = drive.files().list(q=query, fields="files(id, name)").execute()
+    archivos = results.get('files', [])
+    urls = [f"https://drive.google.com/uc?id={f['id']}" for f in archivos]
+    return urls
 
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
@@ -143,6 +152,27 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
+
+    st.subheader("🖼 Galería de imágenes")
+    service = conectar_drive(st.secrets["gcp_service_account"])
+
+    if correo_usuario == ADMIN_EMAIL:
+        nombres = df["Expendiduría"].tolist()
+        seleccionado = st.selectbox("Seleccionar usuario", nombres)
+        user_sel = df[df["Expendiduría"] == seleccionado].iloc[0]
+        carpeta_id_sel = str(user_sel["Carpeta privada"]).split("/")[-1]
+        imagenes_urls = obtener_urls_imagenes(service, carpeta_id_sel)
+    else:
+        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+        imagenes_urls = obtener_urls_imagenes(service, carpeta_id)
+
+    if imagenes_urls:
+        cols = st.columns(3)
+        for i, url in enumerate(imagenes_urls):
+            with cols[i % 3]:
+                st.image(url, use_column_width=True)
+    else:
+        st.info("No hay imágenes subidas aún.")
 
     if correo_usuario == ADMIN_EMAIL:
         st.subheader("📊 Vista completa de todos los puntos")
