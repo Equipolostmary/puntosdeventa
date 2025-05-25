@@ -5,14 +5,14 @@ from mimetypes import guess_type
 import io
 import streamlit as st
 
-# Conectar con Google Drive usando secrets de Streamlit
+# Conexión a Google Drive usando los secrets de Streamlit
 def conectar_drive(secret_dict):
     SCOPES = ["https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(secret_dict, scopes=SCOPES)
     service = build("drive", "v3", credentials=creds)
     return service
 
-# Subir archivo a Drive en una carpeta concreta
+# Subida genérica de archivo
 def subir_archivo_a_drive(service, archivo, nombre_archivo, carpeta_id):
     mime_type = guess_type(nombre_archivo)[0] or "application/octet-stream"
 
@@ -31,12 +31,14 @@ def subir_archivo_a_drive(service, archivo, nombre_archivo, carpeta_id):
 
     return archivo_subido.get("id")
 
-# Función preparada para subir desde Streamlit a carpeta privada
+# Función directa para usar desde la app con archivo de Streamlit
 def subir_archivo_a_drive_con_idcarpeta(file_streamlit, carpeta_id):
+    # Conectarse con los secrets de Streamlit
     service = conectar_drive(st.secrets["gcp_service_account"])
 
-    # Convertir archivo a bytes
+    # Convertir archivo subido en bytes
     file_bytes = io.BytesIO(file_streamlit.read())
     file_bytes.seek(0)
 
+    # Subir a Drive
     subir_archivo_a_drive(service, file_bytes, file_streamlit.name, carpeta_id)
