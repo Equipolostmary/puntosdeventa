@@ -128,4 +128,43 @@ if "email" in st.session_state:
                     st.error(f"Error al subir {img.name}: {e}")
             if ok:
                 row = user.name + 2
-                worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tapp
+                worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
+                worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
+                col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
+                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                st.session_state["subida_ok"] = True
+                st.session_state.widget_key_promos = str(uuid.uuid4())
+                st.session_state.widget_key_imgs = str(uuid.uuid4())
+                st.rerun()
+
+    if correo_usuario == ADMIN_EMAIL:
+        st.subheader("📈 Vista completa de todos los puntos")
+        columnas = [
+            "Expendiduría", "Dirección de correo electrónico", "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",
+            "Entregados promo TAPPO", "Entregados promo BM1000",
+            "Falta por entregar TAPPO", "Falta por entregar BM1000",
+            "Ultima actualización"
+        ]
+        st.dataframe(df[columnas].fillna(0), use_container_width=True)
+
+else:
+    st.image("logo.png", use_container_width=True)
+    correo = st.text_input("Correo electrónico").strip().lower()
+    clave = st.text_input("Contraseña", type="password")
+    if st.button("Acceder"):
+        user = buscar_usuario(correo)
+        if not correo or not clave:
+            st.warning("Debes completar ambos campos.")
+        elif user is None:
+            st.error("Correo no encontrado.")
+        else:
+            password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
+            password_introducida = clave.strip().replace(",", "")
+            if not password_guardada:
+                st.error("No hay contraseña configurada para este usuario.")
+            elif password_guardada != password_introducida:
+                st.error("Contraseña incorrecta.")
+            else:
+                st.session_state["auth_email"] = correo
+                st.session_state["email"] = correo
+                st.rerun()
