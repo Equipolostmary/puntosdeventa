@@ -36,8 +36,6 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
-
-# --- FIN PARTE 1 ---
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -125,8 +123,6 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
-
-# --- FIN PARTE 2 ---
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
@@ -162,7 +158,10 @@ if "auth_email" in st.session_state:
                 col_destino = "VENTAS MAYO" if mes == "Mayo" else "VENTAS JUNIO"
                 row = user.name + 2
                 col_index = df.columns.get_loc(col_destino) + 1
-                worksheet.update_cell(row, col_index, str(cantidad))
+
+                valor_anterior = user.get(col_destino, 0)
+                suma = int(valor_anterior) + int(cantidad) if str(valor_anterior).isdigit() else cantidad
+                worksheet.update_cell(row, col_index, str(suma))
 
                 match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
                 carpeta_id = match.group(1) if match else None
@@ -179,18 +178,18 @@ if "auth_email" in st.session_state:
             except Exception as e:
                 st.error(f"Error al subir ventas: {e}")
 
-    # RESUMEN MAESTRO SOLO PARA ADMINISTRADOR
+    # 📊 Resumen visible solo para administrador
     if correo_usuario == ADMIN_EMAIL:
         st.markdown("---")
         st.subheader("🗂️ Resumen maestro de puntos de venta")
-
-        columnas_maestras = [
+        columnas_deseadas = [
             "Dirección de correo electrónico", "Contraseña",
             "VENTAS MARZO", "VENTAS ABRIL",
             "OBJETIVO", "VENTAS MAYO", "VENTAS JUNIO"
         ]
-        df_filtrado = df[columnas_maestras].fillna("")
-        st.dataframe(df_filtrado, use_container_width=True)
+        columnas_existentes = [c for c in columnas_deseadas if c in df.columns]
+        resumen_df = df[columnas_existentes].fillna("")
+        st.dataframe(resumen_df, use_container_width=True)
 
 else:
     st.image("logo.png", use_container_width=True)
