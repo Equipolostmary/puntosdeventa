@@ -26,7 +26,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Conexión a Google
+# Conectar con Google
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -135,7 +135,6 @@ if "auth_email" in st.session_state:
             "Ultima actualización"
         ]
         st.dataframe(df[columnas].fillna(0), use_container_width=True)
-    # === INCENTIVO DE VENTAS ===
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
@@ -143,10 +142,10 @@ if "auth_email" in st.session_state:
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
     df_ventas.columns = df_ventas.columns.str.strip().str.upper()
-    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.replace(" ", "")
+    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.replace(" ", "").str.strip()
     df_ventas = df_ventas.fillna(method="ffill")
 
-    telefono_usuario = str(user.get("Teléfono")).replace(" ", "")
+    telefono_usuario = str(user.get("Teléfono")).replace(" ", "").strip()
     fila_usuario = df_ventas[df_ventas["TELÉFONO"] == telefono_usuario]
 
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
@@ -154,12 +153,13 @@ if "auth_email" in st.session_state:
     fila_index = None
 
     if not fila_usuario.empty:
+        row_data = fila_usuario.iloc[0]
         fila_index = fila_usuario.index[0] + 2
-        ventas_marzo = fila_usuario["MARZO"].values[0]
-        ventas_abril = fila_usuario["ABRIL"].values[0]
-        ventas_mayo = fila_usuario["MAYO"].values[0]
-        ventas_junio = fila_usuario["JUNIO"].values[0]
-        incentivo_texto = fila_usuario.get("OBJETIVOS Y COMPENSACIONES", ["No asignado"]).values[0]
+        incentivo_texto = row_data.get("OBJETIVOS Y COMPENSACIONES", "No asignado")
+        ventas_marzo = row_data.get("MARZO", "No disponible")
+        ventas_abril = row_data.get("ABRIL", "No disponible")
+        ventas_mayo = row_data.get("MAYO", "No disponible")
+        ventas_junio = row_data.get("JUNIO", "No disponible")
 
     st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
     st.markdown(f"**📊 Marzo:** {ventas_marzo}")
@@ -183,8 +183,8 @@ if "auth_email" in st.session_state:
     if enviar:
         try:
             if fila_index:
-                col = 15 if mes == "Mayo" else 16
-                ventas_sheet.update_cell(fila_index, col, cantidad)
+                col_index = df_ventas.columns.get_loc(mes.upper()) + 1
+                ventas_sheet.update_cell(fila_index, col_index, cantidad)
 
             if "Carpeta privada" in user:
                 match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
