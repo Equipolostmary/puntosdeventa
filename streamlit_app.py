@@ -8,6 +8,7 @@ import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 
+# Estilo visual
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -29,6 +30,7 @@ creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 
+# Registro general de usuarios
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
@@ -88,17 +90,23 @@ if "email" in st.session_state:
 
     if st.button("Subir promociones"):
         if imagenes:
-            service = conectar_drive(st.secrets["gcp_service_account"])
-            carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-            for img in imagenes:
-                subir_archivo_a_drive(service, img, img.name, carpeta_id)
-            row = user.name + 2
-            worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
-            worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
-            col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
-            worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            st.success("✅ Imágenes subidas correctamente.")
-            st.experimental_rerun()
+            try:
+                service = conectar_drive(st.secrets["gcp_service_account"])
+                carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+                for img in imagenes:
+                    subir_archivo_a_drive(service, img, img.name, carpeta_id)
+                row = user.name + 2
+                worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
+                worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
+                col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
+                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                st.success("✅ Promociones subidas correctamente.")
+                st.session_state["promo1"] = 0
+                st.session_state["promo2"] = 0
+                st.session_state["imgpromo"] = None
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al subir promociones: {e}")
         else:
             st.warning("Selecciona al menos una imagen.")
     # === INCENTIVO VENTAS ===
@@ -108,6 +116,7 @@ if "email" in st.session_state:
     ventas_sheet = client.open_by_key("1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0").worksheet("General")
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
+    df_ventas.columns = df_ventas.columns.str.strip().str.upper()
     df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.strip()
 
     telefono_usuario = str(user.get("Teléfono")).strip()
@@ -123,12 +132,7 @@ if "email" in st.session_state:
         ventas_abril = fila_usuario["ABRIL"].values[0]
         ventas_mayo = fila_usuario["MAYO"].values[0]
         ventas_junio = fila_usuario["JUNIO"].values[0]
-        if "OBJETIVOS Y COMPENSACIONES" in fila_usuario.columns:
-            incentivo_texto = fila_usuario["OBJETIVOS Y COMPENSACIONES"].values[0]
-        elif "OBJETIVO" in fila_usuario.columns:
-            incentivo_texto = fila_usuario["OBJETIVO"].values[0]
-        elif "K" in fila_usuario.columns:
-            incentivo_texto = fila_usuario["K"].values[0]
+        incentivo_texto = fila_usuario.get("OBJETIVOS Y COMPENSACIONES", fila_usuario.get("K", ["No asignado"])).values[0]
 
     st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
     st.markdown(f"**📊 Marzo:** {ventas_marzo}")
@@ -145,22 +149,25 @@ if "email" in st.session_state:
         enviar = st.form_submit_button("Enviar")
 
     if enviar:
-        if fila_index:
-            col = 15 if mes == "Mayo" else 16
-            ventas_sheet.update_cell(fila_index, col, cantidad)
+        try:
+            if fila_index:
+                col = 15 if mes == "Mayo" else 16
+                ventas_sheet.update_cell(fila_index, col, cantidad)
 
-        if "Carpeta privada" in user:
-            match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
-            carpeta_id = match.group(1) if match else None
-            if carpeta_id:
-                service = conectar_drive(st.secrets["gcp_service_account"])
-                for archivo in fotos:
-                    subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+            if "Carpeta privada" in user:
+                match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                carpeta_id = match.group(1) if match else None
+                if carpeta_id:
+                    service = conectar_drive(st.secrets["gcp_service_account"])
+                    for archivo in fotos:
+                        subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
-        st.success("✅ Ventas enviadas correctamente.")
-        st.session_state["venta"] = 0
-        st.session_state["imgventas"] = None
-        st.experimental_rerun()
+            st.success("✅ Ventas enviadas correctamente.")
+            st.session_state["venta"] = 0
+            st.session_state["imgventas"] = None
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error al subir ventas: {e}")
 
 else:
     st.image("logo.png", use_container_width=True)
