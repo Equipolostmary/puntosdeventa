@@ -4,8 +4,6 @@ from datetime import datetime
 import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
-import time
-import uuid
 import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
@@ -17,11 +15,9 @@ st.markdown("""
         background-color: #e6e0f8 !important;
         font-family: 'Montserrat', sans-serif;
     }
-    section[data-testid="stSidebar"], #MainMenu, header, footer, [data-testid="stToolbar"],
-    [data-testid="stDecoration"], div[data-testid="stActionButtonIcon"] {
+    section[data-testid="stSidebar"], #MainMenu, header, footer {
         display: none !important;
         visibility: hidden !important;
-        height: 0px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -39,7 +35,6 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
-
 if "email" in st.session_state:
     correo_usuario = st.session_state["email"]
     user = buscar_usuario(correo_usuario)
@@ -51,12 +46,9 @@ if "email" in st.session_state:
 
     nombre_usuario = user.get("Expendiduría", correo_usuario)
 
-    st.markdown(
-        f"<div style='background-color:#bda2e0;padding:15px 10px;text-align:center;"
-        f"font-weight:bold;font-size:20px;color:black;border-radius:5px;'>"
-        f"ÁREA PRIVADA – {nombre_usuario}</div>", unsafe_allow_html=True
-    )
-
+    st.markdown(f"<div style='background-color:#bda2e0;padding:15px 10px;text-align:center;"
+                f"font-weight:bold;font-size:20px;color:black;border-radius:5px;'>"
+                f"ÁREA PRIVADA – {nombre_usuario}</div>", unsafe_allow_html=True)
     st.image("logo.png", use_container_width=True)
 
     if st.button("Cerrar sesión"):
@@ -64,11 +56,11 @@ if "email" in st.session_state:
         st.rerun()
 
     st.success(f"¡Bienvenido, {nombre_usuario}!")
-
     st.subheader("📋 Tus datos personales")
+
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
-        if str(col).lower() not in ["contraseña", "correo", "correo electrónico", "dirección de correo electrónico"]:
+        if "contraseña" not in col.lower():
             st.markdown(f"**{col}:** {user.get(col, '')}")
 
     # === PROMOCIONES ===
@@ -95,24 +87,21 @@ if "email" in st.session_state:
     imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True)
 
     if st.button("Subir promociones"):
-        if not imagenes:
-            st.warning("Selecciona al menos una imagen.")
-        else:
+        if imagenes:
             service = conectar_drive(st.secrets["gcp_service_account"])
             carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
             for img in imagenes:
                 subir_archivo_a_drive(service, img, img.name, carpeta_id)
-
             row = user.name + 2
             worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
             worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
             col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
             worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
             st.success("✅ Imágenes subidas y contadores actualizados correctamente.")
             st.rerun()
-
-    # === VENTAS ===
+        else:
+            st.warning("Selecciona al menos una imagen.")
+    # === INCENTIVO VENTAS ===
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
@@ -121,21 +110,29 @@ if "email" in st.session_state:
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
     df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.strip()
 
-    fila_usuario = df_ventas[df_ventas["TELÉFONO"] == str(user.get("Teléfono")).strip()]
+    telefono_usuario = str(user.get("Teléfono")).strip()
+    fila_usuario = df_ventas[df_ventas["TELÉFONO"] == telefono_usuario]
+
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
+    incentivo_texto = "No asignado"
     fila_index = None
 
     if not fila_usuario.empty:
         fila_index = fila_usuario.index[0] + 2
-        ventas_marzo = fila_usuario["MARZO"]
-        ventas_abril = fila_usuario["ABRIL"]
-        ventas_mayo = fila_usuario["MAYO"]
-        ventas_junio = fila_usuario["JUNIO"]
+        ventas_marzo = fila_usuario["MARZO"].values[0]
+        ventas_abril = fila_usuario["ABRIL"].values[0]
+        ventas_mayo = fila_usuario["MAYO"].values[0]
+        ventas_junio = fila_usuario["JUNIO"].values[0]
+        if "OBJETIVOS Y COMPENSACIONES" in df_ventas.columns:
+            incentivo_texto = fila_usuario["OBJETIVOS Y COMPENSACIONES"].values[0]
+        elif "OBJETIVO" in df_ventas.columns:
+            incentivo_texto = fila_usuario["OBJETIVO"].values[0]
 
-    st.markdown(f"**Marzo:** {ventas_marzo}")
-    st.markdown(f"**Abril:** {ventas_abril}")
-    st.markdown(f"**Mayo:** {ventas_mayo}")
-    st.markdown(f"**Junio:** {ventas_junio}")
+    st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
+    st.markdown(f"**📊 Marzo:** {ventas_marzo}")
+    st.markdown(f"**📊 Abril:** {ventas_abril}")
+    st.markdown(f"**📊 Mayo:** {ventas_mayo}")
+    st.markdown(f"**📊 Junio:** {ventas_junio}")
 
     st.subheader("📤 Reporta tus ventas del mes")
     with st.form("formulario_ventas"):
@@ -146,10 +143,10 @@ if "email" in st.session_state:
 
     if enviar:
         if fila_index:
-            ventas_sheet.update_cell(fila_index, 15, input_mayo)
-            ventas_sheet.update_cell(fila_index, 16, input_junio)
+            ventas_sheet.update_cell(fila_index, 15, input_mayo)   # Columna O
+            ventas_sheet.update_cell(fila_index, 16, input_junio)  # Columna P
 
-        if "Carpeta privada" in user and isinstance(user["Carpeta privada"], str):
+        if "Carpeta privada" in user:
             match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
             carpeta_id = match.group(1) if match else None
             if carpeta_id:
