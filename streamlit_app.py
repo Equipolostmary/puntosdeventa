@@ -10,7 +10,6 @@ import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 
-# Estilo general
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -42,7 +41,6 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# Login
 if "email" in st.session_state:
     correo_usuario = st.session_state["email"]
     user = buscar_usuario(correo_usuario)
@@ -68,7 +66,6 @@ if "email" in st.session_state:
 
     st.success(f"¡Bienvenido, {nombre_usuario}!")
 
-    # Datos personales visibles
     st.subheader("📋 Tus datos personales")
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
@@ -120,9 +117,11 @@ if "email" in st.session_state:
     st.header("🧾 Registro de Ventas Mensuales")
 
     ventas_sheet = client.open("Compensaciones Mensuales").worksheet("General")
-    df_ventas = pd.DataFrame(ventas_sheet.get_all_records())
-    fila_usuario = df_ventas[df_ventas["F"] == user.get("Teléfono")]
+    valores = ventas_sheet.get_all_values()
+    df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
+    df_ventas["F"] = df_ventas["F"].astype(str).str.strip()
 
+    fila_usuario = df_ventas[df_ventas["F"] == str(user.get("Teléfono")).strip()]
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
     fila_index = None
 
@@ -139,7 +138,6 @@ if "email" in st.session_state:
     st.markdown(f"**Junio:** {ventas_junio}")
 
     st.subheader("📤 Reporta tus ventas del mes")
-
     with st.form("formulario_ventas"):
         input_mayo = st.number_input("¿Cuántos dispositivos Lost Mary has vendido en mayo?", min_value=0, step=1)
         input_junio = st.number_input("¿Cuántos dispositivos Elfbar has vendido en junio?", min_value=0, step=1)
@@ -148,8 +146,8 @@ if "email" in st.session_state:
 
     if enviar:
         if fila_index:
-            ventas_sheet.update_cell(fila_index, 15, input_mayo)   # Columna O
-            ventas_sheet.update_cell(fila_index, 16, input_junio)  # Columna P
+            ventas_sheet.update_cell(fila_index, 15, input_mayo)
+            ventas_sheet.update_cell(fila_index, 16, input_junio)
 
         if "Carpeta privada" in user and isinstance(user["Carpeta privada"], str):
             match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
