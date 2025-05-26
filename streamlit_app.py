@@ -8,6 +8,7 @@ import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 
+# Estilo visual
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -29,10 +30,13 @@ creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 
-# Registro general de usuarios
+# Conexión a hoja principal de registro
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
+
+def limpiar_telefono(num):
+    return str(num).replace(" ", "").replace("-", "").strip()
 
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
@@ -83,11 +87,14 @@ if "email" in st.session_state:
     """)
 
     st.subheader("📸 Subir nuevas promociones")
-    promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0, key="promo1")
-    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key="promo2")
-    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key="imgpromo")
 
-    if st.button("Subir promociones"):
+    with st.form("form_promos"):
+        promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0)
+        promo2 = st.number_input("Promos 3×21 BM1000", min_value=0)
+        imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True)
+        enviar_promos = st.form_submit_button("Subir promociones")
+
+    if enviar_promos:
         if imagenes:
             try:
                 service = conectar_drive(st.secrets["gcp_service_account"])
@@ -113,9 +120,10 @@ if "email" in st.session_state:
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
     df_ventas.columns = df_ventas.columns.str.strip().str.upper()
-    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.strip()
+    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).apply(limpiar_telefono)
+    df_ventas = df_ventas.fillna(method="ffill")
 
-    telefono_usuario = str(user.get("Teléfono")).strip()
+    telefono_usuario = limpiar_telefono(user.get("Teléfono"))
     fila_usuario = df_ventas[df_ventas["TELÉFONO"] == telefono_usuario]
 
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
@@ -128,7 +136,7 @@ if "email" in st.session_state:
         ventas_abril = fila_usuario["ABRIL"].values[0]
         ventas_mayo = fila_usuario["MAYO"].values[0]
         ventas_junio = fila_usuario["JUNIO"].values[0]
-        incentivo_texto = fila_usuario.get("OBJETIVOS Y COMPENSACIONES", fila_usuario.get("K", ["No asignado"])).values[0]
+        incentivo_texto = fila_usuario["OBJETIVOS Y COMPENSACIONES"].values[0]
 
     st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
     st.markdown(f"**📊 Marzo:** {ventas_marzo}")
@@ -140,8 +148,8 @@ if "email" in st.session_state:
 
     with st.form("formulario_ventas"):
         mes = st.selectbox("Selecciona el mes", ["Mayo", "Junio"])
-        cantidad = st.number_input(f"¿Cuántos dispositivos has vendido en {mes.lower()}?", min_value=0, step=1, key="venta")
-        fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key="imgventas")
+        cantidad = st.number_input(f"¿Cuántos dispositivos has vendido en {mes.lower()}?", min_value=0, step=1)
+        fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True)
         enviar = st.form_submit_button("Enviar")
 
     if enviar:
