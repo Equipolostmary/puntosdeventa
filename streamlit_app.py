@@ -37,6 +37,7 @@ def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
+# --- FIN PARTE 1 ---
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -125,6 +126,7 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
 
+# --- FIN PARTE 2 ---
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
@@ -176,6 +178,19 @@ if "auth_email" in st.session_state:
                 st.rerun()
             except Exception as e:
                 st.error(f"Error al subir ventas: {e}")
+
+    # RESUMEN MAESTRO SOLO PARA ADMINISTRADOR
+    if correo_usuario == ADMIN_EMAIL:
+        st.markdown("---")
+        st.subheader("🗂️ Resumen maestro de puntos de venta")
+
+        columnas_maestras = [
+            "Dirección de correo electrónico", "Contraseña",
+            "VENTAS MARZO", "VENTAS ABRIL",
+            "OBJETIVO", "VENTAS MAYO", "VENTAS JUNIO"
+        ]
+        df_filtrado = df[columnas_maestras].fillna("")
+        st.dataframe(df_filtrado, use_container_width=True)
 
 else:
     st.image("logo.png", use_container_width=True)
