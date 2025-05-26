@@ -1,30 +1,18 @@
 import streamlit as st
 
-# Verifica que el usuario esté logueado
+# Configuración de página
+st.set_page_config(page_title="Ventas", layout="centered")
+
+# Mostrar algo incluso si no hay login (para confirmar que carga)
+st.title("📈 Página de ventas")
+st.write("Esto es contenido de prueba para verificar que se muestra.")
+
+# Verifica login (si quieres bloquear contenido real)
 if "email" not in st.session_state:
-    st.warning("Debes iniciar sesión para acceder a esta sección.")
+    st.warning("Debes iniciar sesión para ver el contenido completo.")
     st.stop()
 
-st.set_page_config(page_title="Ventas", layout="centered")
-st.title("📈 Registro de Ventas")
+# Si hay login, continúa con la interfaz
+st.success(f"¡Bienvenido {st.session_state['email']} a la zona de ventas!")
 
-st.info("Desde aquí podrás consultar y registrar tus ventas mensuales.")
-
-# Función que puedes reutilizar en otros archivos
-def mostrar_panel(usuario, promociones, imagenes):
-    st.subheader(f"Área privada de: {usuario.get('Nombre del punto de venta', 'Sin nombre')}")
-
-    st.write("📈 Promociones actuales:", usuario.get("Nº Promos", 0))
-    st.write("📁 Carpeta Drive asignada:", usuario.get("Carpeta Drive", "No asignada"))
-
-    st.write("Número de promociones nuevas:", promociones)
-
-    if imagenes:
-        st.write("Imágenes seleccionadas:")
-        for img in imagenes:
-            st.image(img, width=200)
-    else:
-        st.info("Aún no se han seleccionado imágenes.")
-
-# Este bloque se ejecuta siempre que se abre la página
-st.success("✅ Página de ventas cargada correctamente.")
+# Aquí puedes poner lo que quieras que cargue solo para usuarios autenticados
