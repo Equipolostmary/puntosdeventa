@@ -8,6 +8,7 @@ import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 
+# Estilo visual
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -84,7 +85,7 @@ if "email" in st.session_state:
     st.subheader("📸 Subir nuevas promociones")
     promo1 = st.number_input("Promos 2+1 TAPPO", min_value=0, key="promo1")
     promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key="promo2")
-    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True)
+    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key="imgpromo")
 
     if st.button("Subir promociones"):
         if imagenes:
@@ -98,7 +99,7 @@ if "email" in st.session_state:
             col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
             worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             st.success("✅ Imágenes subidas y contadores actualizados correctamente.")
-            st.rerun()
+            st.experimental_rerun()
         else:
             st.warning("Selecciona al menos una imagen.")
     # === INCENTIVO VENTAS ===
@@ -123,9 +124,9 @@ if "email" in st.session_state:
         ventas_abril = fila_usuario["ABRIL"].values[0]
         ventas_mayo = fila_usuario["MAYO"].values[0]
         ventas_junio = fila_usuario["JUNIO"].values[0]
-        if "OBJETIVOS Y COMPENSACIONES" in df_ventas.columns:
+        if "OBJETIVOS Y COMPENSACIONES" in fila_usuario.columns:
             incentivo_texto = fila_usuario["OBJETIVOS Y COMPENSACIONES"].values[0]
-        elif "OBJETIVO" in df_ventas.columns:
+        elif "OBJETIVO" in fila_usuario.columns:
             incentivo_texto = fila_usuario["OBJETIVO"].values[0]
 
     st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
@@ -135,26 +136,28 @@ if "email" in st.session_state:
     st.markdown(f"**📊 Junio:** {ventas_junio}")
 
     st.subheader("📤 Reporta tus ventas del mes")
+
     with st.form("formulario_ventas"):
-        input_mayo = st.number_input("¿Cuántos dispositivos Lost Mary has vendido en mayo?", min_value=0, step=1)
-        input_junio = st.number_input("¿Cuántos dispositivos Elfbar has vendido en junio?", min_value=0, step=1)
-        fotos_ventas = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True)
+        mes = st.selectbox("Selecciona el mes", ["Mayo", "Junio"])
+        cantidad = st.number_input(f"¿Cuántos dispositivos has vendido en {mes.lower()}?", min_value=0, step=1, key="venta")
+        fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key="imgventas")
         enviar = st.form_submit_button("Enviar")
 
     if enviar:
         if fila_index:
-            ventas_sheet.update_cell(fila_index, 15, input_mayo)   # Columna O
-            ventas_sheet.update_cell(fila_index, 16, input_junio)  # Columna P
+            col = 15 if mes == "Mayo" else 16
+            ventas_sheet.update_cell(fila_index, col, cantidad)
 
         if "Carpeta privada" in user:
             match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
             carpeta_id = match.group(1) if match else None
             if carpeta_id:
                 service = conectar_drive(st.secrets["gcp_service_account"])
-                for archivo in fotos_ventas:
+                for archivo in fotos:
                     subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
         st.success("✅ Ventas enviadas correctamente.")
+        st.experimental_rerun()
 
 else:
     st.image("logo.png", use_container_width=True)
