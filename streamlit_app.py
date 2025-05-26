@@ -9,50 +9,45 @@ import uuid
 import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
-
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
 st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
-    html, body, .block-container, .stApp, .main {
-        background-color: #e6e0f8 !important;
-        font-family: 'Montserrat', sans-serif;
-    }
-    section[data-testid="stSidebar"], #MainMenu, header, footer {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    </style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+html, body, .block-container, .stApp, .main {
+    background-color: #e6e0f8 !important;
+    font-family: 'Montserrat', sans-serif;
+}
+section[data-testid="stSidebar"], #MainMenu, header, footer {
+    display: none !important;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# Conexión a Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 
-# Cargar hoja principal de registro
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
-# Función para buscar usuario por correo
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
+
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
-    with st.container():
-        st.markdown(f"""
-        <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
-                    font-weight:bold;font-size:20px;color:black;border-radius:5px;">
-            ÁREA PRIVADA – {nombre_usuario}
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
+                font-weight:bold;font-size:20px;color:black;border-radius:5px;">
+        ÁREA PRIVADA – {nombre_usuario}
+    </div>
+    """, unsafe_allow_html=True)
 
     st.image("logo.png", use_container_width=True)
 
@@ -65,7 +60,7 @@ if "auth_email" in st.session_state:
         st.session_state.clear()
         st.rerun()
 
-    st.success(f"¡Bienvenido, {user['Expendiduría']}! ✅")
+    st.success(f"¡Bienvenido, {user['Expendiduría']}!")
 
     st.subheader("📋 Datos registrados")
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
@@ -73,13 +68,7 @@ if "auth_email" in st.session_state:
         if "contraseña" not in col.lower():
             st.markdown(f"**{col}:** {user.get(col, '')}")
 
-    st.subheader("🎯 Objetivo y compensación mensual")
-
-    objetivo = user.get("OBJETIVO", "")
-    compensacion = user.get("COMPENSACION", "")
-    st.markdown(f"- **OBJETIVO:** {objetivo if objetivo else '*Sin asignar*'}")
-    st.markdown(f"- **COMPENSACIÓN:** {compensacion if compensacion else '*Sin definir*'}")
-
+    st.markdown("---")
     st.subheader("📦 Estado de promociones")
 
     def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
@@ -135,8 +124,15 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
+
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
+
+    objetivo = user.get("OBJETIVO", "")
+    compensacion = user.get("COMPENSACION", "")
+    st.subheader("🎯 Objetivo y compensación mensual")
+    st.markdown(f"- **OBJETIVO:** {objetivo if objetivo else '*No asignado*'}")
+    st.markdown(f"- **COMPENSACIÓN:** {compensacion if compensacion else '*No definido*'}")
 
     ventas_mayo = user.get("VENTAS MAYO", "")
     ventas_junio = user.get("VENTAS JUNIO", "")
