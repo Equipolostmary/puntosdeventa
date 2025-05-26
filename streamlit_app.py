@@ -26,11 +26,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Conectar con Google
+# Conectar con Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
+
+# Hoja de registro de usuarios
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
@@ -138,14 +140,17 @@ if "auth_email" in st.session_state:
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
+    # Abrimos Excel de ventas
     ventas_sheet = client.open_by_key("1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0").worksheet("General")
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
     df_ventas.columns = df_ventas.columns.str.strip().str.upper()
-    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.replace(" ", "").str.strip()
+
+    # Normalizamos teléfonos y datos
+    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.replace(" ", "").str.replace(".0", "").str.strip()
     df_ventas = df_ventas.fillna(method="ffill")
 
-    telefono_usuario = str(user.get("Teléfono")).replace(" ", "").strip()
+    telefono_usuario = str(user.get("Teléfono", "")).replace(" ", "").replace(".0", "").strip()
     fila_usuario = df_ventas[df_ventas["TELÉFONO"] == telefono_usuario]
 
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
@@ -154,7 +159,7 @@ if "auth_email" in st.session_state:
 
     if not fila_usuario.empty:
         row_data = fila_usuario.iloc[0]
-        fila_index = fila_usuario.index[0] + 2
+        fila_index = fila_usuario.index[0] + 2  # Ajuste por cabecera
         incentivo_texto = row_data.get("OBJETIVOS Y COMPENSACIONES", "No asignado")
         ventas_marzo = row_data.get("MARZO", "No disponible")
         ventas_abril = row_data.get("ABRIL", "No disponible")
