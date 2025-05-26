@@ -8,7 +8,6 @@ import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 
-# Estilo visual
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -101,9 +100,6 @@ if "email" in st.session_state:
                 col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
                 worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 st.success("✅ Promociones subidas correctamente.")
-                st.session_state["promo1"] = 0
-                st.session_state["promo2"] = 0
-                st.session_state["imgpromo"] = None
                 st.rerun()
             except Exception as e:
                 st.error(f"Error al subir promociones: {e}")
@@ -163,8 +159,6 @@ if "email" in st.session_state:
                         subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
             st.success("✅ Ventas enviadas correctamente.")
-            st.session_state["venta"] = 0
-            st.session_state["imgventas"] = None
             st.rerun()
         except Exception as e:
             st.error(f"Error al subir ventas: {e}")
