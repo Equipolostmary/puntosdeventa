@@ -26,13 +26,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Conectar con Google Sheets
+# Conectar con Google Sheets y Drive
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 
-# Hoja de registro de usuarios
+# Cargar hoja de registro
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
@@ -40,6 +40,10 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
+
+# Función para normalizar teléfono
+def limpiar_telefono(numero):
+    return str(numero).replace(" ", "").replace(".0", "").strip()
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -140,33 +144,30 @@ if "auth_email" in st.session_state:
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
-    # Abrimos Excel de ventas
+    # Cargar hoja de ventas
     ventas_sheet = client.open_by_key("1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0").worksheet("General")
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
-    df_ventas.columns = df_ventas.columns.str.strip().str.upper()
-
-    # Normalizamos teléfonos y datos
+    df_ventas.columns = df_ventas.columns.str.upper().str.strip()
     df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.replace(" ", "").str.replace(".0", "").str.strip()
-    df_ventas = df_ventas.fillna(method="ffill")
 
-    telefono_usuario = str(user.get("Teléfono", "")).replace(" ", "").replace(".0", "").strip()
+    telefono_usuario = limpiar_telefono(user.get("Teléfono", ""))
     fila_usuario = df_ventas[df_ventas["TELÉFONO"] == telefono_usuario]
 
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
-    incentivo_texto = "No asignado"
+    incentivo = "No asignado"
     fila_index = None
 
     if not fila_usuario.empty:
+        fila_index = fila_usuario.index[0] + 2
         row_data = fila_usuario.iloc[0]
-        fila_index = fila_usuario.index[0] + 2  # Ajuste por cabecera
-        incentivo_texto = row_data.get("OBJETIVOS Y COMPENSACIONES", "No asignado")
+        incentivo = row_data.get("OBJETIVOS Y COMPENSACIONES", "No asignado")
         ventas_marzo = row_data.get("MARZO", "No disponible")
         ventas_abril = row_data.get("ABRIL", "No disponible")
         ventas_mayo = row_data.get("MAYO", "No disponible")
         ventas_junio = row_data.get("JUNIO", "No disponible")
 
-    st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
+    st.markdown(f"**🎯 Objetivo asignado:** {incentivo}")
     st.markdown(f"**📊 Marzo:** {ventas_marzo}")
     st.markdown(f"**📊 Abril:** {ventas_abril}")
     st.markdown(f"**📊 Mayo:** {ventas_mayo}")
@@ -181,17 +182,21 @@ if "auth_email" in st.session_state:
 
     with st.form("formulario_ventas"):
         mes = st.selectbox("Selecciona el mes", ["Mayo", "Junio"], key=st.session_state.widget_key_ventas + "_mes")
-        cantidad = st.number_input("¿Cuántos dispositivos has vendido?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+        cantidad = st.number_input(f"¿Cuántos dispositivos has vendido en {mes.lower()}?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
         fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
         enviar = st.form_submit_button("Enviar")
 
     if enviar:
-        try:
-            if fila_index:
-                col_index = df_ventas.columns.get_loc(mes.upper()) + 1
-                ventas_sheet.update_cell(fila_index, col_index, cantidad)
+        if not fotos:
+            st.warning("Debes subir al menos una imagen.")
+        elif not fila_index:
+            st.error("No se encontró tu fila en la hoja de ventas.")
+        else:
+            try:
+                columna_destino = mes.upper()
+                col_index = df_ventas.columns.get_loc(columna_destino) + 1
+                ventas_sheet.update_cell(fila_index, col_index, str(cantidad))
 
-            if "Carpeta privada" in user:
                 match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
                 carpeta_id = match.group(1) if match else None
                 if carpeta_id:
@@ -199,13 +204,13 @@ if "auth_email" in st.session_state:
                     for archivo in fotos:
                         subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
-            st.success("✅ Ventas enviadas correctamente.")
-            time.sleep(2)
-            st.session_state.widget_key_ventas = str(uuid.uuid4())
-            st.session_state.widget_key_fotos = str(uuid.uuid4())
-            st.rerun()
-        except Exception as e:
-            st.error(f"Error al subir ventas: {e}")
+                st.success("✅ Ventas enviadas correctamente.")
+                time.sleep(2)
+                st.session_state.widget_key_ventas = str(uuid.uuid4())
+                st.session_state.widget_key_fotos = str(uuid.uuid4())
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al subir ventas: {e}")
 
 else:
     st.image("logo.png", use_container_width=True)
