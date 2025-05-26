@@ -28,7 +28,6 @@ st.markdown("""
 
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Conexión
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -71,6 +70,7 @@ if "email" in st.session_state:
     for col in columnas_visibles:
         if str(col).lower() not in ["contraseña", "correo", "correo electrónico", "dirección de correo electrónico"]:
             st.markdown(f"**{col}:** {user.get(col, '')}")
+
     # === PROMOCIONES ===
     st.markdown("---")
     st.header("🎁 Promociones")
@@ -112,25 +112,25 @@ if "email" in st.session_state:
             st.success("✅ Imágenes subidas y contadores actualizados correctamente.")
             st.rerun()
 
-    # === SECCIÓN DE VENTAS ===
+    # === VENTAS ===
     st.markdown("---")
-    st.header("🧾 Registro de Ventas Mensuales")
+    st.header("💰 Incentivo compensaciones mensuales")
 
     ventas_sheet = client.open("Compensaciones Mensuales").worksheet("General")
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
-    df_ventas["F"] = df_ventas["F"].astype(str).str.strip()
+    df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.strip()
 
-    fila_usuario = df_ventas[df_ventas["F"] == str(user.get("Teléfono")).strip()]
+    fila_usuario = df_ventas[df_ventas["TELÉFONO"] == str(user.get("Teléfono")).strip()]
     ventas_marzo = ventas_abril = ventas_mayo = ventas_junio = "No disponible"
     fila_index = None
 
     if not fila_usuario.empty:
         fila_index = fila_usuario.index[0] + 2
-        ventas_marzo = fila_usuario["M"].values[0]
-        ventas_abril = fila_usuario["N"].values[0]
-        ventas_mayo = fila_usuario["O"].values[0]
-        ventas_junio = fila_usuario["P"].values[0]
+        ventas_marzo = fila_usuario["MARZO"]
+        ventas_abril = fila_usuario["ABRIL"]
+        ventas_mayo = fila_usuario["MAYO"]
+        ventas_junio = fila_usuario["JUNIO"]
 
     st.markdown(f"**Marzo:** {ventas_marzo}")
     st.markdown(f"**Abril:** {ventas_abril}")
