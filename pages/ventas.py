@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Solo se muestra si hay sesión iniciada
+# Verifica que el usuario esté logueado
 if "email" not in st.session_state:
     st.warning("Debes iniciar sesión para acceder a esta sección.")
     st.stop()
@@ -8,9 +8,9 @@ if "email" not in st.session_state:
 st.set_page_config(page_title="Ventas", layout="centered")
 st.title("📈 Registro de Ventas")
 
-st.info("Desde aquí podrás consultar y actualizar tus ventas mensuales.")
+st.info("Desde aquí podrás consultar y registrar tus ventas mensuales.")
 
-# Función reutilizable para mostrar el panel de cada punto
+# Función que puedes reutilizar en otros archivos
 def mostrar_panel(usuario, promociones, imagenes):
     st.subheader(f"Área privada de: {usuario.get('Nombre del punto de venta', 'Sin nombre')}")
 
@@ -25,3 +25,6 @@ def mostrar_panel(usuario, promociones, imagenes):
             st.image(img, width=200)
     else:
         st.info("Aún no se han seleccionado imágenes.")
+
+# Este bloque se ejecuta siempre que se abre la página
+st.success("✅ Página de ventas cargada correctamente.")
