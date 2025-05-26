@@ -8,7 +8,6 @@ import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 
-# Estilo visual
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -29,6 +28,7 @@ scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapi
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
+
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
@@ -64,7 +64,6 @@ if "email" in st.session_state:
         if "contraseña" not in col.lower():
             st.markdown(f"**{col}:** {user.get(col, '')}")
 
-    # === PROMOCIONES ===
     st.markdown("---")
     st.header("🎁 Promociones")
 
@@ -98,7 +97,7 @@ if "email" in st.session_state:
             worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
             col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
             worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            st.success("✅ Imágenes subidas y contadores actualizados correctamente.")
+            st.success("✅ Imágenes subidas correctamente.")
             st.experimental_rerun()
         else:
             st.warning("Selecciona al menos una imagen.")
@@ -106,7 +105,7 @@ if "email" in st.session_state:
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
-    ventas_sheet = client.open("Compensaciones Mensuales").worksheet("General")
+    ventas_sheet = client.open_by_key("1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0").worksheet("General")
     valores = ventas_sheet.get_all_values()
     df_ventas = pd.DataFrame(valores[1:], columns=valores[0])
     df_ventas["TELÉFONO"] = df_ventas["TELÉFONO"].astype(str).str.strip()
@@ -128,6 +127,8 @@ if "email" in st.session_state:
             incentivo_texto = fila_usuario["OBJETIVOS Y COMPENSACIONES"].values[0]
         elif "OBJETIVO" in fila_usuario.columns:
             incentivo_texto = fila_usuario["OBJETIVO"].values[0]
+        elif "K" in fila_usuario.columns:
+            incentivo_texto = fila_usuario["K"].values[0]
 
     st.markdown(f"**🎯 Objetivo asignado:** {incentivo_texto}")
     st.markdown(f"**📊 Marzo:** {ventas_marzo}")
@@ -157,6 +158,8 @@ if "email" in st.session_state:
                     subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
         st.success("✅ Ventas enviadas correctamente.")
+        st.session_state["venta"] = 0
+        st.session_state["imgventas"] = None
         st.experimental_rerun()
 
 else:
