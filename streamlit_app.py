@@ -36,6 +36,7 @@ df = pd.DataFrame(worksheet.get_all_records())
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
+
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -123,6 +124,7 @@ if "auth_email" in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
                 st.rerun()
+
     st.markdown("---")
     st.header("💰 Incentivo compensaciones mensuales")
 
@@ -160,7 +162,12 @@ if "auth_email" in st.session_state:
                 col_index = df.columns.get_loc(col_destino) + 1
 
                 valor_anterior = user.get(col_destino, 0)
-                suma = int(valor_anterior) + int(cantidad) if str(valor_anterior).isdigit() else cantidad
+                try:
+                    anterior = int(valor_anterior)
+                except:
+                    anterior = 0
+                suma = anterior + int(cantidad)
+
                 worksheet.update_cell(row, col_index, str(suma))
 
                 match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
@@ -184,7 +191,7 @@ if "auth_email" in st.session_state:
         st.subheader("🗂️ Resumen maestro de puntos de venta")
         columnas_deseadas = [
             "Dirección de correo electrónico", "Contraseña",
-            "VENTAS MARZO", "VENTAS ABRIL",
+            "VENTAS MARZO", "VENTAS ABRIL",  # nuevas columnas visibles
             "OBJETIVO", "VENTAS MAYO", "VENTAS JUNIO"
         ]
         columnas_existentes = [c for c in columnas_deseadas if c in df.columns]
