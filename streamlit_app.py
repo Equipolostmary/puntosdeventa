@@ -191,7 +191,7 @@ if "auth_email" in st.session_state:
         st.subheader("🗂️ Resumen maestro de puntos de venta")
         columnas_deseadas = [
             "Dirección de correo electrónico", "Contraseña",
-            "VENTAS MARZO", "VENTAS ABRIL",  # nuevas columnas visibles
+            "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",  # M y N reales
             "OBJETIVO", "VENTAS MAYO", "VENTAS JUNIO"
         ]
         columnas_existentes = [c for c in columnas_deseadas if c in df.columns]
