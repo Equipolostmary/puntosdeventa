@@ -130,14 +130,11 @@ if "auth_email" in st.session_state:
 
     objetivo = user.get("OBJETIVO", "")
     compensacion = user.get("COMPENSACION", "")
+    ventas_mensuales = user.get("VENTAS MENSUALES", "")
     st.subheader("🎯 Objetivo y compensación mensual")
     st.markdown(f"- **OBJETIVO:** {objetivo if objetivo else '*No asignado*'}")
     st.markdown(f"- **COMPENSACIÓN:** {compensacion if compensacion else '*No definido*'}")
-
-    ventas_mayo = user.get("VENTAS MAYO", "")
-    ventas_junio = user.get("VENTAS JUNIO", "")
-    st.markdown(f"**📊 Mayo:** {ventas_mayo if ventas_mayo else '*Sin registrar*'}")
-    st.markdown(f"**📊 Junio:** {ventas_junio if ventas_junio else '*Sin registrar*'}")
+    st.markdown(f"**📊 Ventas acumuladas:** {ventas_mensuales if ventas_mensuales else '*Sin registrar*'}")
 
     st.subheader("📤 Reporta tus ventas del mes")
 
@@ -147,8 +144,7 @@ if "auth_email" in st.session_state:
         st.session_state.widget_key_fotos = str(uuid.uuid4())
 
     with st.form("formulario_ventas"):
-        mes = st.selectbox("Selecciona el mes", ["Mayo", "Junio"], key=st.session_state.widget_key_ventas + "_mes")
-        cantidad = st.number_input(f"¿Cuántos dispositivos has vendido en {mes.lower()}?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+        cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
         fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
         enviar = st.form_submit_button("Enviar")
 
@@ -157,7 +153,7 @@ if "auth_email" in st.session_state:
             st.warning("Debes subir al menos una imagen.")
         else:
             try:
-                col_destino = "VENTAS MAYO" if mes == "Mayo" else "VENTAS JUNIO"
+                col_destino = "VENTAS MENSUALES"
                 row = user.name + 2
                 col_index = df.columns.get_loc(col_destino) + 1
 
@@ -185,14 +181,13 @@ if "auth_email" in st.session_state:
             except Exception as e:
                 st.error(f"Error al subir ventas: {e}")
 
-    # 📊 Resumen visible solo para administrador
     if correo_usuario == ADMIN_EMAIL:
         st.markdown("---")
         st.subheader("🗂️ Resumen maestro de puntos de venta")
         columnas_deseadas = [
             "Dirección de correo electrónico", "Contraseña",
-            "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",  # M y N reales
-            "OBJETIVO", "VENTAS MAYO", "VENTAS JUNIO"
+            "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",
+            "OBJETIVO", "VENTAS MENSUALES"
         ]
         columnas_existentes = [c for c in columnas_deseadas if c in df.columns]
         resumen_df = df[columnas_existentes].fillna("")
