@@ -42,14 +42,14 @@ if "auth_email" in st.session_state:
     user = buscar_usuario(correo_usuario)
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
+    st.image("logo.png", use_container_width=True)
+
     st.markdown(f"""
-    <div style="background-color:#bda2e0;padding:15px 10px;text-align:center;
-                font-weight:bold;font-size:20px;color:black;border-radius:5px;">
+    <div style="background-color:#bda2e0;margin-top:10px;padding:12px;text-align:center;
+                font-weight:bold;font-size:20px;color:black;border-radius:10px;">
         ÁREA PRIVADA – {nombre_usuario}
     </div>
     """, unsafe_allow_html=True)
-
-    st.image("logo.png", use_container_width=True)
 
     if st.button("Cerrar sesión"):
         st.session_state.clear()
