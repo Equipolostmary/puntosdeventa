@@ -209,22 +209,23 @@ if "auth_email" in st.session_state:
                                                 or termino in str(row.get("Usuario", "")).lower()
                                                 or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
             if not resultados.empty:
-                index = resultados.index[0]
-                st.info(f"{len(resultados)} resultado(s) encontrado(s). Mostrando el primero.")
-                with st.form("editar_usuario"):
-                    nuevos_valores = {}
-                    for col in df.columns:
-                        if col != "Carpeta privada":
-                            nuevos_valores[col] = st.text_input(col, str(df.at[index, col]))
-                    if st.form_submit_button("Guardar cambios"):
-                        try:
-                            for col, nuevo_valor in nuevos_valores.items():
-                                worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
-                            st.success("✅ Datos actualizados correctamente.")
-                            time.sleep(2)
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error al guardar: {e}")
+                st.info(f"{len(resultados)} resultado(s) encontrado(s).")
+                for i, index in enumerate(resultados.index):
+                    st.markdown(f"---\n### Resultado {i + 1}")
+                    with st.form(f"editar_usuario_{index}"):
+                        nuevos_valores = {}
+                        for col in df.columns:
+                            if col != "Carpeta privada":
+                                nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
+                        if st.form_submit_button("Guardar cambios", key=f"guardar_{index}"):
+                            try:
+                                for col, nuevo_valor in nuevos_valores.items():
+                                    worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
+                                st.success("✅ Datos actualizados correctamente.")
+                                time.sleep(2)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Error al guardar: {e}")
             else:
                 st.warning("No se encontró ningún punto con ese dato.")
 
