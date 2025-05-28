@@ -233,5 +233,4 @@ else:
             else:
                 st.session_state["auth_email"] = correo
                 st.rerun()
- st.rerun()
-
+ 
