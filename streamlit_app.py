@@ -97,6 +97,7 @@ if "auth_email" in st.session_state:
             resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
                                                 or termino in str(row.get("Usuario", "")).lower()
                                                 or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+
             if not resultados.empty:
                 st.info(f"{len(resultados)} resultado(s) encontrado(s).")
                 opciones = [f"{row['Usuario']} - {row['Expendiduría']} - {row['TELÉFONO']}" for _, row in resultados.iterrows()]
@@ -120,32 +121,6 @@ if "auth_email" in st.session_state:
                             st.error(f"Error al guardar: {e}")
             else:
                 st.warning("No se encontró ningún punto con ese dato.")
-        # ========== ACCESOS RÁPIDOS ==========
-        st.markdown('<div class="seccion">📁 ACCESOS DIRECTOS - RECURSOS</div>', unsafe_allow_html=True)
-        enlaces = {
-            "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
-            "BAJADA DE PRECIO BM600": "https://docs.google.com/spreadsheets/d/1F-TyJSI32sIBvZXtUKfFQ5P2crQQeXHNIsX1u95vi4o/edit?gid=0#gid=0",
-            "BUSCAR EXPENDIDURÍA": "https://serviciostelematicosext.hacienda.gob.es/CMT/GestitabExt/Egeo/index.cshtml",
-            "COMPENSACIONES MENSUALES": "https://docs.google.com/spreadsheets/d/1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0/edit?gid=128791843#gid=128791843",
-            "CORREO": "https://email.ionos.es/appsuite/#!!&app=io.ox/mail&folder=default0/INBOX",
-            "EXCELL DE VACACIONES": "https://login.microsoftonline.com/76c804a6-47a7-41d2-b1be-d343519bc19c/oauth2/authorize?...",
-            "FOTOS COMPENSACIONES": "https://drive.google.com/drive/u/1/folders/18SxC9Wy9VTz-W2auyIBMwaYU6yRqsHXA",
-            "FOTOS DE LOS TICKET": "https://drive.google.com/drive/u/1/folders/1GpG-NERdKzZvItaq5rV78B8W_UAmb_e4",
-            "INVITACIONES EVENTOS": "https://docs.google.com/spreadsheets/d/1VTzXhfGbOldKiuN4HuHcrcotyw0HzOENCjLkeaV3FN4/edit?gid=0#gid=0",
-            "MERCHAN Y MOBILIARIO": "https://sites.google.com/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/1RMwDRQ-1uqtQfif1O9ckdy7L6fv-GAHD/edit",
-            "PERSONIO": "https://login.personio.com/u/login/identifier?...",
-            "REALIZAR PEDIDO": "https://docs.google.com/spreadsheets/d/1IUeYNQg3Dx4N4K56vrkiRWNqp3vkM8HXplHY8mbh3tI/edit?gid=2078407623#gid=2078407623",
-            "REGISTRAR PUNTO DE VENTA": "https://docs.google.com/forms/d/e/1FAIpQLScTNcjTq0DU2xIjB1ECbqVpcVXWKurBiNBZFDngN3fhmYbl_A/viewform",
-            "RESPUESTAS DE FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR2X76MQdEy3-FjlVWFQX",
-            "VIDEOS": "https://sites.google.com/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/1RMwDRQ-1uqtQfif1O9ckdy7L6fv-GAHD/edit",
-            "VINILOS": "https://docs.google.com/spreadsheets/d/1l2hSuJuS0wBMCVaMuGFSAnoAVy72vfskI0XmA4rX3Oc/edit?gid=0#gid=0",
-            "VISUALES": "https://drive.google.com/drive/u/1/folders/1qzXCVrBcAuebu2kepn9sQ8X85ZIDh68C",
-            "WEB DE ESTANCOS": "https://sites.google.com/view/estancoslostmary"
-        }
-        enlaces_ordenados = dict(sorted(enlaces.items()))
-        opcion = st.selectbox("Selecciona un recurso para abrir:", list(enlaces_ordenados.keys()))
-        st.markdown(f"[🔗 Abrir enlace seleccionado]({enlaces_ordenados[opcion]})", unsafe_allow_html=True)
-
     else:
         user = buscar_usuario(correo_usuario)
         nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
@@ -213,7 +188,15 @@ if "auth_email" in st.session_state:
                     time.sleep(2)
                     st.rerun()
 
-        st.markdown('<div class="seccion">REPORTAR VENTAS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
+        objetivo = user.get("OBJETIVO", "")
+        compensacion = user.get("COMPENSACION", "")
+        ventas_mensuales = user.get("VENTAS MENSUALES", "")
+        st.write(f"- OBJETIVO: {objetivo if objetivo else '*No asignado*'}")
+        st.write(f"- COMPENSACIÓN: {compensacion if compensacion else '*No definido*'}")
+        st.write(f"- Ventas acumuladas: {ventas_mensuales if ventas_mensuales else '*Sin registrar*'}")
+
+        st.markdown('<div class="seccion">REPORTA TUS VENTAS</div>', unsafe_allow_html=True)
         if "widget_key_ventas" not in st.session_state:
             st.session_state.widget_key_ventas = str(uuid.uuid4())
         if "widget_key_fotos" not in st.session_state:
