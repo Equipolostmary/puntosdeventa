@@ -19,18 +19,15 @@ html, body, .block-container, .stApp {
     background-color: #e6e0f8 !important;
     font-family: 'Montserrat', sans-serif;
 }
-
 section[data-testid="stSidebar"], #MainMenu, header, footer {
     display: none !important;
 }
-
 .logo-container {
     display: flex;
     justify-content: center;
     margin-top: 30px;
     margin-bottom: 10px;
 }
-
 .logo-frame {
     background-color: white;
     padding: 10px;
@@ -40,7 +37,6 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
     max-width: 600px;
     margin: auto;
 }
-
 .titulo {
     text-align: center;
     font-size: 24px;
@@ -51,7 +47,6 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
     padding: 10px;
     border-radius: 10px;
 }
-
 .seccion {
     font-size: 18px;
     font-weight: bold;
@@ -61,7 +56,6 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
     border-bottom: 2px solid #bbb;
     padding-bottom: 5px;
 }
-
 button[kind="primary"] {
     font-family: 'Montserrat', sans-serif !important;
 }
@@ -108,7 +102,7 @@ if "auth_email" in st.session_state:
     st.markdown('<div class="seccion">DATOS REGISTRADOS</div>', unsafe_allow_html=True)
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
-        if "contraseña" not in col.lower():
+        if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
             st.markdown(f"**{col}:** {user.get(col, '')}")
 
     st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
