@@ -204,31 +204,35 @@ if "auth_email" in st.session_state:
     if correo_usuario == ADMIN_EMAIL:
         st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario").strip().lower()
+
         if termino:
             resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
                                                 or termino in str(row.get("Usuario", "")).lower()
                                                 or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+
             if not resultados.empty:
                 st.info(f"{len(resultados)} resultado(s) encontrado(s).")
-                for i, index in enumerate(resultados.index):
-                    st.markdown(f"---\n### Resultado {i + 1}")
-                    with st.form(f"editar_usuario_{index}"):
-                        nuevos_valores = {}
-                        for col in df.columns:
-                            if col != "Carpeta privada":
-                                nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
-                        if st.form_submit_button("Guardar cambios", key=f"guardar_{index}"):
-                            try:
-                                for col, nuevo_valor in nuevos_valores.items():
-                                    worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
-                                st.success("✅ Datos actualizados correctamente.")
-                                time.sleep(2)
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Error al guardar: {e}")
+                opciones = [f"{row['Usuario']} - {row['Expendiduría']} - {row['TELÉFONO']}" for _, row in resultados.iterrows()]
+                seleccion = st.selectbox("Selecciona un punto para editar:", opciones)
+                index = resultados.index[opciones.index(seleccion)]
+
+                with st.form(f"editar_usuario_{index}"):
+                    nuevos_valores = {}
+                    for col in df.columns:
+                        if col != "Carpeta privada":
+                            nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
+                    guardar = st.form_submit_button("Guardar cambios")
+                    if guardar:
+                        try:
+                            for col, nuevo_valor in nuevos_valores.items():
+                                worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
+                            st.success("✅ Datos actualizados correctamente.")
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error al guardar: {e}")
             else:
                 st.warning("No se encontró ningún punto con ese dato.")
-
 else:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
