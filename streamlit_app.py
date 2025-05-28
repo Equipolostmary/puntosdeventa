@@ -99,7 +99,7 @@ def buscar_usuario(email):
     return df[mask].iloc[0] if mask.any() else None
 
 # Nombres columnas promociones EXACTOS
-promo_tappo_col = "Promoción 2+1 TAPPO"
+promo_tappo_col = "Promoción 3x10 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
 total_promos_col = "TOTAL PROMOS"
 
