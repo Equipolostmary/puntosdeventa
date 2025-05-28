@@ -115,6 +115,13 @@ if "auth_email" in st.session_state:
 
     if correo_usuario == ADMIN_EMAIL:
         st.markdown(f'<div class="titulo">ÁREA PRIVADA – ADMINISTRADOR</div>', unsafe_allow_html=True)
+
+        # Mostrar el menú de recursos solo al administrador
+        st.markdown('<div class="seccion">ACCESO A RECURSOS</div>', unsafe_allow_html=True)
+        opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()))
+        if opcion:
+            st.markdown(f"[Abrir {opcion} ▶️]({enlaces[opcion]})", unsafe_allow_html=True)
+
         st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario").strip().lower()
 
