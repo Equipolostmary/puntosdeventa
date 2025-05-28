@@ -110,15 +110,14 @@ if "auth_email" in st.session_state:
 
     def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
     tappo_asig = val("Promoción 2+1 TAPPO")
-    tappo_ent = val("Entregados promo TAPPO")
     tappo_falt = val("Falta por entregar TAPPO")
     bm_asig = val("Promoción 3×21 BM1000")
-    bm_ent = val("Entregados promo BM1000")
     bm_falt = val("Falta por entregar BM1000")
+    total_promos = val("TOTAL PROMOS")
 
-    st.write(f"- TAPPO asignados: {tappo_asig} | Entregados: {tappo_ent} | Pendientes: {tappo_falt}")
-    st.write(f"- BM1000 asignados: {bm_asig} | Entregados: {bm_ent} | Pendientes: {bm_falt}")
-    st.write(f"- Última actualización: {user.get('Ultima actualización', 'N/A')}")
+    st.write(f"- TAPPO asignados: {tappo_asig} | Pendientes: {tappo_falt}")
+    st.write(f"- BM1000 asignados: {bm_asig} | Pendientes: {bm_falt}")
+    st.write(f"- Total promociones acumuladas: {total_promos}")
 
     if st.session_state.get("subida_ok"):
         st.success("Imágenes subidas correctamente. Contadores actualizados.")
@@ -153,8 +152,7 @@ if "auth_email" in st.session_state:
                 row = user.name + 2
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 2+1 TAPPO")+1, str(tappo_asig + promo1))
                 worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm_asig + promo2))
-                col_actualizacion = [c for c in df.columns if "actualiz" in c.lower()][0]
-                worksheet.update_cell(row, df.columns.get_loc(col_actualizacion)+1, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                worksheet.update_cell(row, df.columns.get_loc("TOTAL PROMOS")+1, str(tappo_asig + promo1 + bm_asig + promo2))
                 st.session_state["subida_ok"] = True
                 st.session_state.widget_key_promos = str(uuid.uuid4())
                 st.session_state.widget_key_imgs = str(uuid.uuid4())
@@ -211,7 +209,7 @@ if "auth_email" in st.session_state:
         st.markdown('<div class="seccion">RESUMEN MAESTRO DE PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         columnas_deseadas = [
             "Usuario", "Contraseña",
-            "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",
+            "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000", "TOTAL PROMOS",
             "OBJETIVO", "VENTAS MENSUALES"
         ]
         columnas_existentes = [c for c in columnas_deseadas if c in df.columns]
