@@ -92,7 +92,6 @@ if "auth_email" in st.session_state:
         st.success(f"¡Bienvenido, {nombre_usuario}!")
     else:
         st.markdown(f'<div class="titulo">ÁREA PRIVADA</div>', unsafe_allow_html=True)
-
     if correo_usuario == ADMIN_EMAIL:
         st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario").strip().lower()
@@ -129,15 +128,31 @@ if "auth_email" in st.session_state:
             st.session_state.clear()
             st.rerun()
 
+        st.markdown('<div class="seccion">DATOS REGISTRADOS</div>', unsafe_allow_html=True)
+        columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
+        for col in columnas_visibles:
+            if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
+                etiqueta = "Usuario" if col.lower() == "usuario" else col
+                st.markdown(f"**{etiqueta}:** {user.get(col, '')}")
+
+        st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
+        def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
+        tappo = val("Promoción 3x10 TAPPO")
+        bm1000 = val("Promoción 3×21 BM1000")
+        total = val("TOTAL PROMOS")
+        entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
+        pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
+
+        st.write(f"- TAPPO asignados: {tappo}")
+        st.write(f"- BM1000 asignados: {bm1000}")
+        st.write(f"- Total promociones acumuladas: {total}")
+        st.write(f"- Promos entregadas: {entregados}")
+        st.write(f"- Pendientes de entregar: {pendientes}")
         st.markdown('<div class="seccion">SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
         if "widget_key_promos" not in st.session_state:
             st.session_state.widget_key_promos = str(uuid.uuid4())
         if "widget_key_imgs" not in st.session_state:
             st.session_state.widget_key_imgs = str(uuid.uuid4())
-
-        tappo = int(user.get("Promoción 3x10 TAPPO", 0)) if str(user.get("Promoción 3x10 TAPPO", 0)).isdigit() else 0
-        bm1000 = int(user.get("Promoción 3×21 BM1000", 0)) if str(user.get("Promoción 3×21 BM1000", 0)).isdigit() else 0
-
         promo1 = st.number_input("Promos 3x10 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
         promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
         imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
@@ -157,14 +172,64 @@ if "auth_email" in st.session_state:
                         st.error(f"Error al subir {img.name}: {e}")
                 if ok:
                     row = user.name + 2
-                    worksheet.update_cell(row, df.columns.get_loc("Promoción 3x10 TAPPO") + 1, str(tappo + promo1))
-                    worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000") + 1, str(bm1000 + promo2))
-                    worksheet.update_cell(row, df.columns.get_loc("TOTAL PROMOS") + 1, str(tappo + promo1 + bm1000 + promo2))
+                    worksheet.update_cell(row, df.columns.get_loc("Promoción 3x10 TAPPO")+1, str(tappo + promo1))
+                    worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm1000 + promo2))
+                    worksheet.update_cell(row, df.columns.get_loc("TOTAL PROMOS")+1, str(tappo + promo1 + bm1000 + promo2))
                     st.session_state.widget_key_promos = str(uuid.uuid4())
                     st.session_state.widget_key_imgs = str(uuid.uuid4())
                     st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
                     time.sleep(2)
                     st.rerun()
+
+        st.markdown('<div class="seccion">INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
+        objetivo = user.get("OBJETIVO", "")
+        compensacion = user.get("COMPENSACION", "")
+        ventas_may = user.get("VENTAS MAYO", "")
+        ventas_jun = user.get("VENTAS JUNIO", "")
+        st.write(f"- OBJETIVO: {objetivo if objetivo else '*No asignado*'}")
+        st.write(f"- COMPENSACIÓN: {compensacion if compensacion else '*No definido*'}")
+        st.write(f"- Ventas mayo: {ventas_may if ventas_may else '*Sin registrar*'}")
+        st.write(f"- Ventas junio: {ventas_jun if ventas_jun else '*Sin registrar*'}")
+
+        st.markdown('<div class="seccion">REPORTA TUS VENTAS</div>', unsafe_allow_html=True)
+        if "widget_key_ventas" not in st.session_state:
+            st.session_state.widget_key_ventas = str(uuid.uuid4())
+        if "widget_key_fotos" not in st.session_state:
+            st.session_state.widget_key_fotos = str(uuid.uuid4())
+
+        with st.form("formulario_ventas"):
+            mes = st.selectbox("¿Qué mes estás reportando?", ["MAYO", "JUNIO"])
+            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+            fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+            enviar = st.form_submit_button("Enviar")
+
+        if enviar:
+            if not fotos:
+                st.warning("Debes subir al menos una imagen.")
+            else:
+                try:
+                    col_destino = f"VENTAS {mes}"
+                    row = user.name + 2
+                    col_index = df.columns.get_loc(col_destino) + 1
+                    valor_anterior = user.get(col_destino, 0)
+                    anterior = int(valor_anterior) if str(valor_anterior).isdigit() else 0
+                    suma = anterior + int(cantidad)
+                    worksheet.update_cell(row, col_index, str(suma))
+
+                    match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                    carpeta_id = match.group(1) if match else None
+                    if carpeta_id:
+                        service = conectar_drive(st.secrets["gcp_service_account"])
+                        for archivo in fotos:
+                            subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+
+                    st.success("Ventas enviadas correctamente.")
+                    time.sleep(2)
+                    st.session_state.widget_key_ventas = str(uuid.uuid4())
+                    st.session_state.widget_key_fotos = str(uuid.uuid4())
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error al subir ventas: {e}")
 
 else:
     st.image("logo.png", use_container_width=True)
