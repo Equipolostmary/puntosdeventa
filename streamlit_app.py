@@ -112,7 +112,7 @@ if "auth_email" in st.session_state:
     tappo = val("Promoción 2+1 TAPPO")
     bm1000 = val("Promoción 3×21 BM1000")
     total = val("TOTAL PROMOS")
-    entregados = val("RE repuestos") if "RE repuestos" in df.columns else 0
+    entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
     pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
     st.write(f"- TAPPO asignados: {tappo}")
