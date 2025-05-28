@@ -11,6 +11,28 @@ import re
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
+# Diccionario enlaces DEFINIDO AL INICIO
+enlaces = {
+    "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
+    "CATALOGO DE MATERIALES": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/10ciZH8DpEsC5GNpYSigFrfJ_Fln9B0Q2/preview?authuser=0",
+    "COMPENSACIONES MENSUALES": "https://docs.google.com/spreadsheets/d/1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0/edit?gid=128791843#gid=128791843",
+    "CORREO ELECTRONICO": "https://email.ionos.es/appsuite/#!!&app=io.ox/mail&folder=default0/INBOX",
+    "EVENTOS": "https://docs.google.com/spreadsheets/d/1VTzXhfGbOldKiuN4HuHcrcotyw0HzOENCjLkeaV3FN4/edit?gid=0#gid=0",
+    "EXCELL VACACIONES": "https://ideasoriginales4-my.sharepoint.com/:x:/r/personal/erselfbar_ioinvestigacion_com/Documents/PROYECTO%20LOST%20MERY%20-%20ELFBAR/1.%20VACACIONES%202025/Vacaciones%20Equipo%20Lost%20Mary%202025.xlsx?d=w98ae47bd4a4f4096ab0cb35f2183d6fb&csf=1&web=1&e=yNQTrb",
+    "EXPENDIDURÍAS": "https://serviciostelematicosext.hacienda.gob.es/CMT/GestitabExt/Egeo/index.cshtml",
+    "FOTOS COMPENSACIONES": "https://drive.google.com/drive/u/1/folders/18SxC9Wy9VTz-W2auyIBMwaYU6yRqsHXA",
+    "FOTOS DE LOS TICKET": "https://drive.google.com/drive/u/1/folders/1GpG-NERdKzZvItaq5rV78B8W_UAmb_e4",
+    "PERSONIO": "https://login.personio.com/u/login",
+    "PRECIO BM600": "https://docs.google.com/spreadsheets/d/1F-TyJSI32sIBvZXtUKfFQ5P2crQQeXHNIsX1u95vi4o/edit?gid=0#gid=0",
+    "REALIZAR PEDIDO": "https://docs.google.com/spreadsheets/d/1IUeYNQg3Dx4N4K56vrkiRWNqp3vkM8HXplHY8mbh3tI/edit?gid=2078407623#gid=2078407623",
+    "REGISTRAR PUNTO DE VENTA": "https://docs.google.com/forms/d/e/1FAIpQLScTNcjTq0DU2xIjB1ECbqVpcVXWKurBiNBZFDngN3fhmYbl_A/viewform",
+    "RESPUESTAS FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR2X76MQdEy3-FjlVWFQX",
+    "VIDEOS": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/1hzXetHR3hV3MVcE-Z7A0GSMmI7q3hqjT/preview?authuser=0",
+    "VINILOS": "https://docs.google.com/spreadsheets/d/1l2hSuJuS0wBMCVaMuGFSAnoAVy72vfskI0XmA4rX3Oc/edit?gid=0#gid=0",
+    "VISUALES": "https://drive.google.com/drive/u/1/folders/1qzXCVrBcAuebu2kepn9sQ8X85ZIDh68C",
+    "WEB DE ESTANCOS": "https://sites.google.com/view/estancoslostmary"
+}
+
 # ======== ESTILO VISUAL GENERAL ========
 st.markdown("""
 <style>
@@ -76,7 +98,7 @@ def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# Nombres exactos de columnas para promociones
+# Nombres columnas promociones EXACTOS
 promo_tappo_col = "Promoción 2+1 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
 total_promos_col = "TOTAL PROMOS"
@@ -105,7 +127,7 @@ if "auth_email" in st.session_state:
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
 
     if correo_usuario == ADMIN_EMAIL:
-        # Solo enlaces y buscador sin mostrar datos ni promos
+        # Solo mostrar enlaces y buscador, sin datos personales ni resumen
         st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
         opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
         if opcion:
@@ -141,7 +163,6 @@ if "auth_email" in st.session_state:
                 st.warning("No se encontró ningún punto con ese dato.")
     else:
         # Usuario normal: mostrar datos y formularios
-
         st.markdown('<div class="seccion">DATOS REGISTRADOS</div>', unsafe_allow_html=True)
         columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
         for col in columnas_visibles:
@@ -264,25 +285,3 @@ else:
             else:
                 st.session_state["auth_email"] = correo
                 st.rerun()
-
-# Diccionario de enlaces (mantenerlo fuera para evitar redefinir)
-enlaces = {
-    "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
-    "CATALOGO DE MATERIALES": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/10ciZH8DpEsC5GNpYSigFrfJ_Fln9B0Q2/preview?authuser=0",
-    "COMPENSACIONES MENSUALES": "https://docs.google.com/spreadsheets/d/1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0/edit?gid=128791843#gid=128791843",
-    "CORREO ELECTRONICO": "https://email.ionos.es/appsuite/#!!&app=io.ox/mail&folder=default0/INBOX",
-    "EVENTOS": "https://docs.google.com/spreadsheets/d/1VTzXhfGbOldKiuN4HuHcrcotyw0HzOENCjLkeaV3FN4/edit?gid=0#gid=0",
-    "EXCELL VACACIONES": "https://ideasoriginales4-my.sharepoint.com/:x:/r/personal/erselfbar_ioinvestigacion_com/Documents/PROYECTO%20LOST%20MERY%20-%20ELFBAR/1.%20VACACIONES%202025/Vacaciones%20Equipo%20Lost%20Mary%202025.xlsx?d=w98ae47bd4a4f4096ab0cb35f2183d6fb&csf=1&web=1&e=yNQTrb",
-    "EXPENDIDURÍAS": "https://serviciostelematicosext.hacienda.gob.es/CMT/GestitabExt/Egeo/index.cshtml",
-    "FOTOS COMPENSACIONES": "https://drive.google.com/drive/u/1/folders/18SxC9Wy9VTz-W2auyIBMwaYU6yRqsHXA",
-    "FOTOS DE LOS TICKET": "https://drive.google.com/drive/u/1/folders/1GpG-NERdKzZvItaq5rV78B8W_UAmb_e4",
-    "PERSONIO": "https://login.personio.com/u/login",
-    "PRECIO BM600": "https://docs.google.com/spreadsheets/d/1F-TyJSI32sIBvZXtUKfFQ5P2crQQeXHNIsX1u95vi4o/edit?gid=0#gid=0",
-    "REALIZAR PEDIDO": "https://docs.google.com/spreadsheets/d/1IUeYNQg3Dx4N4K56vrkiRWNqp3vkM8HXplHY8mbh3tI/edit?gid=2078407623#gid=2078407623",
-    "REGISTRAR PUNTO DE VENTA": "https://docs.google.com/forms/d/e/1FAIpQLScTNcjTq0DU2xIjB1ECbqVpcVXWKurBiNBZFDngN3fhmYbl_A/viewform",
-    "RESPUESTAS FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR2X76MQdEy3-FjlVWFQX",
-    "VIDEOS": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/1hzXetHR3hV3MVcE-Z7A0GSMmI7q3hqjT/preview?authuser=0",
-    "VINILOS": "https://docs.google.com/spreadsheets/d/1l2hSuJuS0wBMCVaMuGFSAnoAVy72vfskI0XmA4rX3Oc/edit?gid=0#gid=0",
-    "VISUALES": "https://drive.google.com/drive/u/1/folders/1qzXCVrBcAuebu2kepn9sQ8X85ZIDh68C",
-    "WEB DE ESTANCOS": "https://sites.google.com/view/estancoslostmary"
-}
