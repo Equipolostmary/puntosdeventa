@@ -107,7 +107,6 @@ if "auth_email" in st.session_state:
             st.markdown(f"**{etiqueta}:** {user.get(col, '')}")
 
     st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
-
     def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
     tappo = val("Promoción 2+1 TAPPO")
     bm1000 = val("Promoción 3×21 BM1000")
@@ -203,15 +202,31 @@ if "auth_email" in st.session_state:
                 st.error(f"Error al subir ventas: {e}")
 
     if correo_usuario == ADMIN_EMAIL:
-        st.markdown('<div class="seccion">RESUMEN MAESTRO DE PUNTOS DE VENTA</div>', unsafe_allow_html=True)
-        columnas_deseadas = [
-            "Usuario", "Contraseña",
-            "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",
-            "OBJETIVO", "VENTAS MENSUALES"
-        ]
-        columnas_existentes = [c for c in columnas_deseadas if c in df.columns]
-        resumen_df = df[columnas_existentes].fillna("")
-        st.dataframe(resumen_df, use_container_width=True)
+        st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
+        termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario").strip().lower()
+        if termino:
+            resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
+                                                or termino in str(row.get("Usuario", "")).lower()
+                                                or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+            if not resultados.empty:
+                index = resultados.index[0]
+                st.info(f"{len(resultados)} resultado(s) encontrado(s). Mostrando el primero.")
+                with st.form("editar_usuario"):
+                    nuevos_valores = {}
+                    for col in df.columns:
+                        if col != "Carpeta privada":
+                            nuevos_valores[col] = st.text_input(col, str(df.at[index, col]))
+                    if st.form_submit_button("Guardar cambios"):
+                        try:
+                            for col, nuevo_valor in nuevos_valores.items():
+                                worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
+                            st.success("✅ Datos actualizados correctamente.")
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error al guardar: {e}")
+            else:
+                st.warning("No se encontró ningún punto con ese dato.")
 
 else:
     st.image("logo.png", use_container_width=True)
@@ -233,4 +248,3 @@ else:
             else:
                 st.session_state["auth_email"] = correo
                 st.rerun()
- 
