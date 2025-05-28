@@ -1,18 +1,17 @@
-# streamlit_app.py (estructura actualizada con buscador editable y columnas corregidas)
-# Esta versión reemplaza el resumen por un panel con buscador y edición completa
-
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 import gspread
 from google.oauth2 import service_account
-from datetime import datetime
+from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
+import uuid
 import re
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# ====== ESTILO VISUAL GENERAL ======
+# ======== ESTILO VISUAL GENERAL ========
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -63,7 +62,7 @@ input, textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# ============ CREDENCIALES GOOGLE SHEETS ============
+# ============ CONEXIÓN GOOGLE SHEETS ============
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
@@ -73,12 +72,12 @@ sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
-# ============ AUTENTICACION ============
+# ============ AUTENTICACIÓN ============
 def buscar_usuario(email):
     mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# ============ LOGIN ============
+# ============ INTERFAZ ============
 if "auth_email" not in st.session_state:
     st.image("logo.png", use_container_width=True)
     correo = st.text_input("Correo electrónico").strip().lower()
@@ -109,15 +108,43 @@ else:
     st.markdown('</div></div>', unsafe_allow_html=True)
 
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
+
     if st.button("CERRAR SESIÓN"):
         st.session_state.clear()
         st.rerun()
 
-    # ============ PANELES DE ADMINISTRADOR ============
+    if user is None:
+        st.error("Usuario no encontrado.")
+        st.session_state.clear()
+        st.rerun()
+
+    st.success(f"¡Bienvenido, {user['Expendiduría']}!")
+
+    st.markdown('<div class="seccion">DATOS REGISTRADOS</div>', unsafe_allow_html=True)
+    columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
+    for col in columnas_visibles:
+        if "contraseña" not in col.lower():
+            st.markdown(f"**{col}:** {user.get(col, '')}")
+
+    st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
+
+    def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
+    tappo_asig = val("Promoción 2+1 TAPPO")
+    tappo_ent = val("Entregados promo TAPPO")
+    tappo_falt = val("Falta por entregar TAPPO")
+    bm_asig = val("Promoción 3×21 BM1000")
+    bm_ent = val("Entregados promo BM1000")
+    bm_falt = val("Falta por entregar BM1000")
+
+    st.write(f"- TAPPO asignados: {tappo_asig} | Entregados: {tappo_ent} | Pendientes: {tappo_falt}")
+    st.write(f"- BM1000 asignados: {bm_asig} | Entregados: {bm_ent} | Pendientes: {bm_falt}")
+    st.write(f"- TOTAL PROMOS: {user.get('TOTAL PROMOS', 'N/A')}")
+
+    # Resto igual (subida de promociones, ventas, etc...)
+
     if correo_usuario == ADMIN_EMAIL:
         st.markdown('<div class="seccion">BUSCADOR Y EDICIÓN DE DATOS</div>', unsafe_allow_html=True)
         busqueda = st.text_input("Buscar punto por cualquier campo (correo, nombre, teléfono, etc.)").lower().strip()
-
         df_filtrado = df[df.apply(lambda row: row.astype(str).str.lower().str.contains(busqueda).any(), axis=1)] if busqueda else df
 
         if not df_filtrado.empty:
