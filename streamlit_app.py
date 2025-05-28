@@ -73,7 +73,7 @@ worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
 def buscar_usuario(email):
-    mask = df["Dirección de correo electrónico"].astype(str).str.lower() == email.lower().strip()
+    mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
 # ============ ÁREA PRIVADA ============
@@ -103,7 +103,8 @@ if "auth_email" in st.session_state:
     columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
     for col in columnas_visibles:
         if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
-            st.markdown(f"**{col}:** {user.get(col, '')}")
+            etiqueta = "Usuario" if col.lower() == "usuario" else col
+            st.markdown(f"**{etiqueta}:** {user.get(col, '')}")
 
     st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
 
@@ -187,10 +188,7 @@ if "auth_email" in st.session_state:
                 row = user.name + 2
                 col_index = df.columns.get_loc(col_destino) + 1
                 valor_anterior = user.get(col_destino, 0)
-                try:
-                    anterior = int(valor_anterior)
-                except:
-                    anterior = 0
+                anterior = int(valor_anterior) if str(valor_anterior).isdigit() else 0
                 suma = anterior + int(cantidad)
                 worksheet.update_cell(row, col_index, str(suma))
 
@@ -212,7 +210,7 @@ if "auth_email" in st.session_state:
     if correo_usuario == ADMIN_EMAIL:
         st.markdown('<div class="seccion">RESUMEN MAESTRO DE PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         columnas_deseadas = [
-            "Dirección de correo electrónico", "Contraseña",
+            "Usuario", "Contraseña",
             "Promoción 2+1 TAPPO", "Promoción 3×21 BM1000",
             "OBJETIVO", "VENTAS MENSUALES"
         ]
@@ -229,7 +227,7 @@ else:
         if not correo or not clave:
             st.warning("Debes completar ambos campos.")
         elif user is None:
-            st.error("Correo no encontrado.")
+            st.error("Usuario no encontrado.")
         else:
             password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
             password_introducida = clave.strip().replace(",", "")
