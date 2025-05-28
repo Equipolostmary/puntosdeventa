@@ -78,7 +78,6 @@ enlaces = {
     "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
     "CATALOGO DE MATERIALES": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/10ciZH8DpEsC5GNpYSigFrfJ_Fln9B0Q2/preview?authuser=0",
     "COMPENSACIONES MENSUALES": "https://docs.google.com/spreadsheets/d/1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0/edit?gid=128791843#gid=128791843",
-    "EXCELL VACACIONES": "https://ideasoriginales4-my.sharepoint.com/:x:/r/personal/erselfbar_ioinvestigacion_com/Documents/PROYECTO%20LOST%20MERY%20-%20ELFBAR/1.%20VACACIONES%202025/Vacaciones%20Equipo%20Lost%20Mary%202025.xlsx?d=w98ae47bd4a4f4096ab0cb35f2183d6fb&csf=1&web=1&e=yNQTrb",
     "REALIZAR PEDIDO": "https://docs.google.com/spreadsheets/d/1IUeYNQg3Dx4N4K56vrkiRWNqp3vkM8HXplHY8mbh3tI/edit?gid=2078407623#gid=2078407623",
     "REGISTRAR PUNTO DE VENTA": "https://docs.google.com/forms/d/e/1FAIpQLScTNcjTq0DU2xIjB1ECbqVpcVXWKurBiNBZFDngN3fhmYbl_A/viewform",
     "RESPUESTAS FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR2X76MQdEy3-FjlVWFQX",
@@ -97,10 +96,32 @@ if "auth_email" in st.session_state:
         st.rerun()
 
     user = buscar_usuario(correo_usuario)
+    if user is None:
+        st.error("Usuario no encontrado.")
+        st.session_state.clear()
+        st.rerun()
+
     if correo_usuario != ADMIN_EMAIL:
         nombre_usuario = user.get("Expendiduría", correo_usuario)
         st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
         st.success(f"¡Bienvenido, {nombre_usuario}!")
+
+        st.markdown('<div class="seccion">DATOS PERSONALES</div>', unsafe_allow_html=True)
+        columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
+        for col in columnas_visibles:
+            if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
+                etiqueta = "Usuario" if col.lower() == "usuario" else col
+                st.markdown(f"**{etiqueta}:** {user.get(col, '')}")
+
+        st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
+        def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
+        tappo = val("Promoción 3x10 TAPPO")
+        bm1000 = val("Promoción 3×21 BM1000")
+        total = val("TOTAL PROMOS")
+        st.write(f"- TAPPO asignados: {tappo}")
+        st.write(f"- BM1000 asignados: {bm1000}")
+        st.write(f"- Total promociones acumuladas: {total}")
+
     else:
         st.markdown(f'<div class="titulo">ÁREA PRIVADA</div>', unsafe_allow_html=True)
         st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
@@ -108,80 +129,97 @@ if "auth_email" in st.session_state:
         if opcion:
             st.markdown(f"[Ir al recurso seleccionado]({enlaces[opcion]})", unsafe_allow_html=True)
 
-    if correo_usuario != ADMIN_EMAIL:
-        if user is None:
-            st.error("Usuario no encontrado.")
-            st.session_state.clear()
+        st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
+        termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario").strip().lower()
+        if termino:
+            resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
+                                                or termino in str(row.get("Usuario", "")).lower()
+                                                or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+            if not resultados.empty:
+                opciones = [f"{row['Usuario']} - {row['Expendiduría']} - {row['TELÉFONO']}" for _, row in resultados.iterrows()]
+                seleccion = st.selectbox("Selecciona un punto para editar:", opciones, key="buscador_admin")
+                index = resultados.index[opciones.index(seleccion)]
+                with st.form(f"editar_usuario_{index}"):
+                    nuevos_valores = {}
+                    for col in df.columns:
+                        if col != "Carpeta privada":
+                            nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
+                    guardar = st.form_submit_button("Guardar cambios")
+                    if guardar:
+                        for col, nuevo_valor in nuevos_valores.items():
+                            worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
+                        st.success("✅ Datos actualizados correctamente.")
+                        time.sleep(2)
+                        st.rerun()
+
+# sigue con los formularios, contadores y ventas si necesitas que los vuelva a pegar
+    st.markdown('<div class="seccion">SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
+    if "widget_key_promos" not in st.session_state:
+        st.session_state.widget_key_promos = str(uuid.uuid4())
+    if "widget_key_imgs" not in st.session_state:
+        st.session_state.widget_key_imgs = str(uuid.uuid4())
+
+    promo1 = st.number_input("Promos 3x10 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
+    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
+    imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
+
+    if st.button("SUBIR PROMOCIONES"):
+        if not imagenes:
+            st.warning("Selecciona al menos una imagen.")
+        else:
+            service = conectar_drive(st.secrets["gcp_service_account"])
+            carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+            for img in imagenes:
+                subir_archivo_a_drive(service, img, img.name, carpeta_id)
+
+            row = user.name + 2
+            worksheet.update_cell(row, df.columns.get_loc("Promoción 3x10 TAPPO")+1, str(tappo + promo1))
+            worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000")+1, str(bm1000 + promo2))
+            worksheet.update_cell(row, df.columns.get_loc("TOTAL PROMOS")+1, str(tappo + promo1 + bm1000 + promo2))
+
+            st.session_state.widget_key_promos = str(uuid.uuid4())
+            st.session_state.widget_key_imgs = str(uuid.uuid4())
+            st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
+            time.sleep(2)
             st.rerun()
 
-        st.markdown('<div class="seccion">SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
-        if "widget_key_promos" not in st.session_state:
-            st.session_state.widget_key_promos = str(uuid.uuid4())
-        if "widget_key_imgs" not in st.session_state:
-            st.session_state.widget_key_imgs = str(uuid.uuid4())
+    st.markdown('<div class="seccion">REPORTA TUS VENTAS</div>', unsafe_allow_html=True)
+    if "widget_key_ventas" not in st.session_state:
+        st.session_state.widget_key_ventas = str(uuid.uuid4())
+    if "widget_key_fotos" not in st.session_state:
+        st.session_state.widget_key_fotos = str(uuid.uuid4())
 
-        tappo = int(user.get("Promoción 3x10 TAPPO", 0)) if str(user.get("Promoción 3x10 TAPPO", 0)).isdigit() else 0
-        bm1000 = int(user.get("Promoción 3×21 BM1000", 0)) if str(user.get("Promoción 3×21 BM1000", 0)).isdigit() else 0
+    with st.form("formulario_ventas"):
+        cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+        fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+        enviar = st.form_submit_button("Enviar")
 
-        promo1 = st.number_input("Promos 3x10 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
-        promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
-        imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
-
-        if st.button("SUBIR PROMOCIONES"):
-            if not imagenes:
-                st.warning("Selecciona al menos una imagen.")
-            else:
-                service = conectar_drive(st.secrets["gcp_service_account"])
-                carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-                for img in imagenes:
-                    subir_archivo_a_drive(service, img, img.name, carpeta_id)
+    if enviar:
+        if not fotos:
+            st.warning("Debes subir al menos una imagen.")
+        else:
+            try:
+                col_destino = "VENTAS MENSUALES"
                 row = user.name + 2
-                worksheet.update_cell(row, df.columns.get_loc("Promoción 3x10 TAPPO") + 1, str(tappo + promo1))
-                worksheet.update_cell(row, df.columns.get_loc("Promoción 3×21 BM1000") + 1, str(bm1000 + promo2))
-                worksheet.update_cell(row, df.columns.get_loc("TOTAL PROMOS") + 1, str(tappo + promo1 + bm1000 + promo2))
-                st.session_state.widget_key_promos = str(uuid.uuid4())
-                st.session_state.widget_key_imgs = str(uuid.uuid4())
-                st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
+                col_index = df.columns.get_loc(col_destino) + 1
+                anterior = int(user.get(col_destino, 0)) if str(user.get(col_destino, 0)).isdigit() else 0
+                suma = anterior + int(cantidad)
+                worksheet.update_cell(row, col_index, str(suma))
+
+                match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                carpeta_id = match.group(1) if match else None
+                if carpeta_id:
+                    service = conectar_drive(st.secrets["gcp_service_account"])
+                    for archivo in fotos:
+                        subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+
+                st.success("Ventas enviadas correctamente.")
                 time.sleep(2)
+                st.session_state.widget_key_ventas = str(uuid.uuid4())
+                st.session_state.widget_key_fotos = str(uuid.uuid4())
                 st.rerun()
-
-        st.markdown('<div class="seccion">REPORTA TUS VENTAS</div>', unsafe_allow_html=True)
-        if "widget_key_ventas" not in st.session_state:
-            st.session_state.widget_key_ventas = str(uuid.uuid4())
-        if "widget_key_fotos" not in st.session_state:
-            st.session_state.widget_key_fotos = str(uuid.uuid4())
-
-        with st.form("formulario_ventas"):
-            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
-            fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
-            enviar = st.form_submit_button("Enviar")
-
-        if enviar:
-            if not fotos:
-                st.warning("Debes subir al menos una imagen.")
-            else:
-                try:
-                    col_destino = "VENTAS MENSUALES"
-                    row = user.name + 2
-                    col_index = df.columns.get_loc(col_destino) + 1
-                    anterior = int(user.get(col_destino, 0)) if str(user.get(col_destino, 0)).isdigit() else 0
-                    suma = anterior + int(cantidad)
-                    worksheet.update_cell(row, col_index, str(suma))
-
-                    match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
-                    carpeta_id = match.group(1) if match else None
-                    if carpeta_id:
-                        service = conectar_drive(st.secrets["gcp_service_account"])
-                        for archivo in fotos:
-                            subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
-
-                    st.success("Ventas enviadas correctamente.")
-                    time.sleep(2)
-                    st.session_state.widget_key_ventas = str(uuid.uuid4())
-                    st.session_state.widget_key_fotos = str(uuid.uuid4())
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error al subir ventas: {e}")
+            except Exception as e:
+                st.error(f"Error al subir ventas: {e}")
 
 else:
     st.image("logo.png", use_container_width=True)
