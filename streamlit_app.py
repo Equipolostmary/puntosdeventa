@@ -93,6 +93,29 @@ client = gspread.authorize(creds)
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
+df.columns = df.columns.str.strip()
+
+# ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
+ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
+service = conectar_drive(st.secrets["gcp_service_account"])
+
+for idx, row in df.iterrows():
+    if not row.get("Carpeta privada"):
+        nombre_carpeta = f"{row.get('Expendiduría', 'Punto')} - {row.get('Usuario', 'SinUsuario')}"
+        try:
+            metadata = {
+                "name": nombre_carpeta,
+                "mimeType": "application/vnd.google-apps.folder",
+                "parents": [ID_CARPETA_RAIZ]
+            }
+            carpeta = service.files().create(body=metadata, fields="id").execute()
+            carpeta_id = carpeta.get("id")
+            enlace = f"https://drive.google.com/drive/folders/{carpeta_id}"
+            worksheet.update_cell(idx + 2, 12, enlace)
+            df.at[idx, "Carpeta privada"] = enlace
+        except Exception as e:
+            st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
+
 
 def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
