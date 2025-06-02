@@ -33,12 +33,26 @@ def subir_archivo_a_drive(service, archivo, nombre_archivo, carpeta_id):
 
 # Función directa para usar desde la app con archivo de Streamlit
 def subir_archivo_a_drive_con_idcarpeta(file_streamlit, carpeta_id):
-    # Conectarse con los secrets de Streamlit
     service = conectar_drive(st.secrets["gcp_service_account"])
-
-    # Convertir archivo subido en bytes
     file_bytes = io.BytesIO(file_streamlit.read())
     file_bytes.seek(0)
-
-    # Subir a Drive
     subir_archivo_a_drive(service, file_bytes, file_streamlit.name, carpeta_id)
+
+# Crear carpeta nueva y guardar el enlace en Excel (columna L)
+def crear_carpeta_y_guardar_en_excel(nombre_carpeta, id_padre, worksheet, fila_index):
+    service = conectar_drive(st.secrets["gcp_service_account"])
+
+    # Crear la carpeta en Drive
+    metadata = {
+        "name": nombre_carpeta,
+        "mimeType": "application/vnd.google-apps.folder",
+        "parents": [id_padre]
+    }
+    carpeta = service.files().create(body=metadata, fields="id").execute()
+    carpeta_id = carpeta["id"]
+    enlace = f"https://drive.google.com/drive/folders/{carpeta_id}"
+
+    # Guardar enlace en la columna L (columna 12)
+    worksheet.update_cell(fila_index + 2, 12, enlace)  # +2 por cabecera
+
+    return carpeta_id, enlace
