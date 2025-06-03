@@ -119,6 +119,8 @@ for idx, row in df.iterrows():
         except Exception as e:
             st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
 
+# ... (resto del código permanece igual sin cambios hasta esta sección)
+
 # ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
 def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
