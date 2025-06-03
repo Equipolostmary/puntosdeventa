@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 from datetime import datetime
 import gspread
@@ -11,6 +11,7 @@ import re
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
+# ===== ENLACES =====
 enlaces = {
     "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
     "CATALOGO DE MATERIALES": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-YPxpn22EL6g/p/10ciZH8DpEsC5GNpYSigFrFJ_Fln9B0Q2/preview?authuser=0",
@@ -33,6 +34,7 @@ enlaces = {
     "INTRODUCCION TAPPO": "https://drive.google.com/drive/u/1/folders/18KFVvu3Fg3W_Gr5erYtAXiPPG3zAxg8L"
 }
 
+# ============ ESTILO ============
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -82,6 +84,7 @@ button[kind="primary"] {
 }
 </style>
 """, unsafe_allow_html=True)
+
 # ============ AUTENTICACIÓN Y DATOS ============
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
@@ -93,17 +96,13 @@ worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 df.columns = df.columns.str.strip()
 
-# ===== VALIDAR ENLACE DE CARPETA =====
-def es_link_drive_valido(enlace):
-    return isinstance(enlace, str) and re.match(r"^https://drive\\.google\\.com/drive/folders/[a-zA-Z0-9_-]+$", enlace.strip())
-
 # ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
 ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
 service = conectar_drive(st.secrets["gcp_service_account"])
 
 for idx, row in df.iterrows():
-    enlace_actual = row.get("Carpeta privada", "").strip()
-    if not es_link_drive_valido(enlace_actual):
+    enlace_actual = str(row.get("Carpeta privada", "")).strip()
+    if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
         nombre_carpeta = f"{row.get('Expendiduría', 'Punto')} - {row.get('Usuario', 'SinUsuario')}"
         try:
             metadata = {
@@ -114,6 +113,7 @@ for idx, row in df.iterrows():
             carpeta = service.files().create(body=metadata, fields="id").execute()
             carpeta_id = carpeta.get("id")
             enlace = f"https://drive.google.com/drive/folders/{carpeta_id}"
+            time.sleep(1)
             worksheet.update_cell(idx + 2, df.columns.get_loc("Carpeta privada") + 1, enlace)
             df.at[idx, "Carpeta privada"] = enlace
         except Exception as e:
