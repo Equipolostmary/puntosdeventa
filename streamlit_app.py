@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
@@ -32,6 +32,7 @@ enlaces = {
     "WEB DE ESTANCOS": "https://sites.google.com/view/estancoslostmary",
     "INTRODUCCION TAPPO": "https://drive.google.com/drive/u/1/folders/18KFVvu3Fg3W_Gr5erYtAXiPPG3zAxg8L"
 }
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
@@ -80,7 +81,7 @@ button[kind="primary"] {
     font-family: 'Montserrat', sans-serif !important;
 }
 </style>
-\"\"\", unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 # ============ AUTENTICACIÓN Y DATOS ============
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
