@@ -11,16 +11,88 @@ import re
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
-# Diccionario enlaces (omitido por espacio, ya definido anteriormente)
-...  # (Mantener el diccionario enlaces igual que antes)
+enlaces = {
+    "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
+    "CATALOGO DE MATERIALES": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/10ciZH8DpEsC5GNpYSigFrfJ_Fln9B0Q2/preview?authuser=0",
+    "COMPENSACIONES MENSUALES": "https://docs.google.com/spreadsheets/d/1CpHwmPrRYqqMtXrZBZV7-nQOeEH6Z-RWtpnT84ztVB0/edit?gid=128791843#gid=128791843",
+    "CORREO ELECTRONICO": "https://email.ionos.es/appsuite/#!!&app=io.ox/mail&folder=default0/INBOX",
+    "EVENTOS": "https://docs.google.com/spreadsheets/d/1VTzXhfGbOldKiuN4HuHcrcotyw0HzOENCjLkeaV3FN4/edit?gid=0#gid=0",
+    "EXCELL VACACIONES": "https://ideasoriginales4-my.sharepoint.com/:x:/r/personal/erselfbar_ioinvestigacion_com/Documents/PROYECTO%20LOST%20MERY%20-%20ELFBAR/1.%20VACACIONES%202025/Vacaciones%20Equipo%20Lost%20Mary%202025.xlsx?d=w98ae47bd4a4f4096ab0cb35f2183d6fb&csf=1&web=1&e=yNQTrb",
+    "EXPENDIDURÍAS": "https://serviciostelematicosext.hacienda.gob.es/CMT/GestitabExt/Egeo/index.cshtml",
+    "FOTOS COMPENSACIONES": "https://drive.google.com/drive/u/1/folders/18SxC9Wy9VTz-W2auyIBMwaYU6yRqsHXA",
+    "FOTOS DE LOS TICKET": "https://drive.google.com/drive/u/1/folders/1GpG-NERdKzZvItaq5rV78B8W_UAmb_e4",
+    "PERSONIO": "https://login.personio.com/u/login",
+    "PRECIO BM600": "https://docs.google.com/spreadsheets/d/1F-TyJSI32sIBvZXtUKfFQ5P2crQQeXHNIsX1u95vi4o/edit?gid=0#gid=0",
+    "REALIZAR PEDIDO": "https://docs.google.com/spreadsheets/d/1IUeYNQg3Dx4N4K56vrkiRWNqp3vkM8HXplHY8mbh3tI/edit?gid=2078407623#gid=2078407623",
+    "REGISTRAR PUNTO DE VENTA": "https://docs.google.com/forms/d/e/1FAIpQLScTNcjTq0DU2xIjB1ECbqVpcVXWKurBiNBZFDngN3fhmYbl_A/viewform",
+    "RESPUESTAS FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR2X76MQdEy3-FjlVWFQX",
+    "VIDEOS": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-XPpyn22EL6G/p/1hzXetHR3hV3MVcE-Z7A0GSMmI7q3hqjT/preview?authuser=0",
+    "VINILOS": "https://docs.google.com/spreadsheets/d/1l2hSuJuS0wBMCVaMuGFSAnoAVy72vfskI0XmA4rX3Oc/edit?gid=0#gid=0",
+    "VISUALES": "https://drive.google.com/drive/u/1/folders/1qzXCVrBcAuebu2kepn9sQ8X85ZIDh68C",
+    "WEB DE ESTANCOS": "https://sites.google.com/view/estancoslostmary"
+}
 
-# ======== ESTILO VISUAL GENERAL ========
-...  # (Mantener el bloque de estilo igual que antes)
-
+st.markdown(\"\"\"
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+html, body, .block-container, .stApp {
+    background-color: #e6e0f8 !important;
+    font-family: 'Montserrat', sans-serif;
+}
+section[data-testid="stSidebar"], #MainMenu, header, footer {
+    display: none !important;
+}
+.logo-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+.logo-frame {
+    background-color: white;
+    padding: 10px;
+    border-radius: 20px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    width: 60%;
+    max-width: 600px;
+    margin: auto;
+}
+.titulo {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+    margin: 20px 0 10px 0;
+    background-color: #cdb4f5;
+    padding: 10px;
+    border-radius: 10px;
+}
+.seccion {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #bbb;
+    padding-bottom: 5px;
+}
+button[kind="primary"] {
+    font-family: 'Montserrat', sans-serif !important;
+}
+</style>
+\"\"\", unsafe_allow_html=True)
 # ============ AUTENTICACIÓN Y DATOS ============
-...  # (Mantener el bloque de autenticación igual que antes)
+scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+creds = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"], scopes=scopes)
+client = gspread.authorize(creds)
 
-# ===== FUNCION PARA VALIDAR ENLACES =====
+sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
+worksheet = sheet.worksheet("Registro")
+df = pd.DataFrame(worksheet.get_all_records())
+df.columns = df.columns.str.strip()
+
+# ===== VALIDAR ENLACE DE CARPETA =====
 def es_link_drive_valido(enlace):
     return isinstance(enlace, str) and re.match(r"^https://drive\\.google\\.com/drive/folders/[a-zA-Z0-9_-]+$", enlace.strip())
 
@@ -46,14 +118,16 @@ for idx, row in df.iterrows():
         except Exception as e:
             st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
 
+# ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
 def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
+# ===== DEFINICIÓN DE COLUMNAS DE PROMOCIÓN =====
 promo_tappo_col = "Promoción 3x10 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
 total_promos_col = "TOTAL PROMOS"
-
+# ============ ÁREA PRIVADA ============
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
@@ -62,7 +136,6 @@ if "auth_email" in st.session_state:
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
     st.image("logo.png", use_container_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
-
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
     if st.button("CERRAR SESIÓN"):
@@ -166,7 +239,6 @@ if "auth_email" in st.session_state:
                     st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
                     time.sleep(2)
                     st.rerun()
-
         st.markdown('<div class="seccion">INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
         objetivo = user.get("OBJETIVO", "")
         compensacion = user.get("COMPENSACION", "")
