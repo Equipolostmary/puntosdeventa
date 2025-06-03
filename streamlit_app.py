@@ -30,8 +30,7 @@ enlaces = {
     "VINILOS": "https://docs.google.com/spreadsheets/d/1l2hSuJuS0wBMCVaMuGFSAnoAVy72vfskI0XmA4rX3Oc/edit?gid=0#gid=0",
     "VISUALES": "https://drive.google.com/drive/u/1/folders/1qzXCVrBcAuebu2kepn9sQ8X85ZIDh68C",
     "WEB DE ESTANCOS": "https://sites.google.com/view/estancoslostmary"
-    "INTRODUCCION TAPPO": "https://drive.google.com/drive/u/1/folders/18KFVvu3Fq3W_Gr5erYtAXiPPG3zAxg8L" 
-}
+    "INTRODUCCION TAPPO": "https://drive.google.com/drive/u/1/folders/18KFVvu3Fq3W_Gr5erYtAXiPPG3zAxg8L" }
 
 st.markdown(\"\"\"
 <style>
