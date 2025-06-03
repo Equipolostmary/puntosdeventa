@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
 from datetime import datetime
 import gspread
@@ -99,7 +99,6 @@ df.columns = df.columns.str.strip()
 # ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
 ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
 service = conectar_drive(st.secrets["gcp_service_account"])
-
 for idx, row in df.iterrows():
     enlace_actual = str(row.get("Carpeta privada", "")).strip()
     if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
@@ -118,9 +117,6 @@ for idx, row in df.iterrows():
             df.at[idx, "Carpeta privada"] = enlace
         except Exception as e:
             st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
-
-# ... (resto del código permanece igual sin cambios hasta esta sección)
-
 # ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
 def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
@@ -129,7 +125,9 @@ def buscar_usuario(email):
 # ===== DEFINICIÓN DE COLUMNAS DE PROMOCIÓN =====
 promo_tappo_col = "Promoción 3x10 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
+promo_tappo_2x1_col = "2+1 TAPPO"
 total_promos_col = "TOTAL PROMOS"
+
 # ============ ÁREA PRIVADA ============
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
@@ -186,7 +184,6 @@ if "auth_email" in st.session_state:
                             st.error(f"Error al guardar: {e}")
             else:
                 st.warning("No se encontró ningún punto con ese dato.")
-
     else:
         st.markdown('<div class="seccion">DATOS REGISTRADOS</div>', unsafe_allow_html=True)
         columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
@@ -199,12 +196,14 @@ if "auth_email" in st.session_state:
         def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
         tappo = val(promo_tappo_col)
         bm1000 = val(promo_bm1000_col)
-        total = val(total_promos_col)
+        tappo_2x1 = val(promo_tappo_2x1_col)
+        total = tappo + bm1000 + tappo_2x1
         entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
         pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
         st.write(f"- TAPPO asignados: {tappo}")
         st.write(f"- BM1000 asignados: {bm1000}")
+        st.write(f"- 2+1 TAPPO asignados: {tappo_2x1}")
         st.write(f"- Total promociones acumuladas: {total}")
         st.write(f"- Promos entregadas: {entregados}")
         st.write(f"- Pendientes de entregar: {pendientes}")
@@ -217,6 +216,7 @@ if "auth_email" in st.session_state:
 
         promo1 = st.number_input("Promos 3x10 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
         promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
+        promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
         imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
 
         if st.button("SUBIR PROMOCIONES"):
@@ -236,12 +236,15 @@ if "auth_email" in st.session_state:
                     row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
                     worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
                     worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
-                    worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(tappo + promo1 + bm1000 + promo2))
+                    worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
+                    nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
+                    worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
                     st.session_state.widget_key_promos = str(uuid.uuid4())
                     st.session_state.widget_key_imgs = str(uuid.uuid4())
                     st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
                     time.sleep(2)
                     st.rerun()
+
         st.markdown('<div class="seccion">INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
         objetivo = user.get("OBJETIVO", "")
         compensacion = user.get("COMPENSACION", "")
