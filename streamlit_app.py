@@ -35,7 +35,8 @@ enlaces = {
 }
 
 # ============ ESTILO ============
-st.markdown("""
+
+st.markdown(\"\"\"
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 html, body, .block-container, .stApp {
@@ -83,8 +84,7 @@ button[kind="primary"] {
     font-family: 'Montserrat', sans-serif !important;
 }
 </style>
-""", unsafe_allow_html=True)
-
+\"\"\", unsafe_allow_html=True)
 # ============ AUTENTICACIÓN Y DATOS ============
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
@@ -95,6 +95,19 @@ sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 df.columns = df.columns.str.strip()
+
+# Mostrar columnas cargadas (debug)
+st.write("Columnas actuales:", df.columns.tolist())
+
+# ===== DEFINICIÓN DE COLUMNAS DE PROMOCIÓN =====
+promo_tappo_col = next((col for col in df.columns if "3x13" in col and "TAPPO" in col), None)
+promo_bm1000_col = "Promoción 3×21 BM1000"
+promo_tappo_2x1_col = "2+1 TAPPO"
+total_promos_col = "TOTAL PROMOS"
+
+if promo_tappo_col is None:
+    st.error("❌ No se encontró la columna 'Promoción 3x13 TAPPO'. Verifica el Excel.")
+    st.stop()
 
 # ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
 ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
@@ -117,18 +130,13 @@ for idx, row in df.iterrows():
             df.at[idx, "Carpeta privada"] = enlace
         except Exception as e:
             st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
+
 # ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
 def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
-# ===== DEFINICIÓN DE COLUMNAS DE PROMOCIÓN =====
-promo_tappo_col = "Promoción 3x10 TAPPO"
-promo_bm1000_col = "Promoción 3×21 BM1000"
-promo_tappo_2x1_col = "2+1 TAPPO"
-total_promos_col = "TOTAL PROMOS"
-
-# ============ ÁREA PRIVADA ============
+# ===== ÁREA PRIVADA - LOGIN =====
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
