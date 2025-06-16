@@ -224,7 +224,7 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_column_width=True)
+    st.image("logo.png", use_container_width=True)  # ✅ Corregido: use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
@@ -371,7 +371,7 @@ if "auth_email" in st.session_state:
                     f'<strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_mensuales else "<span style=\'color: #666;\'>Sin registrar</span>"}'
                     f'</div>', unsafe_allow_html=True)
 
-        # ===== SECCIÓN DE REPORTE DE VENTAS =====
+        # ===== SECCIÓN DE REPORTE DE VENTAS (ÁREA FALTANTE) =====
         st.markdown('<div class="seccion">📈 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
         if "widget_key_ventas" not in st.session_state:
             st.session_state.widget_key_ventas = str(uuid.uuid4())
@@ -416,7 +416,7 @@ if "auth_email" in st.session_state:
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_column_width=True)
+    st.image("logo.png", use_container_width=True)  # ✅ Corregido: use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     with st.form("login_form"):
