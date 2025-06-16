@@ -48,7 +48,6 @@ st.markdown("""
     --color-error: #ef4444;
     --color-advertencia: #f59e0b;
     --color-info: #3b82f6;
-    --color-ventas: #4CAF50;
 }
 
 * {
@@ -67,48 +66,47 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 .logo-container {
     display: flex;
     justify-content: center;
-    margin: 10px 0;
+    margin: 20px 0;
 }
 
 .logo-frame {
     background-color: white;
-    padding: 10px 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 15px 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     width: 80%;
-    max-width: 400px;
+    max-width: 500px;
     margin: 0 auto;
 }
 
 .titulo {
     text-align: center;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     color: white;
-    margin: 15px auto;
+    margin: 20px auto;
     background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
-    padding: 10px 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     max-width: 90%;
 }
 
 .seccion {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--color-primario);
-    margin: 20px 0 10px 0;
-    padding-bottom: 6px;
+    margin: 30px 0 15px 0;
+    padding-bottom: 8px;
     border-bottom: 2px solid var(--color-borde);
 }
 
 .dato-usuario {
     background-color: white;
-    padding: 10px 12px;
+    padding: 12px 16px;
     border-radius: 8px;
-    margin-bottom: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    font-size: 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .dato-usuario strong {
@@ -117,15 +115,14 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 
 .stButton>button {
     border-radius: 8px !important;
-    padding: 8px 16px !important;
+    padding: 10px 20px !important;
     font-weight: 600 !important;
-    font-size: 14px !important;
     transition: all 0.2s ease !important;
 }
 
 .stButton>button:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 button[kind="primary"] {
@@ -134,7 +131,7 @@ button[kind="primary"] {
 }
 
 .stNumberInput, .stTextInput, .stSelectbox, .stFileUploader {
-    margin-bottom: 12px !important;
+    margin-bottom: 16px !important;
 }
 
 .stSuccess {
@@ -157,103 +154,20 @@ button[kind="primary"] {
     border-left: 4px solid var(--color-info) !important;
 }
 
-.card {
-    background: white;
-    border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.card-title {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.card-value {
-    font-size: 22px;
-    font-weight: bold;
-    color: var(--color-primario);
-}
-
-.card-ventas {
-    background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
-    border-left: 4px solid var(--color-ventas);
-}
-
-.card-ventas .card-value {
-    color: var(--color-ventas);
-}
-
-.section-container {
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.link-button {
-    display: block;
-    background: white;
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 8px;
-    text-decoration: none;
-    color: var(--color-primario);
-    font-weight: 500;
-    border: 1px solid var(--color-borde);
-    transition: all 0.2s ease;
-}
-
-.link-button:hover {
-    background: #f8f5ff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.promo-section {
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.promo-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-primario);
-    margin-bottom: 10px;
-}
-
-.promo-value {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--color-secundario);
-    text-align: center;
-    margin: 10px 0;
-}
-
 /* Mejoras para móviles */
 @media (max-width: 768px) {
     .logo-frame {
         width: 90%;
-        padding: 8px 12px;
+        padding: 10px 15px;
     }
     
     .titulo {
-        font-size: 16px;
-        padding: 8px 12px;
+        font-size: 18px;
+        padding: 10px 15px;
     }
     
     .seccion {
-        font-size: 15px;
-    }
-    
-    .card-value {
-        font-size: 20px;
+        font-size: 16px;
     }
 }
 </style>
@@ -310,7 +224,7 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_container_width=True)  # ✅ Corregido: use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
@@ -325,186 +239,19 @@ if "auth_email" in st.session_state:
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
 
-    # ===== SECCIÓN DE DATOS PERSONALES =====
-    st.markdown('<div class="section-container">', unsafe_allow_html=True)
-    st.markdown('<div class="seccion">📋 DATOS PERSONALES</div>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f'<div class="dato-usuario"><strong>Expendiduría:</strong> {user["Expendiduría"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="dato-usuario"><strong>Usuario:</strong> {user["Usuario"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="dato-usuario"><strong>Teléfono:</strong> {user["TELÉFONO"]}</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f'<div class="dato-usuario"><strong>Dirección:</strong> {user.get("DIRECCIÓN", "-")}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="dato-usuario"><strong>Localidad:</strong> {user.get("LOCALIDAD", "-")}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="dato-usuario"><strong>Código Postal:</strong> {user.get("CÓDIGO POSTAL", "-")}</div>', unsafe_allow_html=True)
-    
-    # Enlace a la carpeta privada como botón clickeable
-    carpeta_privada = user.get("Carpeta privada", "")
-    if carpeta_privada:
-        st.markdown(f'<a href="{carpeta_privada}" target="_blank" class="link-button">📂 ACCEDER A MI CARPETA PRIVADA</a>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ===== SECCIÓN DE PROMOCIONES =====
-    st.markdown('<div class="section-container">', unsafe_allow_html=True)
-    st.markdown('<div class="seccion">🎁 PROMOCIONES</div>', unsafe_allow_html=True)
-    
-    def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
-    tappo = val(promo_tappo_col)
-    bm1000 = val(promo_bm1000_col)
-    tappo_2x1 = val(promo_tappo_2x1_col)
-    total = tappo + bm1000 + tappo_2x1
-    entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
-    pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
-
-    # Tarjetas de promociones
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown('<div class="promo-section">', unsafe_allow_html=True)
-        st.markdown('<div class="promo-title">TAPPO</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="promo-value">{tappo}</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with col2:
-        st.markdown('<div class="promo-section">', unsafe_allow_html=True)
-        st.markdown('<div class="promo-title">BM1000</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="promo-value">{bm1000}</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with col3:
-        st.markdown('<div class="promo-section">', unsafe_allow_html=True)
-        st.markdown('<div class="promo-title">2+1 TAPPO</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="promo-value">{tappo_2x1}</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # Resumen de promociones
-    st.markdown('<div class="dato-usuario">', unsafe_allow_html=True)
-    st.markdown('<strong>Resumen de promociones:</strong>', unsafe_allow_html=True)
-    st.markdown(f'<div>Total promociones acumuladas: <strong>{total}</strong></div>', unsafe_allow_html=True)
-    st.markdown(f'<div>Promos entregadas: <strong>{entregados}</strong></div>', unsafe_allow_html=True)
-    st.markdown(f'<div>Pendientes de entregar: <strong>{pendientes}</strong></div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Formulario para subir promociones
-    st.markdown('<div class="seccion">📤 SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
-    
-    if "widget_key_promos" not in st.session_state:
-        st.session_state.widget_key_promos = str(uuid.uuid4())
-    if "widget_key_imgs" not in st.session_state:
-        st.session_state.widget_key_imgs = str(uuid.uuid4())
-
-    promo1 = st.number_input("Promos 3x13 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
-    promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
-    promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
-    imagenes = st.file_uploader("Sube los tickets o imágenes de comprobante", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
-
-    if st.button("📤 SUBIR PROMOCIONES", key="subir_promos_btn"):
-        if not imagenes:
-            st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
-        else:
-            service = conectar_drive(st.secrets["gcp_service_account"])
-            carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-            ok = 0
-            for img in imagenes:
-                try:
-                    subir_archivo_a_drive(service, img, img.name, carpeta_id)
-                    ok += 1
-                except Exception as e:
-                    st.error(f"Error al subir {img.name}: {e}")
-            if ok:
-                row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
-                worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
-                worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
-                nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
-                worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
-                st.session_state.widget_key_promos = str(uuid.uuid4())
-                st.session_state.widget_key_imgs = str(uuid.uuid4())
-                st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
-                time.sleep(2)
-                st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ===== SECCIÓN DE VENTAS =====
-    st.markdown('<div class="section-container">', unsafe_allow_html=True)
-    st.markdown('<div class="seccion">💰 VENTAS</div>', unsafe_allow_html=True)
-    
-    objetivo = user.get("OBJETIVO", "")
-    compensacion = user.get("COMPENSACION", "")
-    ventas_mensuales = user.get("VENTAS MENSUALES", "")
-    
-    st.markdown('<div class="card card-ventas">', unsafe_allow_html=True)
-    st.markdown('<div class="card-title">VENTAS ACUMULADAS</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="card-value">{ventas_mensuales if ventas_mensuales else "0"}</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown(f'<div class="dato-usuario">'
-                f'<strong>OBJETIVO:</strong> {objetivo if objetivo else "<span style=\'color: #666;\'>No asignado</span>"}<br>'
-                f'<strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "<span style=\'color: #666;\'>No definido</span>"}'
-                f'</div>', unsafe_allow_html=True)
-
-    # Formulario para reportar ventas
-    st.markdown('<div class="seccion">📈 REPORTAR VENTAS</div>', unsafe_allow_html=True)
-    
-    if "widget_key_ventas" not in st.session_state:
-        st.session_state.widget_key_ventas = str(uuid.uuid4())
-    if "widget_key_fotos" not in st.session_state:
-        st.session_state.widget_key_fotos = str(uuid.uuid4())
-
-    with st.form("formulario_ventas", clear_on_submit=True):
-        cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
-        fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
-        enviar = st.form_submit_button("📤 ENVIAR REPORTE")
-
-    if enviar:
-        if not fotos:
-            st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
-        else:
-            try:
-                col_destino = "VENTAS MENSUALES"
-                row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                col_index = df.columns.get_loc(col_destino) + 1
-                valor_anterior = user.get(col_destino, 0)
-                anterior = int(valor_anterior) if str(valor_anterior).isdigit() else 0
-                suma = anterior + int(cantidad)
-                worksheet.update_cell(row, col_index, str(suma))
-
-                match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
-                carpeta_id = match.group(1) if match else None
-                if carpeta_id:
-                    service = conectar_drive(st.secrets["gcp_service_account"])
-                    for archivo in fotos:
-                        subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
-
-                st.success("✅ Ventas reportadas correctamente.")
-                time.sleep(2)
-                st.session_state.widget_key_ventas = str(uuid.uuid4())
-                st.session_state.widget_key_fotos = str(uuid.uuid4())
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Error al subir ventas: {e}")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ===== SECCIÓN DE RECURSOS =====
-    st.markdown('<div class="section-container">', unsafe_allow_html=True)
-    st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
-    
-    # Mostrar los enlaces como botones clickeables
-    for nombre, url in enlaces.items():
-        st.markdown(f'<a href="{url}" target="_blank" class="link-button">📌 {nombre}</a>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # ===== SECCIÓN DE ADMINISTRADOR =====
     if correo_usuario == ADMIN_EMAIL:
-        st.markdown('<div class="section-container">', unsafe_allow_html=True)
-        st.markdown('<div class="seccion">🔧 HERRAMIENTAS ADMIN</div>', unsafe_allow_html=True)
-        
+        st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
+        opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
+        if opcion:
+            st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" style="text-decoration: none; color: var(--color-primario); font-weight: 500;">Ir al recurso seleccionado →</a>', unsafe_allow_html=True)
+
         st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario", key="busqueda_admin").strip().lower()
 
         if termino:
             resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
-                                        or termino in str(row.get("Usuario", "")).lower()
-                                        or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+                                                or termino in str(row.get("Usuario", "")).lower()
+                                                or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
             if not resultados.empty:
                 opciones = [f"{row['Usuario']} - {row['Expendiduría']} - {row['TELÉFONO']}" for _, row in resultados.iterrows()]
                 seleccion = st.selectbox("Selecciona un punto para editar:", opciones, key="buscador_admin")
@@ -526,12 +273,150 @@ if "auth_email" in st.session_state:
                             st.error(f"Error al guardar: {e}")
             else:
                 st.warning("No se encontró ningún punto con ese dato.")
-        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        # ===== SECCIÓN DE DATOS REGISTRADOS =====
+        st.markdown('<div class="seccion">📋 DATOS REGISTRADOS</div>', unsafe_allow_html=True)
+        columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
+        for col in columnas_visibles:
+            if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
+                etiqueta = "Usuario" if col.lower() == "usuario" else col
+                valor = user.get(col, '')
+                st.markdown(f'<div class="dato-usuario"><strong>{etiqueta}:</strong> {valor}</div>', unsafe_allow_html=True)
+
+        # ===== SECCIÓN DE PROMOCIONES =====
+        st.markdown('<div class="seccion">🎁 ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
+        def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
+        tappo = val(promo_tappo_col)
+        bm1000 = val(promo_bm1000_col)
+        tappo_2x1 = val(promo_tappo_2x1_col)
+        total = tappo + bm1000 + tappo_2x1
+        entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
+        pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
+
+        # Tarjetas de promociones
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(f'<div style="background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">'
+                        f'<div style="font-size: 14px; color: #666;">TAPPO</div>'
+                        f'<div style="font-size: 24px; font-weight: bold; color: var(--color-primario);">{tappo}</div>'
+                        f'</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown(f'<div style="background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">'
+                        f'<div style="font-size: 14px; color: #666;">BM1000</div>'
+                        f'<div style="font-size: 24px; font-weight: bold; color: var(--color-primario);">{bm1000}</div>'
+                        f'</div>', unsafe_allow_html=True)
+        with col3:
+            st.markdown(f'<div style="background: white; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">'
+                        f'<div style="font-size: 14px; color: #666;">2+1 TAPPO</div>'
+                        f'<div style="font-size: 24px; font-weight: bold; color: var(--color-primario);">{tappo_2x1}</div>'
+                        f'</div>', unsafe_allow_html=True)
+
+        # Resumen de promociones
+        st.markdown(f'<div class="dato-usuario">'
+                    f'<strong>Total promociones acumuladas:</strong> {total}<br>'
+                    f'<strong>Promos entregadas:</strong> {entregados}<br>'
+                    f'<strong>Pendientes de entregar:</strong> {pendientes}'
+                    f'</div>', unsafe_allow_html=True)
+
+        # ===== SECCIÓN PARA SUBIR PROMOCIONES =====
+        st.markdown('<div class="seccion">📤 SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
+        if "widget_key_promos" not in st.session_state:
+            st.session_state.widget_key_promos = str(uuid.uuid4())
+        if "widget_key_imgs" not in st.session_state:
+            st.session_state.widget_key_imgs = str(uuid.uuid4())
+
+        with st.container():
+            st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
+            promo1 = st.number_input("Promos 3x13 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
+            promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
+            promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
+            imagenes = st.file_uploader("Sube los tickets o imágenes de comprobante", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            if st.button("📤 SUBIR PROMOCIONES", key="subir_promos_btn"):
+                if not imagenes:
+                    st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
+                else:
+                    service = conectar_drive(st.secrets["gcp_service_account"])
+                    carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+                    ok = 0
+                    for img in imagenes:
+                        try:
+                            subir_archivo_a_drive(service, img, img.name, carpeta_id)
+                            ok += 1
+                        except Exception as e:
+                            st.error(f"Error al subir {img.name}: {e}")
+                    if ok:
+                        row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                        worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
+                        worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
+                        worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
+                        nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
+                        worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
+                        st.session_state.widget_key_promos = str(uuid.uuid4())
+                        st.session_state.widget_key_imgs = str(uuid.uuid4())
+                        st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
+                        time.sleep(2)
+                        st.rerun()
+
+        # ===== SECCIÓN DE INCENTIVOS =====
+        st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
+        objetivo = user.get("OBJETIVO", "")
+        compensacion = user.get("COMPENSACION", "")
+        ventas_mensuales = user.get("VENTAS MENSUALES", "")
+        
+        st.markdown(f'<div class="dato-usuario">'
+                    f'<strong>OBJETIVO:</strong> {objetivo if objetivo else "<span style=\'color: #666;\'>No asignado</span>"}<br>'
+                    f'<strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "<span style=\'color: #666;\'>No definido</span>"}<br>'
+                    f'<strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_mensuales else "<span style=\'color: #666;\'>Sin registrar</span>"}'
+                    f'</div>', unsafe_allow_html=True)
+
+        # ===== SECCIÓN DE REPORTE DE VENTAS (ÁREA FALTANTE) =====
+        st.markdown('<div class="seccion">📈 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
+        if "widget_key_ventas" not in st.session_state:
+            st.session_state.widget_key_ventas = str(uuid.uuid4())
+        if "widget_key_fotos" not in st.session_state:
+            st.session_state.widget_key_fotos = str(uuid.uuid4())
+
+        with st.form("formulario_ventas", clear_on_submit=True):
+            st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
+            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+            fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+            enviar = st.form_submit_button("📤 ENVIAR REPORTE")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if enviar:
+            if not fotos:
+                st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
+            else:
+                try:
+                    col_destino = "VENTAS MENSUALES"
+                    row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                    col_index = df.columns.get_loc(col_destino) + 1
+                    valor_anterior = user.get(col_destino, 0)
+                    anterior = int(valor_anterior) if str(valor_anterior).isdigit() else 0
+                    suma = anterior + int(cantidad)
+                    worksheet.update_cell(row, col_index, str(suma))
+
+                    match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                    carpeta_id = match.group(1) if match else None
+                    if carpeta_id:
+                        service = conectar_drive(st.secrets["gcp_service_account"])
+                        for archivo in fotos:
+                            subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+
+                    st.success("✅ Ventas reportadas correctamente.")
+                    time.sleep(2)
+                    st.session_state.widget_key_ventas = str(uuid.uuid4())
+                    st.session_state.widget_key_fotos = str(uuid.uuid4())
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Error al subir ventas: {e}")
 
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_container_width=True)  # ✅ Corregido: use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     with st.form("login_form"):
