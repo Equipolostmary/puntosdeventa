@@ -8,7 +8,7 @@ import time
 import uuid
 import re
 
-st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
 
 # ===== ENLACES =====
@@ -34,168 +34,53 @@ enlaces = {
     "INTRODUCCION TAPPO": "https://drive.google.com/drive/u/1/folders/18KFVvu3Fg3W_Gr5erYtAXiPPG3zAxg8L"
 }
 
-# ============ ESTILO COMPACTO ============
+# ============ ESTILO ============
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-:root {
-    --color-primario: #6a3093;
-    --color-secundario: #a044ff;
-    --color-fondo: #f5f3ff;
-    --color-texto: #333333;
-    --color-borde: #d1d5db;
-    --color-exito: #10b981;
-    --color-error: #ef4444;
-    --color-advertencia: #f59e0b;
-    --color-info: #3b82f6;
-}
-
-* {
-    font-family: 'Montserrat', sans-serif !important;
-}
-
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 html, body, .block-container, .stApp {
-    background-color: var(--color-fondo) !important;
-    color: var(--color-texto) !important;
+    background-color: #e6e0f8 !important;
+    font-family: 'Montserrat', sans-serif;
 }
-
 section[data-testid="stSidebar"], #MainMenu, header, footer {
     display: none !important;
 }
-
 .logo-container {
     display: flex;
     justify-content: center;
-    margin: 10px 0;
+    margin-top: 30px;
+    margin-bottom: 10px;
 }
-
 .logo-frame {
     background-color: white;
-    padding: 10px 15px;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 80%;
-    max-width: 400px;
-    margin: 0 auto;
+    padding: 10px;
+    border-radius: 20px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    width: 60%;
+    max-width: 600px;
+    margin: auto;
 }
-
 .titulo {
     text-align: center;
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    margin: 10px auto;
-    background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
-    padding: 10px 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 90%;
-}
-
-.seccion {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-primario);
-    margin: 15px 0 10px 0;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--color-borde);
-}
-
-.dato-usuario {
-    background-color: white;
-    padding: 10px 12px;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    font-size: 14px;
-}
-
-.dato-usuario strong {
-    color: var(--color-primario);
-}
-
-.stButton>button {
-    border-radius: 6px !important;
-    padding: 8px 16px !important;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    transition: all 0.2s ease !important;
-}
-
-.stButton>button:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-button[kind="primary"] {
-    background-color: var(--color-primario) !important;
-    border-color: var(--color-primario) !important;
-}
-
-.stNumberInput, .stTextInput, .stSelectbox, .stFileUploader {
-    margin-bottom: 12px !important;
-}
-
-.compact-card {
-    background: white;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.compact-card-title {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.compact-card-value {
-    font-size: 20px;
+    font-size: 24px;
     font-weight: bold;
-    color: var(--color-primario);
+    color: black;
+    margin: 20px 0 10px 0;
+    background-color: #cdb4f5;
+    padding: 10px;
+    border-radius: 10px;
 }
-
-.link-button {
-    display: inline-block;
-    background: var(--color-primario);
-    color: white !important;
-    padding: 8px 12px;
-    border-radius: 6px;
-    text-decoration: none !important;
-    font-size: 14px;
-    margin: 5px 0;
-    text-align: center;
-    transition: all 0.2s;
+.seccion {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #bbb;
+    padding-bottom: 5px;
 }
-
-.link-button:hover {
-    background: var(--color-secundario);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    color: white !important;
-}
-
-/* Mejoras para móviles */
-@media (max-width: 768px) {
-    .logo-frame {
-        width: 90%;
-        padding: 8px 12px;
-    }
-    
-    .titulo {
-        font-size: 16px;
-        padding: 8px 12px;
-    }
-    
-    .seccion {
-        font-size: 15px;
-    }
-    
-    .dato-usuario {
-        font-size: 13px;
-        padding: 8px 10px;
-    }
+button[kind="primary"] {
+    font-family: 'Montserrat', sans-serif !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -232,7 +117,6 @@ for idx, row in df.iterrows():
             df.at[idx, "Carpeta privada"] = enlace
         except Exception as e:
             st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
-
 # ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
 def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
@@ -255,7 +139,7 @@ if "auth_email" in st.session_state:
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
-    if st.button("CERRAR SESIÓN", key="logout_btn"):
+    if st.button("CERRAR SESIÓN"):
         st.session_state.clear()
         st.rerun()
 
@@ -264,51 +148,67 @@ if "auth_email" in st.session_state:
         st.session_state.clear()
         st.rerun()
 
-    # ===== SECCIÓN COMPACTA DE DATOS PERSONALES =====
-    st.markdown('<div class="seccion">📌 DATOS PERSONALES</div>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f'<div class="dato-usuario"><strong>Expendiduría:</strong> {user["Expendiduría"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="dato-usuario"><strong>Usuario:</strong> {user["Usuario"]}</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f'<div class="dato-usuario"><strong>Teléfono:</strong> {user["TELÉFONO"]}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="dato-usuario"><strong>Correo:</strong> {user["Usuario"]}</div>', unsafe_allow_html=True)
-    
-    # Enlace a la carpeta privada como botón clickable
-    if "Carpeta privada" in user and pd.notna(user["Carpeta privada"]):
-        st.markdown(f'<a href="{user["Carpeta privada"]}" target="_blank" class="link-button">📂 ABRIR CARPETA PRIVADA</a>', unsafe_allow_html=True)
+    st.success(f"¡Bienvenido, {user['Expendiduría']}!")
 
-    # ===== SECCIÓN COMPACTA DE PROMOCIONES =====
-    st.markdown('<div class="seccion">🎁 PROMOCIONES</div>', unsafe_allow_html=True)
-    
-    def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
-    tappo = val(promo_tappo_col)
-    bm1000 = val(promo_bm1000_col)
-    tappo_2x1 = val(promo_tappo_2x1_col)
-    total = tappo + bm1000 + tappo_2x1
-    entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
-    pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
+    if correo_usuario == ADMIN_EMAIL:
+        st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
+        opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
+        if opcion:
+            st.markdown(f"[Ir al recurso seleccionado]({enlaces[opcion]})", unsafe_allow_html=True)
 
-    # Tarjetas compactas de promociones
-    cols = st.columns(3)
-    with cols[0]:
-        st.markdown(f'<div class="compact-card"><div class="compact-card-title">TAPPO</div><div class="compact-card-value">{tappo}</div></div>', unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown(f'<div class="compact-card"><div class="compact-card-title">BM1000</div><div class="compact-card-value">{bm1000}</div></div>', unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown(f'<div class="compact-card"><div class="compact-card-title">2+1 TAPPO</div><div class="compact-card-value">{tappo_2x1}</div></div>', unsafe_allow_html=True)
-    
-    # Resumen compacto
-    st.markdown(f'<div class="dato-usuario">'
-                f'<strong>Total promociones:</strong> {total}<br>'
-                f'<strong>Entregadas:</strong> {entregados}<br>'
-                f'<strong>Pendientes:</strong> {pendientes}'
-                f'</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
+        termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario").strip().lower()
 
-    # ===== SECCIÓN COMPACTA PARA SUBIR PROMOCIONES =====
-    with st.expander("📤 SUBIR NUEVAS PROMOCIONES"):
+        if termino:
+            resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
+                                                or termino in str(row.get("Usuario", "")).lower()
+                                                or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+            if not resultados.empty:
+                opciones = [f"{row['Usuario']} - {row['Expendiduría']} - {row['TELÉFONO']}" for _, row in resultados.iterrows()]
+                seleccion = st.selectbox("Selecciona un punto para editar:", opciones, key="buscador_admin")
+                index = resultados.index[opciones.index(seleccion)]
+                with st.form(f"editar_usuario_{index}"):
+                    nuevos_valores = {}
+                    for col in df.columns:
+                        if col != "Carpeta privada":
+                            nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
+                    guardar = st.form_submit_button("Guardar cambios")
+                    if guardar:
+                        try:
+                            for col, nuevo_valor in nuevos_valores.items():
+                                worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
+                            st.success("✅ Datos actualizados correctamente.")
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error al guardar: {e}")
+            else:
+                st.warning("No se encontró ningún punto con ese dato.")
+    else:
+        st.markdown('<div class="seccion">DATOS REGISTRADOS</div>', unsafe_allow_html=True)
+        columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
+        for col in columnas_visibles:
+            if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
+                etiqueta = "Usuario" if col.lower() == "usuario" else col
+                st.markdown(f"**{etiqueta}:** {user.get(col, '')}")
+
+        st.markdown('<div class="seccion">ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
+        def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
+        tappo = val(promo_tappo_col)
+        bm1000 = val(promo_bm1000_col)
+        tappo_2x1 = val(promo_tappo_2x1_col)
+        total = tappo + bm1000 + tappo_2x1
+        entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
+        pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
+
+        st.write(f"- TAPPO asignados: {tappo}")
+        st.write(f"- BM1000 asignados: {bm1000}")
+        st.write(f"- 2+1 TAPPO asignados: {tappo_2x1}")
+        st.write(f"- Total promociones acumuladas: {total}")
+        st.write(f"- Promos entregadas: {entregados}")
+        st.write(f"- Pendientes de entregar: {pendientes}")
+
+        st.markdown('<div class="seccion">SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
         if "widget_key_promos" not in st.session_state:
             st.session_state.widget_key_promos = str(uuid.uuid4())
         if "widget_key_imgs" not in st.session_state:
@@ -317,11 +217,11 @@ if "auth_email" in st.session_state:
         promo1 = st.number_input("Promos 3x13 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
         promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
         promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
-        imagenes = st.file_uploader("Sube los tickets o imágenes de comprobante", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
+        imagenes = st.file_uploader("Tickets o imágenes", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
 
-        if st.button("📤 SUBIR PROMOCIONES", key="subir_promos_btn"):
+        if st.button("SUBIR PROMOCIONES"):
             if not imagenes:
-                st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
+                st.warning("Selecciona al menos una imagen.")
             else:
                 service = conectar_drive(st.secrets["gcp_service_account"])
                 carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
@@ -341,36 +241,32 @@ if "auth_email" in st.session_state:
                     worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
                     st.session_state.widget_key_promos = str(uuid.uuid4())
                     st.session_state.widget_key_imgs = str(uuid.uuid4())
-                    st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
+                    st.success("✅ Imágenes subidas correctamente. Contadores actualizados.")
                     time.sleep(2)
                     st.rerun()
 
-    # ===== SECCIÓN COMPACTA DE INCENTIVOS =====
-    st.markdown('<div class="seccion">💰 INCENTIVOS</div>', unsafe_allow_html=True)
-    
-    objetivo = user.get("OBJETIVO", "")
-    compensacion = user.get("COMPENSACION", "")
-    ventas_mensuales = user.get("VENTAS MENSUALES", "")
-    
-    st.markdown(f'<div class="dato-usuario">'
-                f'<strong>Objetivo:</strong> {objetivo if objetivo else "No asignado"}<br>'
-                f'<strong>Compensación:</strong> {compensacion if compensacion else "No definido"}<br>'
-                f'<strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_mensuales else "Sin registrar"}'
-                f'</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
+        objetivo = user.get("OBJETIVO", "")
+        compensacion = user.get("COMPENSACION", "")
+        ventas_mensuales = user.get("VENTAS MENSUALES", "")
+        st.write(f"- OBJETIVO: {objetivo if objetivo else '*No asignado*'}")
+        st.write(f"- COMPENSACIÓN: {compensacion if compensacion else '*No definido*'}")
+        st.write(f"- Ventas acumuladas: {ventas_mensuales if ventas_mensuales else '*Sin registrar*'}")
 
-    # ===== SECCIÓN COMPACTA DE REPORTE DE VENTAS =====
-    with st.expander("📈 REPORTAR VENTAS"):
+        st.markdown('<div class="seccion">REPORTA TUS VENTAS</div>', unsafe_allow_html=True)
         if "widget_key_ventas" not in st.session_state:
             st.session_state.widget_key_ventas = str(uuid.uuid4())
         if "widget_key_fotos" not in st.session_state:
             st.session_state.widget_key_fotos = str(uuid.uuid4())
 
-        cantidad = st.number_input("Dispositivos vendidos este mes", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
-        fotos = st.file_uploader("Sube fotos como comprobante", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+        with st.form("formulario_ventas"):
+            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+            fotos = st.file_uploader("Sube fotos (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+            enviar = st.form_submit_button("Enviar")
 
-        if st.button("📤 ENVIAR REPORTE", key="enviar_ventas_btn"):
+        if enviar:
             if not fotos:
-                st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
+                st.warning("Debes subir al menos una imagen.")
             else:
                 try:
                     col_destino = "VENTAS MENSUALES"
@@ -388,76 +284,31 @@ if "auth_email" in st.session_state:
                         for archivo in fotos:
                             subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
-                    st.success("✅ Ventas reportadas correctamente.")
+                    st.success("Ventas enviadas correctamente.")
                     time.sleep(2)
                     st.session_state.widget_key_ventas = str(uuid.uuid4())
                     st.session_state.widget_key_fotos = str(uuid.uuid4())
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Error al subir ventas: {e}")
-
-    # ===== ÁREA ADMINISTRADOR =====
-    if correo_usuario == ADMIN_EMAIL:
-        st.markdown('<div class="seccion">👑 ADMINISTRADOR</div>', unsafe_allow_html=True)
-        
-        with st.expander("📂 RECURSOS"):
-            opcion = st.selectbox("Selecciona un recurso:", sorted(enlaces.keys()), key="recursos_maestro")
-            st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" class="link-button">ABRIR RECURSO</a>', unsafe_allow_html=True)
-        
-        with st.expander("🔎 BUSCAR PUNTOS DE VENTA"):
-            termino = st.text_input("Buscar por teléfono, correo o nombre", key="busqueda_admin").strip().lower()
-
-            if termino:
-                resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
-                                            or termino in str(row.get("Usuario", "")).lower()
-                                            or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
-                if not resultados.empty:
-                    opciones = [f"{row['Usuario']} - {row['Expendiduría']}" for _, row in resultados.iterrows()]
-                    seleccion = st.selectbox("Selecciona un punto:", opciones, key="buscador_admin")
-                    index = resultados.index[opciones.index(seleccion)]
-                    with st.form(f"editar_usuario_{index}"):
-                        nuevos_valores = {}
-                        for col in df.columns:
-                            if col != "Carpeta privada":
-                                nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
-                        guardar = st.form_submit_button("💾 GUARDAR CAMBIOS")
-                        if guardar:
-                            try:
-                                for col, nuevo_valor in nuevos_valores.items():
-                                    worksheet.update_cell(index + 2, df.columns.get_loc(col) + 1, nuevo_valor)
-                                st.success("✅ Datos actualizados correctamente.")
-                                time.sleep(2)
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Error al guardar: {e}")
-                else:
-                    st.warning("No se encontró ningún punto con ese dato.")
+                    st.error(f"Error al subir ventas: {e}")
 
 else:
-    # ===== PANTALLA DE LOGIN COMPACTA =====
-    st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
     st.image("logo.png", use_container_width=True)
-    st.markdown('</div></div>', unsafe_allow_html=True)
-    
-    with st.form("login_form"):
-        st.markdown('<div style="text-align: center; margin-bottom: 15px; font-size: 16px; font-weight: 600; color: var(--color-primario);">INICIAR SESIÓN</div>', unsafe_allow_html=True)
-        correo = st.text_input("Correo electrónico", key="login_email").strip().lower()
-        clave = st.text_input("Contraseña", type="password", key="login_pass")
-        submit = st.form_submit_button("ACCEDER", type="primary")
-
-    if submit:
+    correo = st.text_input("Correo electrónico").strip().lower()
+    clave = st.text_input("Contraseña", type="password")
+    if st.button("Acceder"):
         user = buscar_usuario(correo)
         if not correo or not clave:
-            st.warning("⚠️ Debes completar ambos campos.")
+            st.warning("Debes completar ambos campos.")
         elif user is None:
-            st.error("❌ Correo no encontrado.")
+            st.error("Correo no encontrado.")
         else:
             password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
             password_introducida = clave.strip().replace(",", "")
             if not password_guardada:
-                st.error("❌ No hay contraseña configurada para este usuario.")
+                st.error("No hay contraseña configurada para este usuario.")
             elif password_guardada != password_introducida:
-                st.error("❌ Contraseña incorrecta.")
+                st.error("Contraseña incorrecta.")
             else:
                 st.session_state["auth_email"] = correo
                 st.rerun()
