@@ -39,8 +39,8 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 :root {
-    --color-primario: #6a3093;
-    --color-secundario: #a044ff;
+    --color-primary: #6a3093;
+    --color-secondary: #a044ff;
     --color-fondo: #f5f3ff;
     --color-texto: #333333;
     --color-borde: #d1d5db;
@@ -85,7 +85,7 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
     font-weight: 700;
     color: white;
     margin: 20px auto;
-    background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
     padding: 12px 20px;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -95,7 +95,7 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 .seccion {
     font-size: 18px;
     font-weight: 600;
-    color: var(--color-primario);
+    color: var(--color-primary);
     margin: 30px 0 15px 0;
     padding-bottom: 8px;
     border-bottom: 2px solid var(--color-borde);
@@ -110,7 +110,7 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 }
 
 .dato-usuario strong {
-    color: var(--color-primario);
+    color: var(--color-primary);
 }
 
 .stButton>button {
@@ -126,8 +126,8 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 }
 
 button[kind="primary"] {
-    background-color: var(--color-primario) !important;
-    border-color: var(--color-primario) !important;
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
 }
 
 .stNumberInput, .stTextInput, .stSelectbox, .stFileUploader {
@@ -192,7 +192,7 @@ button[kind="primary"] {
 .metric-value {
     font-size: 24px;
     font-weight: bold;
-    color: var(--color-primario);
+    color: var(--color-primary);
     margin: 5px 0;
 }
 
@@ -290,7 +290,7 @@ if "auth_email" in st.session_state:
         st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
         opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
         if opcion:
-            st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" style="text-decoration: none; color: var(--color-primario); font-weight: 500;">Ir al recurso seleccionado →</a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" style="text-decoration: none; color: var(--color-primary); font-weight: 500;">Ir al recurso seleccionado →</a>', unsafe_allow_html=True)
 
         st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario", key="busqueda_admin").strip().lower()
@@ -353,7 +353,7 @@ if "auth_email" in st.session_state:
             st.markdown(f"""
             <div style="margin-top: 20px;">
                 <a href="{user['Carpeta privada']}" target="_blank" style="text-decoration: none;">
-                    <button style="background-color: var(--color-primario); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <button style="background-color: var(--color-primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
                         📁 Abrir mi carpeta privada
                     </button>
                 </a>
@@ -362,7 +362,7 @@ if "auth_email" in st.session_state:
 
         # ===== SECCIÓN DE PROMOCIONES =====
         st.markdown('<div class="seccion">🎁 ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
-        def val(col): return int(user.get(col, 0)) if str(user.get(col)).isdigit() else 0
+        def val(col): return int(user.get(col, 0)) if str(user.get(col)).replace('.', '').isdigit() else 0
         tappo = val(promo_tappo_col)
         bm1000 = val(promo_bm1000_col)
         tappo_2x1 = val(promo_tappo_2x1_col)
@@ -444,22 +444,28 @@ if "auth_email" in st.session_state:
         compensacion = user.get("COMPENSACION", "0")
         ventas_mensuales = user.get("VENTAS MENSUALES", "0")
 
-        # Procesar los datos de compensación (eliminar saltos de línea y espacios extra)
-        compensacion_limpia = " ".join(compensacion.split())
+        # Procesar los datos
+        compensacion_limpia = " ".join(str(compensacion).split())
+        
+        # Función para validar y convertir a número
+        def to_float(value):
+            try:
+                # Eliminar puntos de separación de miles y comas decimales si es necesario
+                value = str(value).replace('.', '').replace(',', '.')
+                return float(value)
+            except:
+                return 0.0
 
-        try:
-            objetivo_num = float(objetivo) if objetivo else 0
-            ventas_num = float(ventas_mensuales) if ventas_mensuales else 0
-            porcentaje = min(100, (ventas_num / objetivo_num * 100)) if objetivo_num > 0 else 0
-        except:
-            porcentaje = 0
+        objetivo_num = to_float(objetivo)
+        ventas_num = to_float(ventas_mensuales)
+        porcentaje = min(100, (ventas_num / objetivo_num * 100)) if objetivo_num > 0 else 0
 
         # Mostrar la información de incentivos
         st.markdown(f"""
         <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                 <div style="flex: 1; margin-right: 10px;">
-                    <strong>OBJETIVO:</strong> {objetivo if objetivo else "No asignado"}
+                    <strong>OBJETIVO:</strong> {objetivo if objetivo_num > 0 else "No asignado"}
                 </div>
                 <div style="flex: 1;">
                     <strong>COMPENSACIÓN:</strong> {compensacion_limpia if compensacion else "No definido"}
@@ -467,11 +473,11 @@ if "auth_email" in st.session_state:
             </div>
             
             <div style="margin-bottom: 5px;">
-                <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_mensuales else "0"}
+                <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
             </div>
             
             <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
-                <div style="background: var(--color-primario); width: {porcentaje}%; height: 100%; border-radius: 10px; 
+                <div style="background: var(--color-primary); width: {porcentaje}%; height: 100%; border-radius: 10px; 
                      display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
                     {round(porcentaje, 1)}%
                 </div>
@@ -506,7 +512,7 @@ if "auth_email" in st.session_state:
                     row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
                     col_index = df.columns.get_loc(col_destino) + 1
                     valor_anterior = user.get(col_destino, 0)
-                    anterior = int(valor_anterior) if str(valor_anterior).isdigit() else 0
+                    anterior = to_float(valor_anterior)
                     suma = anterior + int(cantidad)
                     worksheet.update_cell(row, col_index, str(suma))
 
@@ -536,7 +542,7 @@ else:
 
     if not st.session_state.recover_password:
         with st.form("login_form"):
-            st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primario);">INICIAR SESIÓN</div>', unsafe_allow_html=True)
+            st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primary);">INICIAR SESIÓN</div>', unsafe_allow_html=True)
             correo = st.text_input("Correo electrónico", key="login_email").strip().lower()
             clave = st.text_input("Contraseña", type="password", key="login_pass")
             submit = st.form_submit_button("ACCEDER", type="primary")
@@ -544,7 +550,7 @@ else:
             st.markdown("""
             <div style="text-align: center; margin: 20px 0;">
                 <a href="#" onclick="alert('Se enviará un enlace de recuperación a tu correo');" 
-                   style="color: var(--color-primario); text-decoration: none; font-size: 14px;">
+                   style="color: var(--color-primary); text-decoration: none; font-size: 14px;">
                    ¿Olvidaste tu contraseña?
                 </a>
             </div>
@@ -568,7 +574,7 @@ else:
                     st.rerun()
     else:
         with st.form("recover_form"):
-            st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primario);">RECUPERAR CONTRASEÑA</div>', unsafe_allow_html=True)
+            st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primary);">RECUPERAR CONTRASEÑA</div>', unsafe_allow_html=True)
             recover_email = st.text_input("Ingresa tu correo electrónico", key="recover_email").strip().lower()
             submit_recover = st.form_submit_button("ENVIAR ENLACE")
             
