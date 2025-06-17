@@ -435,7 +435,6 @@ if "auth_email" in st.session_state:
                         st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
                         time.sleep(2)
                         st.rerun()
-
 # ===== SECCIÓN DE INCENTIVOS =====
 st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
 
