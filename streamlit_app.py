@@ -163,38 +163,44 @@ button[kind="primary"] {
     font-size: 14px !important;
 }
 
-.metric-card {
+.promo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.promo-card {
     background: white;
     border-radius: 8px;
-    padding: 12px;
+    padding: 10px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    margin-bottom: 12px;
-    transition: transform 0.3s ease;
-    transform: rotate(var(--rotate, -3deg));
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-.metric-card:hover {
-    transform: rotate(0deg) scale(1.05) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.metric-value {
-    font-size: 20px;
+.promo-value {
+    font-size: 18px;
     font-weight: bold;
     color: var(--color-primary);
-    margin: 3px 0;
+    margin: 5px 0;
 }
 
-.metric-label {
+.promo-label {
     font-size: 12px;
     color: #666;
 }
 
-.metric-container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 12px;
+.promo-total {
+    background-color: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    font-size: 14px;
 }
 
 .sales-card {
@@ -281,21 +287,21 @@ button[kind="primary"] {
         margin: 12px 0 6px 0;
     }
     
-    .metric-container {
-        gap: 6px;
-        padding-bottom: 6px;
+    .promo-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
     
-    .metric-card {
-        min-width: 90px;
+    .promo-card {
         padding: 8px;
+        min-height: auto;
     }
     
-    .metric-value {
+    .promo-value {
         font-size: 16px;
     }
     
-    .metric-label {
+    .promo-label {
         font-size: 11px;
     }
     
@@ -320,6 +326,11 @@ button[kind="primary"] {
         font-size: 13px;
     }
     
+    .promo-total {
+        font-size: 13px;
+        padding: 8px;
+    }
+    
     .logout-btn {
         position: fixed;
         bottom: 10px;
@@ -340,15 +351,6 @@ button[kind="primary"] {
     .stButton>button {
         padding: 5px 10px !important;
         font-size: 12px !important;
-    }
-    
-    .promo-section {
-        margin-top: 8px !important;
-    }
-    
-    .promo-total {
-        font-size: 12px !important;
-        padding: 6px 8px !important;
     }
 }
 </style>
@@ -502,33 +504,43 @@ if "auth_email" in st.session_state:
         entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
         pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
-        # Creamos columnas para el diseño en diagonal
-        col1, col2, col3 = st.columns(3)
+        # Diseño de promociones en grid
+        st.markdown('<div class="promo-grid">', unsafe_allow_html=True)
         
-        with col1:
-            st.markdown(f'<div class="metric-card" style="--rotate: -5deg;">'
-                        f'<div class="metric-label">3x13 TAPPO</div>'
-                        f'<div class="metric-value">{tappo}</div>'
-                        f'</div>', unsafe_allow_html=True)
+        # Tarjeta 1
+        st.markdown(f"""
+        <div class="promo-card">
+            <div class="promo-label">3x13 TAPPO</div>
+            <div class="promo-value">{tappo}</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with col2:
-            st.markdown(f'<div class="metric-card" style="--rotate: 2deg;">'
-                        f'<div class="metric-label">3×21 BM1000</div>'
-                        f'<div class="metric-value">{bm1000}</div>'
-                        f'</div>', unsafe_allow_html=True)
+        # Tarjeta 2
+        st.markdown(f"""
+        <div class="promo-card">
+            <div class="promo-label">3×21 BM1000</div>
+            <div class="promo-value">{bm1000}</div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with col3:
-            st.markdown(f'<div class="metric-card" style="--rotate: -3deg;">'
-                        f'<div class="metric-label">2+1 TAPPO</div>'
-                        f'<div class="metric-value">{tappo_2x1}</div>'
-                        f'</div>', unsafe_allow_html=True)
+        # Tarjeta 3
+        st.markdown(f"""
+        <div class="promo-card">
+            <div class="promo-label">2+1 TAPPO</div>
+            <div class="promo-value">{tappo_2x1}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # Cierre del grid
 
         # Resumen de promociones
-        st.markdown(f'<div class="dato-usuario" style="margin-top: 12px;">'
-                    f'<strong>Total promociones acumuladas:</strong> {total}<br>'
-                    f'<strong>Promos entregadas:</strong> {entregados}<br>'
-                    f'<strong>Pendientes de entregar:</strong> {pendientes}'
-                    f'</div>', unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="promo-total">
+            <strong>Total promociones acumuladas:</strong> {total}<br>
+            <strong>Promos entregadas:</strong> {entregados}<br>
+            <strong>Pendientes de entregar:</strong> {pendientes}
+        </div>
+        """, unsafe_allow_html=True)
 
         # ===== FORMULARIO PARA SUBIR PROMOCIONES =====
         with st.expander("📤 SUBIR NUEVAS PROMOCIONES", expanded=False):
