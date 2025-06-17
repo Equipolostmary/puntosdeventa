@@ -436,42 +436,52 @@ if "auth_email" in st.session_state:
                         time.sleep(2)
                         st.rerun()
 
-        # ===== SECCIÓN DE INCENTIVOS =====
-        st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
-        objetivo = user.get("OBJETIVO", "0")
-        compensacion = user.get("COMPENSACION", "0")
-        ventas_mensuales = user.get("VENTAS MENSUALES", "0")
+# ===== SECCIÓN DE INCENTIVOS =====
+st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
 
-        try:
-            objetivo_num = float(objetivo) if objetivo else 0
-            ventas_num = float(ventas_mensuales) if ventas_mensuales else 0
-            porcentaje = min(100, (ventas_num / objetivo_num * 100)) if objetivo_num > 0 else 0
-        except:
-            porcentaje = 0
+# Obtener datos del usuario
+objetivo = user.get("OBJETIVO", "0")
+compensacion = user.get("COMPENSACION", "0")
+ventas_mensuales = user.get("VENTAS MENSUALES", "0")
 
-        st.markdown(f"""
-        <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <div><strong>OBJETIVO:</strong> {objetivo if objetivo else "No asignado"}</div>
-                <div><strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "No definido"}</div>
-            </div>
-            
-            <div style="margin-bottom: 5px;">
-                <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_mensuales else "0"}
-            </div>
-            
-            <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
-                <div style="background: var(--color-primario); width: {porcentaje}%; height: 100%; border-radius: 10px; 
-                     display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
-                    {round(porcentaje, 1)}%
-                </div>
-            </div>
-            
-            <div style="text-align: center; font-size: 14px; color: #666;">
-                Progreso hacia el objetivo
-            </div>
+# Procesar los datos de compensación (eliminar saltos de línea y espacios extra)
+compensacion_limpia = " ".join(compensacion.split())
+
+try:
+    objetivo_num = float(objetivo) if objetivo else 0
+    ventas_num = float(ventas_mensuales) if ventas_mensuales else 0
+    porcentaje = min(100, (ventas_num / objetivo_num * 100)) if objetivo_num > 0 else 0
+except:
+    porcentaje = 0
+
+# Mostrar la información de incentivos
+st.markdown(f"""
+<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <div style="flex: 1; margin-right: 10px;">
+            <strong>OBJETIVO:</strong> {objetivo if objetivo else "No asignado"}
         </div>
-        """, unsafe_allow_html=True)
+        <div style="flex: 1;">
+            <strong>COMPENSACIÓN:</strong> {compensacion_limpia if compensacion else "No definido"}
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 5px;">
+        <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_mensuales else "0"}
+    </div>
+    
+    <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+        <div style="background: var(--color-primario); width: {porcentaje}%; height: 100%; border-radius: 10px; 
+             display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+            {round(porcentaje, 1)}%
+        </div>
+    </div>
+    
+    <div style="text-align: center; font-size: 14px; color: #666;">
+        Progreso hacia el objetivo
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
         # ===== SECCIÓN DE REPORTE DE VENTAS =====
         st.markdown('<div class="seccion">📈 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
