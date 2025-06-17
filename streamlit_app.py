@@ -505,7 +505,6 @@ with st.form("formulario_ventas", clear_on_submit=True):
     enviar = st.form_submit_button("📤 ENVIAR REPORTE")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Esta línea debe estar SIN indentación (alineada con el with)
 if enviar:
     if not fotos:
         st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
