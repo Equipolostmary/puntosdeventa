@@ -165,33 +165,34 @@ button[kind="primary"] {
 
 .promo-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
     margin-bottom: 15px;
 }
 
 .promo-card {
     background: white;
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    min-height: 80px;
+    min-height: 70px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .promo-value {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     color: var(--color-primary);
     margin: 5px 0;
 }
 
 .promo-label {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
+    line-height: 1.2;
 }
 
 .promo-total {
@@ -288,21 +289,21 @@ button[kind="primary"] {
     }
     
     .promo-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
     }
     
     .promo-card {
-        padding: 8px;
-        min-height: auto;
+        padding: 6px;
+        min-height: 60px;
     }
     
     .promo-value {
-        font-size: 16px;
+        font-size: 14px;
     }
     
     .promo-label {
-        font-size: 11px;
+        font-size: 10px;
     }
     
     .sales-card {
@@ -719,6 +720,7 @@ else:
             submit_recover = st.form_submit_button("ENVIAR ENLACE")
             
             if submit_recover:
+               
                 user = buscar_usuario(recover_email)
                 if user is not None:
                     st.success("Se ha enviado un enlace de recuperación a tu correo")
