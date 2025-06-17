@@ -487,48 +487,48 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ===== SECCIÓN DE REPORTE DE VENTAS =====
-st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
+        # ===== SECCIÓN DE REPORTE DE VENTAS =====
+        st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
 
-if "widget_key_ventas" not in st.session_state:
-    st.session_state.widget_key_ventas = str(uuid.uuid4())
-if "widget_key_fotos" not in st.session_state:
-    st.session_state.widget_key_fotos = str(uuid.uuid4())
+        if "widget_key_ventas" not in st.session_state:
+            st.session_state.widget_key_ventas = str(uuid.uuid4())
+        if "widget_key_fotos" not in st.session_state:
+            st.session_state.widget_key_fotos = str(uuid.uuid4())
 
-with st.form("formulario_ventas", clear_on_submit=True):
-    st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
-    cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
-    fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
-    enviar = st.form_submit_button("📤 ENVIAR REPORTE")
-    st.markdown('</div>', unsafe_allow_html=True)
+        with st.form("formulario_ventas", clear_on_submit=True):
+            st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
+            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+            fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+            enviar = st.form_submit_button("📤 ENVIAR REPORTE")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        if enviar:
-            if not fotos:
-                st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
-            else:
-                try:
-                    col_destino = "VENTAS MENSUALES"
-                    row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                    col_index = df.columns.get_loc(col_destino) + 1
-                    valor_anterior = user.get(col_destino, 0)
-                    anterior = to_float(valor_anterior)
-                    suma = anterior + int(cantidad)
-                    worksheet.update_cell(row, col_index, str(suma))
+            if enviar:
+                if not fotos:
+                    st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
+                else:
+                    try:
+                        col_destino = "VENTAS MENSUALES"
+                        row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                        col_index = df.columns.get_loc(col_destino) + 1
+                        valor_anterior = user.get(col_destino, 0)
+                        anterior = to_float(valor_anterior)
+                        suma = anterior + int(cantidad)
+                        worksheet.update_cell(row, col_index, str(suma))
 
-                    match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
-                    carpeta_id = match.group(1) if match else None
-                    if carpeta_id:
-                        service = conectar_drive(st.secrets["gcp_service_account"])
-                        for archivo in fotos:
-                            subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+                        match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                        carpeta_id = match.group(1) if match else None
+                        if carpeta_id:
+                            service = conectar_drive(st.secrets["gcp_service_account"])
+                            for archivo in fotos:
+                                subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
-                    st.success("✅ Ventas reportadas correctamente.")
-                    time.sleep(2)
-                    st.session_state.widget_key_ventas = str(uuid.uuid4())
-                    st.session_state.widget_key_fotos = str(uuid.uuid4())
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Error al subir ventas: {e}")
+                        st.success("✅ Ventas reportadas correctamente.")
+                        time.sleep(2)
+                        st.session_state.widget_key_ventas = str(uuid.uuid4())
+                        st.session_state.widget_key_fotos = str(uuid.uuid4())
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error al subir ventas: {e}")
 
 else:
     # ===== PANTALLA DE LOGIN =====
