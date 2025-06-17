@@ -258,6 +258,13 @@ def buscar_usuario(email):
     mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
     return df[mask].iloc[0] if mask.any() else None
 
+def to_float(value):
+    try:
+        cleaned = ''.join(c for c in str(value) if c.isdigit() or c == '.')
+        return float(cleaned) if cleaned else 0.0
+    except:
+        return 0.0
+
 # ===== DEFINICIÓN DE COLUMNAS DE PROMOCIÓN =====
 promo_tappo_col = "Promoción 3x10 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
@@ -268,6 +275,12 @@ total_promos_col = "TOTAL PROMOS"
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
     user = buscar_usuario(correo_usuario)
+    
+    if user is None:
+        st.error("Usuario no encontrado.")
+        st.session_state.clear()
+        st.rerun()
+    
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
@@ -276,11 +289,6 @@ if "auth_email" in st.session_state:
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
     if st.button("CERRAR SESIÓN", key="logout_btn"):
-        st.session_state.clear()
-        st.rerun()
-
-    if user is None:
-        st.error("Usuario no encontrado.")
         st.session_state.clear()
         st.rerun()
 
@@ -328,9 +336,7 @@ if "auth_email" in st.session_state:
             mensaje = st.text_area("Escribe tu mensaje para todos los clientes:")
             if st.button("Enviar mensaje masivo"):
                 try:
-                    # Obtener todos los números de teléfono (columna H)
                     telefonos = df['TELÉFONO'].dropna().astype(str).tolist()
-                    # Aquí iría la lógica para enviar los mensajes (Twilio, etc.)
                     st.success(f"Mensaje preparado para enviar a {len(telefonos)} clientes")
                     st.warning("Nota: La función de envío real necesita configuración con Twilio u otro servicio SMS")
                 except Exception as e:
@@ -437,102 +443,92 @@ if "auth_email" in st.session_state:
                         st.rerun()
 
         # ===== SECCIÓN DE INCENTIVOS =====
-if user is not None:  # Asegurarse que user existe
-    st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
 
-    # Obtener y procesar datos del usuario
-    objetivo = str(user.get("OBJETIVO", "0")).strip()
-    compensacion = str(user.get("COMPENSACION", "0")).strip()
-    ventas_mensuales = str(user.get("VENTAS MENSUALES", "0")).strip()
+        # Obtener y procesar datos del usuario
+        objetivo = str(user.get("OBJETIVO", "0")).strip()
+        compensacion = str(user.get("COMPENSACION", "0")).strip()
+        ventas_mensuales = str(user.get("VENTAS MENSUALES", "0")).strip()
 
-    # Función para convertir valores a float de forma segura
-    def safe_float(value):
-        try:
-            # Eliminar caracteres no numéricos excepto punto decimal
-            cleaned = ''.join(c for c in value if c.isdigit() or c == '.')
-            return float(cleaned) if cleaned else 0.0
-        except:
-            return 0.0
+        # Convertir valores
+        objetivo_num = to_float(objetivo)
+        ventas_num = to_float(ventas_mensuales)
 
-    # Convertir valores
-    objetivo_num = safe_float(objetivo)
-    ventas_num = safe_float(ventas_mensuales)
+        # Calcular porcentaje con protección contra división por cero
+        porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
+        porcentaje = min(100, max(0, porcentaje))  # Asegurar que esté entre 0 y 100
 
-    # Calcular porcentaje con protección contra división por cero
-    porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
-    porcentaje = min(100, max(0, porcentaje))  # Asegurar que esté entre 0 y 100
-
-    # Mostrar la información de incentivos
-    st.markdown(f"""
-    <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <div style="flex: 1; margin-right: 10px;">
-                <strong>OBJETIVO:</strong> {objetivo if objetivo_num > 0 else "No asignado"}
+        # Mostrar la información de incentivos
+        st.markdown(f"""
+        <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div style="flex: 1; margin-right: 10px;">
+                    <strong>OBJETIVO:</strong> {objetivo if objetivo_num > 0 else "No asignado"}
+                </div>
+                <div style="flex: 1;">
+                    <strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "No definido"}
+                </div>
             </div>
-            <div style="flex: 1;">
-                <strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "No definido"}
+            
+            <div style="margin-bottom: 5px;">
+                <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
             </div>
-        </div>
-        
-        <div style="margin-bottom: 5px;">
-            <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
-        </div>
-        
-        <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
-            <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
-                 display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
-                {porcentaje:.1f}%
+            
+            <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+                <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
+                     display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+                    {porcentaje:.1f}%
+                </div>
+            </div>
+            
+            <div style="text-align: center; font-size: 14px; color: #666;">
+                Progreso hacia el objetivo
             </div>
         </div>
-        
-        <div style="text-align: center; font-size: 14px; color: #666;">
-            Progreso hacia el objetivo
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE REPORTE DE VENTAS =====
-st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)  # Esta línea NO debe tener indentación
+        st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
 
-if "widget_key_ventas" not in st.session_state:
-    st.session_state.widget_key_ventas = str(uuid.uuid4())
-if "widget_key_fotos" not in st.session_state:
-    st.session_state.widget_key_fotos = str(uuid.uuid4())
-
-with st.form("formulario_ventas", clear_on_submit=True):
-    st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
-    cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
-    fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
-    enviar = st.form_submit_button("📤 ENVIAR REPORTE")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-if enviar:
-    if not fotos:
-        st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
-    else:
-        try:
-            col_destino = "VENTAS MENSUALES"
-            row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-            col_index = df.columns.get_loc(col_destino) + 1
-            valor_anterior = user.get(col_destino, 0)
-            anterior = to_float(valor_anterior)
-            suma = anterior + int(cantidad)
-            worksheet.update_cell(row, col_index, str(suma))
-
-            match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
-            carpeta_id = match.group(1) if match else None
-            if carpeta_id:
-                service = conectar_drive(st.secrets["gcp_service_account"])
-                for archivo in fotos:
-                    subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
-
-            st.success("✅ Ventas reportadas correctamente.")
-            time.sleep(2)
+        if "widget_key_ventas" not in st.session_state:
             st.session_state.widget_key_ventas = str(uuid.uuid4())
+        if "widget_key_fotos" not in st.session_state:
             st.session_state.widget_key_fotos = str(uuid.uuid4())
-            st.rerun()
-        except Exception as e:
-            st.error(f"❌ Error al subir ventas: {e}")
+
+        with st.form("formulario_ventas", clear_on_submit=True):
+            st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
+            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
+            fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+            enviar = st.form_submit_button("📤 ENVIAR REPORTE")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        if enviar:
+            if not fotos:
+                st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
+            else:
+                try:
+                    col_destino = "VENTAS MENSUALES"
+                    row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                    col_index = df.columns.get_loc(col_destino) + 1
+                    valor_anterior = user.get(col_destino, 0)
+                    anterior = to_float(valor_anterior)
+                    suma = anterior + int(cantidad)
+                    worksheet.update_cell(row, col_index, str(suma))
+
+                    match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                    carpeta_id = match.group(1) if match else None
+                    if carpeta_id:
+                        service = conectar_drive(st.secrets["gcp_service_account"])
+                        for archivo in fotos:
+                            subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+
+                    st.success("✅ Ventas reportadas correctamente.")
+                    time.sleep(2)
+                    st.session_state.widget_key_ventas = str(uuid.uuid4())
+                    st.session_state.widget_key_fotos = str(uuid.uuid4())
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Error al subir ventas: {e}")
 
 else:
     # ===== PANTALLA DE LOGIN =====
@@ -584,7 +580,6 @@ else:
             if submit_recover:
                 user = buscar_usuario(recover_email)
                 if user is not None:
-                    # Aquí iría la lógica para enviar el correo de recuperación
                     st.success("Se ha enviado un enlace de recuperación a tu correo")
                     st.session_state.recover_password = False
                 else:
