@@ -66,47 +66,48 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 .logo-container {
     display: flex;
     justify-content: center;
-    margin: 20px 0;
+    margin: 10px 0;
 }
 
 .logo-frame {
     background-color: white;
-    padding: 15px 25px;
-    border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 80%;
-    max-width: 500px;
+    max-width: 400px;
     margin: 0 auto;
 }
 
 .titulo {
     text-align: center;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: white;
-    margin: 20px auto;
+    margin: 15px auto;
     background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    padding: 12px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     max-width: 90%;
 }
 
 .seccion {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--color-primary);
-    margin: 30px 0 15px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--color-borde);
+    margin: 20px 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--color-borde);
 }
 
 .dato-usuario {
     background-color: white;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 8px;
-    margin-bottom: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-size: 14px;
 }
 
 .dato-usuario strong {
@@ -115,14 +116,15 @@ section[data-testid="stSidebar"], #MainMenu, header, footer {
 
 .stButton>button {
     border-radius: 8px !important;
-    padding: 10px 20px !important;
+    padding: 8px 16px !important;
     font-weight: 600 !important;
+    font-size: 14px !important;
     transition: all 0.2s ease !important;
 }
 
 .stButton>button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 button[kind="primary"] {
@@ -131,90 +133,115 @@ button[kind="primary"] {
 }
 
 .stNumberInput, .stTextInput, .stSelectbox, .stFileUploader {
-    margin-bottom: 16px !important;
+    margin-bottom: 12px !important;
 }
 
 .stSuccess {
     background-color: rgba(16, 185, 129, 0.1) !important;
-    border-left: 4px solid var(--color-exito) !important;
+    border-left: 3px solid var(--color-exito) !important;
+    padding: 10px !important;
+    font-size: 14px !important;
 }
 
 .stError {
     background-color: rgba(239, 68, 68, 0.1) !important;
-    border-left: 4px solid var(--color-error) !important;
+    border-left: 3px solid var(--color-error) !important;
+    padding: 10px !important;
+    font-size: 14px !important;
 }
 
 .stWarning {
     background-color: rgba(245, 158, 11, 0.1) !important;
-    border-left: 4px solid var(--color-advertencia) !important;
+    border-left: 3px solid var(--color-advertencia) !important;
+    padding: 10px !important;
+    font-size: 14px !important;
 }
 
 .stInfo {
     background-color: rgba(59, 130, 246, 0.1) !important;
-    border-left: 4px solid var(--color-info) !important;
-}
-
-/* Estilo para los expanders */
-.st-emotion-cache-1h9usn1.e1f1d6gn3 {
-    background-color: white;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--color-borde);
-}
-
-/* Barra de progreso */
-.progress-bar {
-    transition: width 0.5s ease-in-out;
-}
-
-/* Botones mejorados */
-.custom-button {
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.custom-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-left: 3px solid var(--color-info) !important;
+    padding: 10px !important;
+    font-size: 14px !important;
 }
 
 /* Tarjetas de métricas */
 .metric-card {
     background: white;
-    border-radius: 10px;
-    padding: 15px;
+    border-radius: 8px;
+    padding: 12px;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 12px;
 }
 
 .metric-value {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: bold;
     color: var(--color-primary);
-    margin: 5px 0;
+    margin: 3px 0;
 }
 
 .metric-label {
-    font-size: 14px;
+    font-size: 12px;
     color: #666;
+}
+
+/* Formularios compactos */
+.compact-form {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Barra de progreso */
+.progress-container {
+    margin: 15px 0;
+}
+
+.progress-bar {
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 /* Mejoras para móviles */
 @media (max-width: 768px) {
     .logo-frame {
         width: 90%;
-        padding: 10px 15px;
+        padding: 8px 12px;
     }
     
     .titulo {
-        font-size: 18px;
-        padding: 10px 15px;
+        font-size: 16px;
+        padding: 8px 12px;
     }
     
     .seccion {
-        font-size: 16px;
+        font-size: 14px;
+    }
+    
+    .metric-card {
+        padding: 10px;
+    }
+    
+    .metric-value {
+        font-size: 18px;
     }
 }
 </style>
@@ -295,6 +322,7 @@ if "auth_email" in st.session_state:
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
 
     if correo_usuario == ADMIN_EMAIL:
+        # ===== PANEL DE ADMINISTRADOR =====
         st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
         opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
         if opcion:
@@ -331,7 +359,6 @@ if "auth_email" in st.session_state:
 
         # ===== SECCIÓN DE MENSAJES MASIVOS =====
         st.markdown('<div class="seccion">📨 ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)
-        
         with st.expander("Enviar mensaje a todos los clientes"):
             mensaje = st.text_area("Escribe tu mensaje para todos los clientes:")
             if st.button("Enviar mensaje masivo"):
@@ -343,10 +370,8 @@ if "auth_email" in st.session_state:
                     st.error(f"Error al preparar mensajes: {e}")
 
     else:
-        # ===== SECCIÓN DE DATOS REGISTRADOS =====
-        st.markdown('<div class="seccion">📋 DATOS REGISTRADOS</div>', unsafe_allow_html=True)
-
-        with st.expander("Ver datos personales"):
+        # ===== PANEL DE USUARIO =====
+        with st.expander("📋 MIS DATOS", expanded=False):
             columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
             for col in columnas_visibles:
                 if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
@@ -354,20 +379,20 @@ if "auth_email" in st.session_state:
                     valor = user.get(col, '')
                     st.markdown(f'<div class="dato-usuario"><strong>{etiqueta}:</strong> {valor}</div>', unsafe_allow_html=True)
 
-        # Enlace a la carpeta privada
-        if user.get("Carpeta privada"):
-            st.markdown(f"""
-            <div style="margin-top: 20px;">
-                <a href="{user['Carpeta privada']}" target="_blank" style="text-decoration: none;">
-                    <button style="background-color: var(--color-primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                        📁 Abrir mi carpeta privada
-                    </button>
-                </a>
-            </div>
-            """, unsafe_allow_html=True)
+            if user.get("Carpeta privada"):
+                st.markdown(f"""
+                <div style="margin-top: 10px;">
+                    <a href="{user['Carpeta privada']}" target="_blank" style="text-decoration: none;">
+                        <button style="background-color: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            📁 Abrir mi carpeta privada
+                        </button>
+                    </a>
+                </div>
+                """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE PROMOCIONES =====
-        st.markdown('<div class="seccion">🎁 ESTADO DE PROMOCIONES</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">🎁 PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)
+        
         def val(col): return int(user.get(col, 0)) if str(user.get(col)).replace('.', '').isdigit() else 0
         tappo = val(promo_tappo_col)
         bm1000 = val(promo_bm1000_col)
@@ -380,12 +405,12 @@ if "auth_email" in st.session_state:
         col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown(f'<div class="metric-card">'
-                        f'<div class="metric-label">TAPPO</div>'
+                        f'<div class="metric-label">3x13 TAPPO</div>'
                         f'<div class="metric-value">{tappo}</div>'
                         f'</div>', unsafe_allow_html=True)
         with col2:
             st.markdown(f'<div class="metric-card">'
-                        f'<div class="metric-label">BM1000</div>'
+                        f'<div class="metric-label">3×21 BM1000</div>'
                         f'<div class="metric-value">{bm1000}</div>'
                         f'</div>', unsafe_allow_html=True)
         with col3:
@@ -401,50 +426,51 @@ if "auth_email" in st.session_state:
                     f'<strong>Pendientes de entregar:</strong> {pendientes}'
                     f'</div>', unsafe_allow_html=True)
 
-        # ===== SECCIÓN PARA SUBIR PROMOCIONES =====
-        st.markdown('<div class="seccion">📤 SUBIR NUEVAS PROMOCIONES</div>', unsafe_allow_html=True)
-        if "widget_key_promos" not in st.session_state:
-            st.session_state.widget_key_promos = str(uuid.uuid4())
-        if "widget_key_imgs" not in st.session_state:
-            st.session_state.widget_key_imgs = str(uuid.uuid4())
+        # ===== FORMULARIO PARA SUBIR PROMOCIONES =====
+        with st.expander("📤 SUBIR NUEVAS PROMOCIONES", expanded=False):
+            if "widget_key_promos" not in st.session_state:
+                st.session_state.widget_key_promos = str(uuid.uuid4())
+            if "widget_key_imgs" not in st.session_state:
+                st.session_state.widget_key_imgs = str(uuid.uuid4())
 
-        with st.container():
-            st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
-            promo1 = st.number_input("Promos 3x13 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
-            promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
-            promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
-            imagenes = st.file_uploader("Sube los tickets o imágenes de comprobante", type=["jpg", "png", "jpeg"], accept_multiple_files=True, key=st.session_state.widget_key_imgs)
-            st.markdown('</div>', unsafe_allow_html=True)
+            with st.container():
+                promo1 = st.number_input("Promos 3x13 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_1")
+                promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
+                promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
+                imagenes = st.file_uploader("Sube los tickets o imágenes de comprobante", 
+                                           type=["jpg", "png", "jpeg"], 
+                                           accept_multiple_files=True, 
+                                           key=st.session_state.widget_key_imgs)
 
-            if st.button("📤 SUBIR PROMOCIONES", key="subir_promos_btn"):
-                if not imagenes:
-                    st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
-                else:
-                    service = conectar_drive(st.secrets["gcp_service_account"])
-                    carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-                    ok = 0
-                    for img in imagenes:
-                        try:
-                            subir_archivo_a_drive(service, img, img.name, carpeta_id)
-                            ok += 1
-                        except Exception as e:
-                            st.error(f"Error al subir {img.name}: {e}")
-                    if ok:
-                        row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                        worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
-                        worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
-                        worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
-                        nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
-                        worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
-                        st.session_state.widget_key_promos = str(uuid.uuid4())
-                        st.session_state.widget_key_imgs = str(uuid.uuid4())
-                        st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
-                        time.sleep(2)
-                        st.rerun()
+                if st.button("📤 SUBIR PROMOCIONES", key="subir_promos_btn"):
+                    if not imagenes:
+                        st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
+                    else:
+                        service = conectar_drive(st.secrets["gcp_service_account"])
+                        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+                        ok = 0
+                        for img in imagenes:
+                            try:
+                                subir_archivo_a_drive(service, img, img.name, carpeta_id)
+                                ok += 1
+                            except Exception as e:
+                                st.error(f"Error al subir {img.name}: {e}")
+                        if ok:
+                            row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
+                            worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
+                            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
+                            nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
+                            worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
+                            st.session_state.widget_key_promos = str(uuid.uuid4())
+                            st.session_state.widget_key_imgs = str(uuid.uuid4())
+                            st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
+                            time.sleep(2)
+                            st.rerun()
 
-        # ===== SECCIÓN DE INCENTIVOS =====
-        st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
-
+        # ===== SECCIÓN COMBINADA: COMPENSACIONES Y VENTAS =====
+        st.markdown('<div class="seccion">💰 COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)
+        
         # Obtener y procesar datos del usuario
         objetivo = str(user.get("OBJETIVO", "0")).strip()
         compensacion = str(user.get("COMPENSACION", "0")).strip()
@@ -460,76 +486,68 @@ if "auth_email" in st.session_state:
 
         # Mostrar información de compensaciones
         st.markdown(f"""
-        ## OBJETIVO: {objetivo if objetivo_num > 0 else "No asignado"}
-        ### COMPENSACIÓN: {compensacion if compensacion else "No definido"}
-        """)
-
-        # Barra de progreso corregida
-        st.markdown(f"""
-        <div style="margin-bottom: 5px;">
+        <div class="dato-usuario">
+            <strong>Objetivo mensual:</strong> {objetivo if objetivo_num > 0 else "No asignado"}<br>
+            <strong>Compensación:</strong> {compensacion if compensacion else "No definido"}<br>
             <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
-        </div>
-        
-        <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
-            <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
-                 display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
-                {porcentaje:.1f}%
-            </div>
-        </div>
-        
-        <div style="text-align: center; font-size: 14px; color: #666;">
-            Progreso hacia el objetivo
         </div>
         """, unsafe_allow_html=True)
 
-        # ===== SECCIÓN DE REPORTE DE VENTAS =====
-        st.markdown("---")
-        st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
+        # Barra de progreso mejorada
+        st.markdown(f"""
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {porcentaje:.1f}%">{porcentaje:.1f}%</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        if "widget_key_ventas" not in st.session_state:
-            st.session_state.widget_key_ventas = str(uuid.uuid4())
-        if "widget_key_fotos" not in st.session_state:
-            st.session_state.widget_key_fotos = str(uuid.uuid4())
+        # ===== FORMULARIO DE REPORTE DE VENTAS =====
+        with st.expander("📈 REPORTAR VENTAS MENSUALES", expanded=False):
+            if "widget_key_ventas" not in st.session_state:
+                st.session_state.widget_key_ventas = str(uuid.uuid4())
+            if "widget_key_fotos" not in st.session_state:
+                st.session_state.widget_key_fotos = str(uuid.uuid4())
 
-        with st.form("formulario_ventas", clear_on_submit=True):
-            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", 
-                                     min_value=0, step=1, 
-                                     key=st.session_state.widget_key_ventas + "_cantidad")
-            fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", 
-                                    type=["jpg", "png"], 
-                                    accept_multiple_files=True, 
-                                    key=st.session_state.widget_key_fotos)
-            enviar = st.form_submit_button("📤 ENVIAR REPORTE")
+            with st.form("formulario_ventas", clear_on_submit=True):
+                cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", 
+                                         min_value=0, step=1, 
+                                         key=st.session_state.widget_key_ventas + "_cantidad")
+                fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", 
+                                        type=["jpg", "png"], 
+                                        accept_multiple_files=True, 
+                                        key=st.session_state.widget_key_fotos)
+                enviar = st.form_submit_button("📤 ENVIAR REPORTE")
 
-        if enviar:
-            if not fotos:
-                st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
-            else:
-                try:
-                    # Actualizar ventas mensuales
-                    col_destino = "VENTAS MENSUALES"
-                    row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                    col_index = df.columns.get_loc(col_destino) + 1
-                    valor_anterior = user.get(col_destino, 0)
-                    anterior = to_float(valor_anterior)
-                    suma = anterior + int(cantidad)
-                    worksheet.update_cell(row, col_index, str(suma))
+            if enviar:
+                if not fotos:
+                    st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
+                else:
+                    try:
+                        # Actualizar ventas mensuales
+                        col_destino = "VENTAS MENSUALES"
+                        row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                        col_index = df.columns.get_loc(col_destino) + 1
+                        valor_anterior = user.get(col_destino, 0)
+                        anterior = to_float(valor_anterior)
+                        suma = anterior + int(cantidad)
+                        worksheet.update_cell(row, col_index, str(suma))
 
-                    # Subir fotos a Drive
-                    match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
-                    carpeta_id = match.group(1) if match else None
-                    if carpeta_id:
-                        service = conectar_drive(st.secrets["gcp_service_account"])
-                        for archivo in fotos:
-                            subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
+                        # Subir fotos a Drive
+                        match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                        carpeta_id = match.group(1) if match else None
+                        if carpeta_id:
+                            service = conectar_drive(st.secrets["gcp_service_account"])
+                            for archivo in fotos:
+                                subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
-                    st.success("✅ Ventas reportadas correctamente.")
-                    time.sleep(2)
-                    st.session_state.widget_key_ventas = str(uuid.uuid4())
-                    st.session_state.widget_key_fotos = str(uuid.uuid4())
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Error al subir ventas: {e}")
+                        st.success("✅ Ventas reportadas correctamente.")
+                        time.sleep(2)
+                        st.session_state.widget_key_ventas = str(uuid.uuid4())
+                        st.session_state.widget_key_fotos = str(uuid.uuid4())
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error al subir ventas: {e}")
 
 else:
     # ===== PANTALLA DE LOGIN =====
