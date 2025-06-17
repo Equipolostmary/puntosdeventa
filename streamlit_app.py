@@ -458,18 +458,9 @@ if "auth_email" in st.session_state:
         porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
         porcentaje = min(100, max(0, porcentaje))  # Asegurar que esté entre 0 y 100
 
-        # Mostrar la información de incentivos
+        # Mostrar la información de incentivos - VERSIÓN CORREGIDA
         st.markdown(f"""
         <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <div style="flex: 1; margin-right: 10px;">
-                    <strong>OBJETIVO:</strong> {objetivo if objetivo_num > 0 else "No asignado"}
-                </div>
-                <div style="flex: 1;">
-                    <strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "No definido"}
-                </div>
-            </div>
-            
             <div style="margin-bottom: 5px;">
                 <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
             </div>
