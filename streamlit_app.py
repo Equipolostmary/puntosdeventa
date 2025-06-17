@@ -454,31 +454,36 @@ if "auth_email" in st.session_state:
         objetivo_num = to_float(objetivo)
         ventas_num = to_float(ventas_mensuales)
 
-        # Calcular porcentaje con protección contra división por cero
+        # Calcular porcentaje
         porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
-        porcentaje = min(100, max(0, porcentaje))  # Asegurar que esté entre 0 y 100
+        porcentaje = min(100, max(0, porcentaje))
 
-        # Mostrar la información de incentivos - VERSIÓN CORREGIDA
+        # Mostrar información de compensaciones
         st.markdown(f"""
-        <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <div style="margin-bottom: 5px;">
-                <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
+        ## OBJETIVO: {objetivo if objetivo_num > 0 else "No asignado"}
+        ### COMPENSACIÓN: {compensacion if compensacion else "No definido"}
+        """)
+
+        # Barra de progreso corregida
+        st.markdown(f"""
+        <div style="margin-bottom: 5px;">
+            <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
+        </div>
+        
+        <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+            <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
+                 display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+                {porcentaje:.1f}%
             </div>
-            
-            <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
-                <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
-                     display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
-                    {porcentaje:.1f}%
-                </div>
-            </div>
-            
-            <div style="text-align: center; font-size: 14px; color: #666;">
-                Progreso hacia el objetivo
-            </div>
+        </div>
+        
+        <div style="text-align: center; font-size: 14px; color: #666;">
+            Progreso hacia el objetivo
         </div>
         """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE REPORTE DE VENTAS =====
+        st.markdown("---")
         st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)
 
         if "widget_key_ventas" not in st.session_state:
@@ -487,17 +492,21 @@ if "auth_email" in st.session_state:
             st.session_state.widget_key_fotos = str(uuid.uuid4())
 
         with st.form("formulario_ventas", clear_on_submit=True):
-            st.markdown('<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">', unsafe_allow_html=True)
-            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", min_value=0, step=1, key=st.session_state.widget_key_ventas + "_cantidad")
-            fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", type=["jpg", "png"], accept_multiple_files=True, key=st.session_state.widget_key_fotos)
+            cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", 
+                                     min_value=0, step=1, 
+                                     key=st.session_state.widget_key_ventas + "_cantidad")
+            fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", 
+                                    type=["jpg", "png"], 
+                                    accept_multiple_files=True, 
+                                    key=st.session_state.widget_key_fotos)
             enviar = st.form_submit_button("📤 ENVIAR REPORTE")
-            st.markdown('</div>', unsafe_allow_html=True)
 
         if enviar:
             if not fotos:
                 st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
             else:
                 try:
+                    # Actualizar ventas mensuales
                     col_destino = "VENTAS MENSUALES"
                     row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
                     col_index = df.columns.get_loc(col_destino) + 1
@@ -506,6 +515,7 @@ if "auth_email" in st.session_state:
                     suma = anterior + int(cantidad)
                     worksheet.update_cell(row, col_index, str(suma))
 
+                    # Subir fotos a Drive
                     match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
                     carpeta_id = match.group(1) if match else None
                     if carpeta_id:
