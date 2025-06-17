@@ -163,23 +163,17 @@ button[kind="primary"] {
     font-size: 14px !important;
 }
 
-.promo-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin-bottom: 15px;
-}
-
 .promo-card {
     background: white;
     border-radius: 8px;
-    padding: 8px;
+    padding: 10px 5px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     min-height: 70px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin: 0 2px;
 }
 
 .promo-value {
@@ -197,9 +191,9 @@ button[kind="primary"] {
 
 .promo-total {
     background-color: white;
-    padding: 10px;
+    padding: 12px;
     border-radius: 8px;
-    margin-top: 10px;
+    margin-top: 15px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     font-size: 14px;
 }
@@ -288,22 +282,25 @@ button[kind="primary"] {
         margin: 12px 0 6px 0;
     }
     
-    .promo-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 6px;
-    }
-    
     .promo-card {
-        padding: 6px;
-        min-height: 60px;
+        padding: 8px 4px !important;
+        min-height: 55px !important;
+        margin: 0 1px !important;
     }
     
     .promo-value {
-        font-size: 14px;
+        font-size: 14px !important;
+        margin: 3px 0 !important;
     }
     
     .promo-label {
-        font-size: 10px;
+        font-size: 9px !important;
+        line-height: 1.1 !important;
+    }
+    
+    .promo-total {
+        font-size: 12px !important;
+        padding: 8px 10px !important;
     }
     
     .sales-card {
@@ -325,11 +322,6 @@ button[kind="primary"] {
     .dato-usuario {
         padding: 8px 10px;
         font-size: 13px;
-    }
-    
-    .promo-total {
-        font-size: 13px;
-        padding: 8px;
     }
     
     .logout-btn {
@@ -421,7 +413,7 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_column_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
@@ -505,41 +497,39 @@ if "auth_email" in st.session_state:
         entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
         pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
-        # Diseño de promociones en grid
-        st.markdown('<div class="promo-grid">', unsafe_allow_html=True)
+        # Nuevo diseño con columnas para mejor alineación
+        col1, col2, col3 = st.columns(3)
         
-        # Tarjeta 1
-        st.markdown(f"""
-        <div class="promo-card">
-            <div class="promo-label">3x13 TAPPO</div>
-            <div class="promo-value">{tappo}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with col1:
+            st.markdown(f"""
+            <div class="promo-card">
+                <div class="promo-label">3x13 TAPPO</div>
+                <div class="promo-value">{tappo}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # Tarjeta 2
-        st.markdown(f"""
-        <div class="promo-card">
-            <div class="promo-label">3×21 BM1000</div>
-            <div class="promo-value">{bm1000}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+            <div class="promo-card">
+                <div class="promo-label">3×21 BM1000</div>
+                <div class="promo-value">{bm1000}</div>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # Tarjeta 3
-        st.markdown(f"""
-        <div class="promo-card">
-            <div class="promo-label">2+1 TAPPO</div>
-            <div class="promo-value">{tappo_2x1}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)  # Cierre del grid
+        with col3:
+            st.markdown(f"""
+            <div class="promo-card">
+                <div class="promo-label">2+1 TAPPO</div>
+                <div class="promo-value">{tappo_2x1}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Resumen de promociones
+        # Resumen de promociones con mejor espaciado
         st.markdown(f"""
         <div class="promo-total">
-            <strong>Total promociones acumuladas:</strong> {total}<br>
-            <strong>Promos entregadas:</strong> {entregados}<br>
-            <strong>Pendientes de entregar:</strong> {pendientes}
+            <div style="margin-bottom: 8px;"><strong>Total promociones acumuladas:</strong> {total}</div>
+            <div style="margin-bottom: 8px;"><strong>Promos entregadas:</strong> {entregados}</div>
+            <div><strong>Pendientes de entregar:</strong> {pendientes}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -675,7 +665,7 @@ if "auth_email" in st.session_state:
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_column_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     if "recover_password" not in st.session_state:
@@ -720,7 +710,6 @@ else:
             submit_recover = st.form_submit_button("ENVIAR ENLACE")
             
             if submit_recover:
-               
                 user = buscar_usuario(recover_email)
                 if user is not None:
                     st.success("Se ha enviado un enlace de recuperación a tu correo")
