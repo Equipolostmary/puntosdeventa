@@ -186,13 +186,40 @@ button[kind="primary"] {
     color: #666;
 }
 
-/* Formularios compactos */
-.compact-form {
+/* Contenedor flexible para métricas */
+.metric-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+/* Tarjeta de ventas destacada */
+.sales-card {
     background: white;
     border-radius: 8px;
     padding: 15px;
-    margin-bottom: 15px;
+    text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 15px;
+    border-left: 4px solid var(--color-primary);
+}
+
+.sales-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--color-primary);
+    margin: 5px 0;
+}
+
+.sales-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.sales-target {
+    font-size: 12px;
+    color: #888;
 }
 
 /* Barra de progreso */
@@ -236,12 +263,44 @@ button[kind="primary"] {
         font-size: 14px;
     }
     
+    /* Contenedor flexible para métricas en móvil */
+    .metric-container {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        margin-bottom: 12px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+    
     .metric-card {
+        min-width: 100px;
         padding: 10px;
+        flex: 1;
     }
     
     .metric-value {
         font-size: 18px;
+    }
+    
+    /* Estilo para tarjeta de ventas en móvil */
+    .sales-card {
+        padding: 12px;
+    }
+    
+    .sales-value {
+        font-size: 20px;
+    }
+    
+    /* Ajustar formularios */
+    .stNumberInput, .stTextInput, .stSelectbox {
+        margin-bottom: 8px !important;
+    }
+    
+    /* Ajustar botones */
+    .stButton>button {
+        padding: 6px 12px !important;
+        font-size: 13px !important;
     }
 }
 </style>
@@ -401,26 +460,29 @@ if "auth_email" in st.session_state:
         entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
         pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
+        # Contenedor flexible para las métricas
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+
         # Tarjetas de promociones
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(f'<div class="metric-card">'
-                        f'<div class="metric-label">3x13 TAPPO</div>'
-                        f'<div class="metric-value">{tappo}</div>'
-                        f'</div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown(f'<div class="metric-card">'
-                        f'<div class="metric-label">3×21 BM1000</div>'
-                        f'<div class="metric-value">{bm1000}</div>'
-                        f'</div>', unsafe_allow_html=True)
-        with col3:
-            st.markdown(f'<div class="metric-card">'
-                        f'<div class="metric-label">2+1 TAPPO</div>'
-                        f'<div class="metric-value">{tappo_2x1}</div>'
-                        f'</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card">'
+                    f'<div class="metric-label">3x13 TAPPO</div>'
+                    f'<div class="metric-value">{tappo}</div>'
+                    f'</div>', unsafe_allow_html=True)
+
+        st.markdown(f'<div class="metric-card">'
+                    f'<div class="metric-label">3×21 BM1000</div>'
+                    f'<div class="metric-value">{bm1000}</div>'
+                    f'</div>', unsafe_allow_html=True)
+
+        st.markdown(f'<div class="metric-card">'
+                    f'<div class="metric-label">2+1 TAPPO</div>'
+                    f'<div class="metric-value">{tappo_2x1}</div>'
+                    f'</div>', unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)  # Cierre del contenedor flexible
 
         # Resumen de promociones
-        st.markdown(f'<div class="dato-usuario">'
+        st.markdown(f'<div class="dato-usuario" style="margin-top: 12px;">'
                     f'<strong>Total promociones acumuladas:</strong> {total}<br>'
                     f'<strong>Promos entregadas:</strong> {entregados}<br>'
                     f'<strong>Pendientes de entregar:</strong> {pendientes}'
@@ -484,12 +546,19 @@ if "auth_email" in st.session_state:
         porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
         porcentaje = min(100, max(0, porcentaje))
 
+        # Tarjeta destacada de ventas
+        st.markdown(f"""
+        <div class="sales-card">
+            <div class="sales-label">VENTAS ACUMULADAS</div>
+            <div class="sales-value">{ventas_num if ventas_num > 0 else "0"}</div>
+            <div class="sales-target">Objetivo: {objetivo if objetivo_num > 0 else "No asignado"}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
         # Mostrar información de compensaciones
         st.markdown(f"""
         <div class="dato-usuario">
-            <strong>Objetivo mensual:</strong> {objetivo if objetivo_num > 0 else "No asignado"}<br>
-            <strong>Compensación:</strong> {compensacion if compensacion else "No definido"}<br>
-            <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
+            <strong>Compensación:</strong> {compensacion if compensacion else "No definido"}
         </div>
         """, unsafe_allow_html=True)
 
