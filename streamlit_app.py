@@ -170,6 +170,13 @@ button[kind="primary"] {
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     margin-bottom: 12px;
+    transition: transform 0.3s ease;
+    transform: rotate(var(--rotate, -3deg));
+}
+
+.metric-card:hover {
+    transform: rotate(0deg) scale(1.05) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .metric-value {
@@ -415,8 +422,6 @@ if "auth_email" in st.session_state:
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
-    st.success(f"¡Bienvenido, {user['Expendiduría']}!")
-
     if correo_usuario == ADMIN_EMAIL:
         # ===== PANEL DE ADMINISTRADOR =====
         st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
@@ -497,26 +502,26 @@ if "auth_email" in st.session_state:
         entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
         pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
-        # Contenedor flexible para las métricas
-        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
-
-        # Tarjetas de promociones
-        st.markdown(f'<div class="metric-card">'
-                    f'<div class="metric-label">3x13 TAPPO</div>'
-                    f'<div class="metric-value">{tappo}</div>'
-                    f'</div>', unsafe_allow_html=True)
-
-        st.markdown(f'<div class="metric-card">'
-                    f'<div class="metric-label">3×21 BM1000</div>'
-                    f'<div class="metric-value">{bm1000}</div>'
-                    f'</div>', unsafe_allow_html=True)
-
-        st.markdown(f'<div class="metric-card">'
-                    f'<div class="metric-label">2+1 TAPPO</div>'
-                    f'<div class="metric-value">{tappo_2x1}</div>'
-                    f'</div>', unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Creamos columnas para el diseño en diagonal
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown(f'<div class="metric-card" style="--rotate: -5deg;">'
+                        f'<div class="metric-label">3x13 TAPPO</div>'
+                        f'<div class="metric-value">{tappo}</div>'
+                        f'</div>', unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f'<div class="metric-card" style="--rotate: 2deg;">'
+                        f'<div class="metric-label">3×21 BM1000</div>'
+                        f'<div class="metric-value">{bm1000}</div>'
+                        f'</div>', unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f'<div class="metric-card" style="--rotate: -3deg;">'
+                        f'<div class="metric-label">2+1 TAPPO</div>'
+                        f'<div class="metric-value">{tappo_2x1}</div>'
+                        f'</div>', unsafe_allow_html=True)
 
         # Resumen de promociones
         st.markdown(f'<div class="dato-usuario" style="margin-top: 12px;">'
