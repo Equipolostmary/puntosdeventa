@@ -437,58 +437,59 @@ if "auth_email" in st.session_state:
                         st.rerun()
 
         # ===== SECCIÓN DE INCENTIVOS =====
-st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
+if user is not None:  # Asegurarse que user existe
+    st.markdown('<div class="seccion">💰 INCENTIVO COMPENSACIONES MENSUALES</div>', unsafe_allow_html=True)
 
-# Obtener y procesar datos del usuario
-objetivo = str(user.get("OBJETIVO", "0")).strip()
-compensacion = str(user.get("COMPENSACION", "0")).strip()
-ventas_mensuales = str(user.get("VENTAS MENSUALES", "0")).strip()
+    # Obtener y procesar datos del usuario
+    objetivo = str(user.get("OBJETIVO", "0")).strip()
+    compensacion = str(user.get("COMPENSACION", "0")).strip()
+    ventas_mensuales = str(user.get("VENTAS MENSUALES", "0")).strip()
 
-# Función para convertir valores a float de forma segura
-def safe_float(value):
-    try:
-        # Eliminar caracteres no numéricos excepto punto decimal
-        cleaned = ''.join(c for c in value if c.isdigit() or c == '.')
-        return float(cleaned) if cleaned else 0.0
-    except:
-        return 0.0
+    # Función para convertir valores a float de forma segura
+    def safe_float(value):
+        try:
+            # Eliminar caracteres no numéricos excepto punto decimal
+            cleaned = ''.join(c for c in value if c.isdigit() or c == '.')
+            return float(cleaned) if cleaned else 0.0
+        except:
+            return 0.0
 
-# Convertir valores
-objetivo_num = safe_float(objetivo)
-ventas_num = safe_float(ventas_mensuales)
+    # Convertir valores
+    objetivo_num = safe_float(objetivo)
+    ventas_num = safe_float(ventas_mensuales)
 
-# Calcular porcentaje con protección contra división por cero
-porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
-porcentaje = min(100, max(0, porcentaje))  # Asegurar que esté entre 0 y 100
+    # Calcular porcentaje con protección contra división por cero
+    porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
+    porcentaje = min(100, max(0, porcentaje))  # Asegurar que esté entre 0 y 100
 
-# Mostrar la información de incentivos
-st.markdown(f"""
-<div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-        <div style="flex: 1; margin-right: 10px;">
-            <strong>OBJETIVO:</strong> {objetivo if objetivo_num > 0 else "No asignado"}
+    # Mostrar la información de incentivos
+    st.markdown(f"""
+    <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <div style="flex: 1; margin-right: 10px;">
+                <strong>OBJETIVO:</strong> {objetivo if objetivo_num > 0 else "No asignado"}
+            </div>
+            <div style="flex: 1;">
+                <strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "No definido"}
+            </div>
         </div>
-        <div style="flex: 1;">
-            <strong>COMPENSACIÓN:</strong> {compensacion if compensacion else "No definido"}
+        
+        <div style="margin-bottom: 5px;">
+            <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
+        </div>
+        
+        <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+            <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
+                 display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
+                {porcentaje:.1f}%
+            </div>
+        </div>
+        
+        <div style="text-align: center; font-size: 14px; color: #666;">
+            Progreso hacia el objetivo
         </div>
     </div>
-    
-    <div style="margin-bottom: 5px;">
-        <strong>Ventas acumuladas:</strong> {ventas_mensuales if ventas_num > 0 else "0"}
-    </div>
-    
-    <div style="background: #f0f0f0; border-radius: 10px; height: 20px; margin-bottom: 10px;">
-        <div style="background: var(--color-primary); width: {porcentaje:.1f}%; height: 100%; border-radius: 10px; 
-             display: flex; align-items: center; justify-content: center; color: white; font-size: 12px;">
-            {porcentaje:.1f}%
-        </div>
-    </div>
-    
-    <div style="text-align: center; font-size: 14px; color: #666;">
-        Progreso hacia el objetivo
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE REPORTE DE VENTAS =====
 st.markdown('<div class="seccion">📞 REPORTAR VENTAS MENSUALES</div>', unsafe_allow_html=True)  # Esta línea NO debe tener indentación
