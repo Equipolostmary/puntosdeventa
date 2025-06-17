@@ -413,18 +413,18 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_column_width=True)
+    st.image("logo.png", use_container_width=True)  # Cambiado de use_column_width a use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
     if correo_usuario == ADMIN_EMAIL:
         # ===== PANEL DE ADMINISTRADOR =====
-        st.markdown('<div class="seccion">📂 RECURSOS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">RECURSOS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
         if opcion:
             st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" style="text-decoration: none; color: var(--color-primary); font-weight: 500;">Ir al recurso seleccionado →</a>', unsafe_allow_html=True)
 
-        st.markdown('<div class="seccion">🔎 BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)  # Eliminado el emoji
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario", key="busqueda_admin").strip().lower()
 
         if termino:
@@ -454,7 +454,7 @@ if "auth_email" in st.session_state:
                 st.warning("No se encontró ningún punto con ese dato.")
 
         # ===== SECCIÓN DE MENSAJES MASIVOS =====
-        st.markdown('<div class="seccion">📨 ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         with st.expander("Enviar mensaje a todos los clientes"):
             mensaje = st.text_area("Escribe tu mensaje para todos los clientes:")
             if st.button("Enviar mensaje masivo"):
@@ -467,7 +467,7 @@ if "auth_email" in st.session_state:
 
     else:
         # ===== PANEL DE USUARIO =====
-        with st.expander("📋 MIS DATOS", expanded=False):
+        with st.expander("MIS DATOS", expanded=False):  # Eliminado el emoji
             columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
             for col in columnas_visibles:
                 if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
@@ -480,14 +480,14 @@ if "auth_email" in st.session_state:
                 <div style="margin-top: 10px;">
                     <a href="{user['Carpeta privada']}" target="_blank" style="text-decoration: none;">
                         <button style="background-color: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                            📁 Abrir mi carpeta privada
+                            Abrir mi carpeta privada
                         </button>
                     </a>
                 </div>
                 """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE PROMOCIONES =====
-        st.markdown('<div class="seccion">🎁 PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         
         def val(col): return int(user.get(col, 0)) if str(user.get(col)).replace('.', '').isdigit() else 0
         tappo = val(promo_tappo_col)
@@ -534,7 +534,7 @@ if "auth_email" in st.session_state:
         """, unsafe_allow_html=True)
 
         # ===== FORMULARIO PARA SUBIR PROMOCIONES =====
-        with st.expander("📤 SUBIR NUEVAS PROMOCIONES", expanded=False):
+        with st.expander("SUBIR NUEVAS PROMOCIONES", expanded=False):  # Eliminado el emoji
             if "widget_key_promos" not in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
             if "widget_key_imgs" not in st.session_state:
@@ -549,7 +549,7 @@ if "auth_email" in st.session_state:
                                            accept_multiple_files=True, 
                                            key=st.session_state.widget_key_imgs)
 
-                if st.button("📤 SUBIR PROMOCIONES", key="subir_promos_btn"):
+                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):  # Eliminado el emoji
                     if not imagenes:
                         st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
                     else:
@@ -576,7 +576,7 @@ if "auth_email" in st.session_state:
                             st.rerun()
 
         # ===== SECCIÓN COMBINADA: COMPENSACIONES Y VENTAS =====
-        st.markdown('<div class="seccion">💰 COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         
         objetivo = str(user.get("OBJETIVO", "0")).strip()
         compensacion = str(user.get("COMPENSACION", "0")).strip()
@@ -611,7 +611,7 @@ if "auth_email" in st.session_state:
         """, unsafe_allow_html=True)
 
         # ===== FORMULARIO DE REPORTE DE VENTAS =====
-        with st.expander("📈 REPORTAR VENTAS MENSUALES", expanded=False):
+        with st.expander("REPORTAR VENTAS MENSUALES", expanded=False):  # Eliminado el emoji
             if "widget_key_ventas" not in st.session_state:
                 st.session_state.widget_key_ventas = str(uuid.uuid4())
             if "widget_key_fotos" not in st.session_state:
@@ -625,7 +625,7 @@ if "auth_email" in st.session_state:
                                         type=["jpg", "png"], 
                                         accept_multiple_files=True, 
                                         key=st.session_state.widget_key_fotos)
-                enviar = st.form_submit_button("📤 ENVIAR REPORTE")
+                enviar = st.form_submit_button("ENVIAR REPORTE")  # Eliminado el emoji
 
             if enviar:
                 if not fotos:
@@ -665,7 +665,7 @@ if "auth_email" in st.session_state:
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_column_width=True)
+    st.image("logo.png", use_container_width=True)  # Cambiado de use_column_width a use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     if "recover_password" not in st.session_state:
