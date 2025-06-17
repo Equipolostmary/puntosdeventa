@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
 import gspread
 from google.oauth2 import service_account
 from drive_upload import conectar_drive, subir_archivo_a_drive
@@ -164,7 +163,6 @@ button[kind="primary"] {
     font-size: 14px !important;
 }
 
-/* Tarjetas de métricas */
 .metric-card {
     background: white;
     border-radius: 8px;
@@ -186,14 +184,12 @@ button[kind="primary"] {
     color: #666;
 }
 
-/* Contenedor flexible para métricas */
 .metric-container {
     display: flex;
     gap: 10px;
     margin-bottom: 12px;
 }
 
-/* Tarjeta de ventas destacada */
 .sales-card {
     background: white;
     border-radius: 8px;
@@ -222,7 +218,6 @@ button[kind="primary"] {
     color: #888;
 }
 
-/* Barra de progreso */
 .progress-container {
     margin: 15px 0;
 }
@@ -247,7 +242,6 @@ button[kind="primary"] {
     font-weight: bold;
 }
 
-/* Botón de cerrar sesión */
 .logout-btn {
     position: fixed;
     bottom: 20px;
@@ -263,76 +257,91 @@ button[kind="primary"] {
     border: 1px solid #dc3545 !important;
 }
 
-/* Mejoras para móviles */
 @media (max-width: 768px) {
     .logo-frame {
-        width: 90%;
-        padding: 8px 12px;
+        width: 95%;
+        padding: 6px 10px;
     }
     
     .titulo {
-        font-size: 18px;
-        padding: 8px 12px;
-        margin: 10px auto;
+        font-size: 16px;
+        padding: 6px 10px;
+        margin: 8px auto;
     }
     
     .seccion {
-        font-size: 14px;
-        margin: 15px 0 8px 0;
+        font-size: 13px;
+        margin: 12px 0 6px 0;
     }
     
-    /* Contenedor flexible para métricas en móvil */
     .metric-container {
-        display: flex;
-        flex-direction: row;
-        gap: 8px;
-        margin-bottom: 12px;
-        overflow-x: auto;
-        padding-bottom: 8px;
+        gap: 6px;
+        padding-bottom: 6px;
     }
     
     .metric-card {
-        min-width: 100px;
-        padding: 10px;
-        flex: 1;
+        min-width: 90px;
+        padding: 8px;
     }
     
     .metric-value {
-        font-size: 18px;
+        font-size: 16px;
     }
     
-    /* Estilo para tarjeta de ventas en móvil */
+    .metric-label {
+        font-size: 11px;
+    }
+    
     .sales-card {
-        padding: 12px;
+        padding: 10px;
     }
     
     .sales-value {
-        font-size: 20px;
+        font-size: 18px;
     }
     
-    /* Ajustar formularios */
-    .stNumberInput, .stTextInput, .stSelectbox {
-        margin-bottom: 8px !important;
+    .sales-label {
+        font-size: 12px;
     }
     
-    /* Ajustar botones */
-    .stButton>button {
-        padding: 6px 12px !important;
-        font-size: 13px !important;
+    .sales-target {
+        font-size: 11px;
     }
     
-    /* Botón de cerrar sesión en móvil */
+    .dato-usuario {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
     .logout-btn {
-        position: static;
-        margin-top: 20px;
-        text-align: center;
-        width: 100%;
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: auto;
     }
     
     .logout-btn button {
-        width: 100%;
-        max-width: 200px;
-        margin: 0 auto;
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+        max-width: 120px;
+    }
+    
+    .stNumberInput, .stTextInput, .stSelectbox {
+        margin-bottom: 6px !important;
+    }
+    
+    .stButton>button {
+        padding: 5px 10px !important;
+        font-size: 12px !important;
+    }
+    
+    .promo-section {
+        margin-top: 8px !important;
+    }
+    
+    .promo-total {
+        font-size: 12px !important;
+        padding: 6px 8px !important;
     }
 }
 </style>
@@ -402,7 +411,7 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_column_width=True)
+    st.image("logo.png", use_container_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
@@ -507,7 +516,7 @@ if "auth_email" in st.session_state:
                     f'<div class="metric-value">{tappo_2x1}</div>'
                     f'</div>', unsafe_allow_html=True)
 
-        st.markdown('</div>', unsafe_allow_html=True)  # Cierre del contenedor flexible
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Resumen de promociones
         st.markdown(f'<div class="dato-usuario" style="margin-top: 12px;">'
@@ -561,20 +570,16 @@ if "auth_email" in st.session_state:
         # ===== SECCIÓN COMBINADA: COMPENSACIONES Y VENTAS =====
         st.markdown('<div class="seccion">💰 COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)
         
-        # Obtener y procesar datos del usuario
         objetivo = str(user.get("OBJETIVO", "0")).strip()
         compensacion = str(user.get("COMPENSACION", "0")).strip()
         ventas_mensuales = str(user.get("VENTAS MENSUALES", "0")).strip()
 
-        # Convertir valores
         objetivo_num = to_float(objetivo)
         ventas_num = to_float(ventas_mensuales)
 
-        # Calcular porcentaje
         porcentaje = (ventas_num / objetivo_num * 100) if objetivo_num > 0 else 0
         porcentaje = min(100, max(0, porcentaje))
 
-        # Tarjeta destacada de ventas
         st.markdown(f"""
         <div class="sales-card">
             <div class="sales-label">VENTAS ACUMULADAS</div>
@@ -583,14 +588,12 @@ if "auth_email" in st.session_state:
         </div>
         """, unsafe_allow_html=True)
 
-        # Mostrar información de compensaciones
         st.markdown(f"""
         <div class="dato-usuario">
             <strong>Compensación:</strong> {compensacion if compensacion else "No definido"}
         </div>
         """, unsafe_allow_html=True)
 
-        # Barra de progreso mejorada
         st.markdown(f"""
         <div class="progress-container">
             <div class="progress-bar">
@@ -621,7 +624,6 @@ if "auth_email" in st.session_state:
                     st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
                 else:
                     try:
-                        # Actualizar ventas mensuales
                         col_destino = "VENTAS MENSUALES"
                         row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
                         col_index = df.columns.get_loc(col_destino) + 1
@@ -630,7 +632,6 @@ if "auth_email" in st.session_state:
                         suma = anterior + int(cantidad)
                         worksheet.update_cell(row, col_index, str(suma))
 
-                        # Subir fotos a Drive
                         match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
                         carpeta_id = match.group(1) if match else None
                         if carpeta_id:
@@ -656,7 +657,7 @@ if "auth_email" in st.session_state:
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_column_width=True)
+    st.image("logo.png", use_container_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     if "recover_password" not in st.session_state:
