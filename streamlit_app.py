@@ -247,6 +247,22 @@ button[kind="primary"] {
     font-weight: bold;
 }
 
+/* Botón de cerrar sesión */
+.logout-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.logout-btn button {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    background-color: #f8f9fa !important;
+    color: #dc3545 !important;
+    border: 1px solid #dc3545 !important;
+}
+
 /* Mejoras para móviles */
 @media (max-width: 768px) {
     .logo-frame {
@@ -255,12 +271,14 @@ button[kind="primary"] {
     }
     
     .titulo {
-        font-size: 16px;
+        font-size: 18px;
         padding: 8px 12px;
+        margin: 10px auto;
     }
     
     .seccion {
         font-size: 14px;
+        margin: 15px 0 8px 0;
     }
     
     /* Contenedor flexible para métricas en móvil */
@@ -301,6 +319,20 @@ button[kind="primary"] {
     .stButton>button {
         padding: 6px 12px !important;
         font-size: 13px !important;
+    }
+    
+    /* Botón de cerrar sesión en móvil */
+    .logout-btn {
+        position: static;
+        margin-top: 20px;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .logout-btn button {
+        width: 100%;
+        max-width: 200px;
+        margin: 0 auto;
     }
 }
 </style>
@@ -370,13 +402,9 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_column_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
-
-    if st.button("CERRAR SESIÓN", key="logout_btn"):
-        st.session_state.clear()
-        st.rerun()
 
     st.success(f"¡Bienvenido, {user['Expendiduría']}!")
 
@@ -618,10 +646,17 @@ if "auth_email" in st.session_state:
                     except Exception as e:
                         st.error(f"❌ Error al subir ventas: {e}")
 
+    # Botón de cerrar sesión en la parte inferior
+    st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
+    if st.button("CERRAR SESIÓN", key="logout_btn"):
+        st.session_state.clear()
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_column_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     if "recover_password" not in st.session_state:
