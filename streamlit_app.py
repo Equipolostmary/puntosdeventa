@@ -355,18 +355,41 @@ creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 
-sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
-worksheet = sheet.worksheet("Registro")
-df = pd.DataFrame(worksheet.get_all_records())
-df.columns = df.columns.str.strip()
+try:
+    sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
+    worksheet = sheet.worksheet("Registro")
+    df = pd.DataFrame(worksheet.get_all_records())
+    
+    # Limpiar nombres de columnas (eliminar espacios y caracteres especiales)
+    df.columns = df.columns.str.strip().str.lower()
+    
+    # Renombrar columnas clave para consistencia
+    column_rename = {
+        'direccion de correo electronico': 'usuario',
+        'expendiduria': 'expendiduria',
+        'contraseha': 'contraseña',
+        'carpeta priva': 'carpeta_privada'
+    }
+    df = df.rename(columns=column_rename)
+    
+    # Verificar columnas requeridas
+    required_columns = {'usuario', 'contraseña', 'expendiduria'}
+    if not required_columns.issubset(set(df.columns)):
+        missing = required_columns - set(df.columns)
+        st.error(f"Faltan columnas requeridas en la hoja: {missing}")
+        st.stop()
+        
+except Exception as e:
+    st.error(f"Error al cargar datos desde Google Sheets: {e}")
+    st.stop()
 
 # ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
 ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
 service = conectar_drive(st.secrets["gcp_service_account"])
 for idx, row in df.iterrows():
-    enlace_actual = str(row.get("Carpeta privada", "")).strip()
+    enlace_actual = str(row.get("carpeta_privada", "")).strip()
     if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
-        nombre_carpeta = f"{row.get('Expendiduría', 'Punto')} - {row.get('Usuario', 'SinUsuario')}"
+        nombre_carpeta = f"{row.get('expendiduria', 'Punto')} - {row.get('usuario', 'SinUsuario')}"
         try:
             metadata = {
                 "name": nombre_carpeta,
@@ -377,15 +400,19 @@ for idx, row in df.iterrows():
             carpeta_id = carpeta.get("id")
             enlace = f"https://drive.google.com/drive/folders/{carpeta_id}"
             time.sleep(1)
-            worksheet.update_cell(idx + 2, df.columns.get_loc("Carpeta privada") + 1, enlace)
-            df.at[idx, "Carpeta privada"] = enlace
+            worksheet.update_cell(idx + 2, df.columns.get_loc("carpeta_privada") + 1, enlace)
+            df.at[idx, "carpeta_privada"] = enlace
         except Exception as e:
             st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
 
 # ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
 def buscar_usuario(email):
-    mask = df["Usuario"].astype(str).str.lower() == email.lower().strip()
-    return df[mask].iloc[0] if mask.any() else None
+    try:
+        mask = df["usuario"].astype(str).str.lower() == email.lower().strip()
+        return df[mask].iloc[0] if mask.any() else None
+    except Exception as e:
+        st.error(f"Error al buscar usuario: {str(e)}")
+        return None
 
 def to_float(value):
     try:
@@ -410,35 +437,35 @@ if "auth_email" in st.session_state:
         st.session_state.clear()
         st.rerun()
     
-    nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
+    nombre_usuario = user["expendiduria"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)  # Cambiado de use_column_width a use_container_width
+    st.image("logo.png", use_container_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
     if correo_usuario == ADMIN_EMAIL:
         # ===== PANEL DE ADMINISTRADOR =====
-        st.markdown('<div class="seccion">RECURSOS</div>', unsafe_allow_html=True)  # Eliminado el emoji
+        st.markdown('<div class="seccion">RECURSOS</div>', unsafe_allow_html=True)
         opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
         if opcion:
             st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" style="text-decoration: none; color: var(--color-primary); font-weight: 500;">Ir al recurso seleccionado →</a>', unsafe_allow_html=True)
 
-        st.markdown('<div class="seccion">BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)  # Eliminado el emoji
+        st.markdown('<div class="seccion">BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario", key="busqueda_admin").strip().lower()
 
         if termino:
-            resultados = df[df.apply(lambda row: termino in str(row.get("TELÉFONO", "")).lower()
-                                                or termino in str(row.get("Usuario", "")).lower()
-                                                or termino in str(row.get("Expendiduría", "")).lower(), axis=1)]
+            resultados = df[df.apply(lambda row: termino in str(row.get("telefono", "")).lower()
+                                                or termino in str(row.get("usuario", "")).lower()
+                                                or termino in str(row.get("expendiduria", "")).lower(), axis=1)]
             if not resultados.empty:
-                opciones = [f"{row['Usuario']} - {row['Expendiduría']} - {row['TELÉFONO']}" for _, row in resultados.iterrows()]
+                opciones = [f"{row['usuario']} - {row['expendiduria']} - {row['telefono']}" for _, row in resultados.iterrows()]
                 seleccion = st.selectbox("Selecciona un punto para editar:", opciones, key="buscador_admin")
                 index = resultados.index[opciones.index(seleccion)]
                 with st.form(f"editar_usuario_{index}"):
                     nuevos_valores = {}
                     for col in df.columns:
-                        if col != "Carpeta privada":
+                        if col != "carpeta_privada":
                             nuevos_valores[col] = st.text_input(col, str(df.at[index, col]), key=f"{col}_{index}")
                     guardar = st.form_submit_button("Guardar cambios")
                     if guardar:
@@ -454,12 +481,12 @@ if "auth_email" in st.session_state:
                 st.warning("No se encontró ningún punto con ese dato.")
 
         # ===== SECCIÓN DE MENSAJES MASIVOS =====
-        st.markdown('<div class="seccion">ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)  # Eliminado el emoji
+        st.markdown('<div class="seccion">ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)
         with st.expander("Enviar mensaje a todos los clientes"):
             mensaje = st.text_area("Escribe tu mensaje para todos los clientes:")
             if st.button("Enviar mensaje masivo"):
                 try:
-                    telefonos = df['TELÉFONO'].dropna().astype(str).tolist()
+                    telefonos = df['telefono'].dropna().astype(str).tolist()
                     st.success(f"Mensaje preparado para enviar a {len(telefonos)} clientes")
                     st.warning("Nota: La función de envío real necesita configuración con Twilio u otro servicio SMS")
                 except Exception as e:
@@ -467,18 +494,17 @@ if "auth_email" in st.session_state:
 
     else:
         # ===== PANEL DE USUARIO =====
-        with st.expander("MIS DATOS", expanded=False):  # Eliminado el emoji
-            columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
+        with st.expander("MIS DATOS", expanded=False):
+            columnas_visibles = [col for col in df.columns if col not in ["contraseña", "marca temporal"]]
             for col in columnas_visibles:
-                if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
-                    etiqueta = "Usuario" if col.lower() == "usuario" else col
-                    valor = user.get(col, '')
-                    st.markdown(f'<div class="dato-usuario"><strong>{etiqueta}:</strong> {valor}</div>', unsafe_allow_html=True)
+                etiqueta = col.replace("_", " ").title()
+                valor = user.get(col, '')
+                st.markdown(f'<div class="dato-usuario"><strong>{etiqueta}:</strong> {valor}</div>', unsafe_allow_html=True)
 
-            if user.get("Carpeta privada"):
+            if user.get("carpeta_privada"):
                 st.markdown(f"""
                 <div style="margin-top: 10px;">
-                    <a href="{user['Carpeta privada']}" target="_blank" style="text-decoration: none;">
+                    <a href="{user['carpeta_privada']}" target="_blank" style="text-decoration: none;">
                         <button style="background-color: var(--color-primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
                             Abrir mi carpeta privada
                         </button>
@@ -487,17 +513,16 @@ if "auth_email" in st.session_state:
                 """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE PROMOCIONES =====
-        st.markdown('<div class="seccion">PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
+        st.markdown('<div class="seccion">PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)
         
         def val(col): return int(user.get(col, 0)) if str(user.get(col)).replace('.', '').isdigit() else 0
         tappo = val(promo_tappo_col)
         bm1000 = val(promo_bm1000_col)
         tappo_2x1 = val(promo_tappo_2x1_col)
         total = tappo + bm1000 + tappo_2x1
-        entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
-        pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
+        entregados = val("repuestos") if "repuestos" in df.columns else 0
+        pendientes = val("pendiente de reponer") if "pendiente de reponer" in df.columns else 0
 
-        # Nuevo diseño con columnas para mejor alineación
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -524,7 +549,6 @@ if "auth_email" in st.session_state:
             </div>
             """, unsafe_allow_html=True)
 
-        # Resumen de promociones con mejor espaciado
         st.markdown(f"""
         <div class="promo-total">
             <div style="margin-bottom: 8px;"><strong>Total promociones acumuladas:</strong> {total}</div>
@@ -534,7 +558,7 @@ if "auth_email" in st.session_state:
         """, unsafe_allow_html=True)
 
         # ===== FORMULARIO PARA SUBIR PROMOCIONES =====
-        with st.expander("SUBIR NUEVAS PROMOCIONES", expanded=False):  # Eliminado el emoji
+        with st.expander("SUBIR NUEVAS PROMOCIONES", expanded=False):
             if "widget_key_promos" not in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
             if "widget_key_imgs" not in st.session_state:
@@ -549,12 +573,12 @@ if "auth_email" in st.session_state:
                                            accept_multiple_files=True, 
                                            key=st.session_state.widget_key_imgs)
 
-                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):  # Eliminado el emoji
+                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):
                     if not imagenes:
                         st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
                     else:
                         service = conectar_drive(st.secrets["gcp_service_account"])
-                        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+                        carpeta_id = str(user["carpeta_privada"]).split("/")[-1]
                         ok = 0
                         for img in imagenes:
                             try:
@@ -563,7 +587,7 @@ if "auth_email" in st.session_state:
                             except Exception as e:
                                 st.error(f"Error al subir {img.name}: {e}")
                         if ok:
-                            row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                            row = df[df["usuario"] == user["usuario"]].index[0] + 2
                             worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
                             worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
                             worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
@@ -576,11 +600,11 @@ if "auth_email" in st.session_state:
                             st.rerun()
 
         # ===== SECCIÓN COMBINADA: COMPENSACIONES Y VENTAS =====
-        st.markdown('<div class="seccion">COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
+        st.markdown('<div class="seccion">COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)
         
-        objetivo = str(user.get("OBJETIVO", "0")).strip()
-        compensacion = str(user.get("COMPENSACION", "0")).strip()
-        ventas_mensuales = str(user.get("VENTAS MENSUALES", "0")).strip()
+        objetivo = str(user.get("objetivo", "0")).strip()
+        compensacion = str(user.get("compensacion", "0")).strip()
+        ventas_mensuales = str(user.get("ventas mensuales", "0")).strip()
 
         objetivo_num = to_float(objetivo)
         ventas_num = to_float(ventas_mensuales)
@@ -611,7 +635,7 @@ if "auth_email" in st.session_state:
         """, unsafe_allow_html=True)
 
         # ===== FORMULARIO DE REPORTE DE VENTAS =====
-        with st.expander("REPORTAR VENTAS MENSUALES", expanded=False):  # Eliminado el emoji
+        with st.expander("REPORTAR VENTAS MENSUALES", expanded=False):
             if "widget_key_ventas" not in st.session_state:
                 st.session_state.widget_key_ventas = str(uuid.uuid4())
             if "widget_key_fotos" not in st.session_state:
@@ -625,22 +649,22 @@ if "auth_email" in st.session_state:
                                         type=["jpg", "png"], 
                                         accept_multiple_files=True, 
                                         key=st.session_state.widget_key_fotos)
-                enviar = st.form_submit_button("ENVIAR REPORTE")  # Eliminado el emoji
+                enviar = st.form_submit_button("ENVIAR REPORTE")
 
             if enviar:
                 if not fotos:
                     st.warning("⚠️ Debes subir al menos una imagen como comprobante.")
                 else:
                     try:
-                        col_destino = "VENTAS MENSUALES"
-                        row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                        col_destino = "ventas mensuales"
+                        row = df[df["usuario"] == user["usuario"]].index[0] + 2
                         col_index = df.columns.get_loc(col_destino) + 1
                         valor_anterior = user.get(col_destino, 0)
                         anterior = to_float(valor_anterior)
                         suma = anterior + int(cantidad)
                         worksheet.update_cell(row, col_index, str(suma))
 
-                        match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
+                        match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["carpeta_privada"])
                         carpeta_id = match.group(1) if match else None
                         if carpeta_id:
                             service = conectar_drive(st.secrets["gcp_service_account"])
@@ -655,7 +679,7 @@ if "auth_email" in st.session_state:
                     except Exception as e:
                         st.error(f"❌ Error al subir ventas: {e}")
 
-    # Botón de cerrar sesión en la parte inferior
+    # Botón de cerrar sesión
     st.markdown('<div class="logout-btn">', unsafe_allow_html=True)
     if st.button("CERRAR SESIÓN", key="logout_btn"):
         st.session_state.clear()
@@ -665,7 +689,7 @@ if "auth_email" in st.session_state:
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)  # Cambiado de use_column_width a use_container_width
+    st.image("logo.png", use_container_width=True)
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     if "recover_password" not in st.session_state:
@@ -694,8 +718,8 @@ else:
             elif user is None:
                 st.error("❌ Correo no encontrado.")
             else:
-                password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
-                password_introducida = clave.strip().replace(",", "")
+                password_guardada = str(user.get("contraseña", "")).strip()
+                password_introducida = clave.strip()
                 if not password_guardada:
                     st.error("❌ No hay contraseña configurada para este usuario.")
                 elif password_guardada != password_introducida:
