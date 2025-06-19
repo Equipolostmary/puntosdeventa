@@ -7,10 +7,14 @@ import time
 import uuid
 import re
 
+# ===== CONFIGURACIONES PRINCIPALES =====
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered", initial_sidebar_state="collapsed")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
+ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
+SHEET_ID = "1a14wIe2893oS7zhicvT4mU0N_dM3vqItkTfJdHB325A"
+WORKSHEET_NAME = "Registro"
 
-# ===== ENLACES =====
+# ===== ENLACES COMPLETOS =====
 enlaces = {
     "ACCIONES COMERCIALES Q4 2024": "https://docs.google.com/spreadsheets/d/1DqC1348Z3LqnzCVB8d8AqDbsAR3WUDUf/edit?gid=1142706501#gid=1142706501",
     "CATALOGO DE MATERIALES": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-YPxpn22EL6g/p/10ciZH8DpEsC5GNpYSigFrFJ_Fln9B0Q2/preview?authuser=0",
@@ -349,71 +353,85 @@ button[kind="primary"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ============ AUTENTICACIÓN Y DATOS ============
+# ============ CONEXIÓN A GOOGLE SHEETS ============
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
 client = gspread.authorize(creds)
 
-try:
-    sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
-    worksheet = sheet.worksheet("Registro")
-    df = pd.DataFrame(worksheet.get_all_records())
-    
-    # Limpiar nombres de columnas (eliminar espacios y caracteres especiales)
-    df.columns = df.columns.str.strip().str.lower()
-    
-    # Renombrar columnas clave para consistencia
-    column_rename = {
-        'direccion de correo electronico': 'usuario',
-        'expendiduria': 'expendiduria',
-        'contraseha': 'contraseña',
-        'carpeta priva': 'carpeta_privada'
-    }
-    df = df.rename(columns=column_rename)
-    
-    # Verificar columnas requeridas
-    required_columns = {'usuario', 'contraseña', 'expendiduria'}
-    if not required_columns.issubset(set(df.columns)):
-        missing = required_columns - set(df.columns)
-        st.error(f"Faltan columnas requeridas en la hoja: {missing}")
-        st.stop()
+@st.cache_data(ttl=300)
+def cargar_datos():
+    try:
+        sheet = client.open_by_key(SHEET_ID)
+        worksheet = sheet.worksheet(WORKSHEET_NAME)
+        df = pd.DataFrame(worksheet.get_all_records())
         
-except Exception as e:
-    st.error(f"Error al cargar datos desde Google Sheets: {e}")
-    st.stop()
+        df.columns = df.columns.str.strip().str.lower()
+        df = df.rename(columns={
+            'direccion de correo electronico': 'usuario',
+            'expendiduria': 'expendiduria',
+            'contraseha': 'contraseña',
+            'carpeta priva': 'carpeta_privada',
+            'teléfono': 'telefono'
+        })
+        
+        required_columns = {'usuario', 'contraseña', 'expendiduria', 'telefono'}
+        missing_columns = required_columns - set(df.columns)
+        if missing_columns:
+            st.error(f"ERROR: Faltan columnas esenciales: {missing_columns}")
+            st.stop()
+            
+        return df, worksheet
+        
+    except Exception as e:
+        st.error(f"ERROR CRÍTICO: No se pudo conectar con Google Sheets: {str(e)}")
+        st.stop()
 
-# ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
-ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
-service = conectar_drive(st.secrets["gcp_service_account"])
-for idx, row in df.iterrows():
-    enlace_actual = str(row.get("carpeta_privada", "")).strip()
-    if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
-        nombre_carpeta = f"{row.get('expendiduria', 'Punto')} - {row.get('usuario', 'SinUsuario')}"
-        try:
-            metadata = {
-                "name": nombre_carpeta,
-                "mimeType": "application/vnd.google-apps.folder",
-                "parents": [ID_CARPETA_RAIZ]
-            }
-            carpeta = service.files().create(body=metadata, fields="id").execute()
-            carpeta_id = carpeta.get("id")
-            enlace = f"https://drive.google.com/drive/folders/{carpeta_id}"
-            time.sleep(1)
-            worksheet.update_cell(idx + 2, df.columns.get_loc("carpeta_privada") + 1, enlace)
-            df.at[idx, "carpeta_privada"] = enlace
-        except Exception as e:
-            st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {e}")
+df, worksheet = cargar_datos()
 
-# ===== FUNCIÓN PARA BUSCAR USUARIO POR EMAIL =====
+# ===== FUNCIÓN BUSCAR_USUARIO MEJORADA =====
 def buscar_usuario(email):
     try:
+        if 'usuario' not in df.columns:
+            st.error("Error de configuración: No existe la columna 'usuario'")
+            return None
+            
         mask = df["usuario"].astype(str).str.lower() == email.lower().strip()
-        return df[mask].iloc[0] if mask.any() else None
+        if not mask.any():
+            return None
+            
+        return df[mask].iloc[0]
     except Exception as e:
         st.error(f"Error al buscar usuario: {str(e)}")
         return None
 
+# ===== GESTIÓN DE CARPETAS DRIVE =====
+def crear_carpetas_drive():
+    service = conectar_drive(st.secrets["gcp_service_account"])
+    for idx, row in df.iterrows():
+        enlace_actual = str(row.get("carpeta_privada", "")).strip()
+        if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
+            nombre_carpeta = f"{row.get('expendiduria', 'Punto')} - {row.get('usuario', 'SinUsuario')}"
+            try:
+                metadata = {
+                    "name": nombre_carpeta,
+                    "mimeType": "application/vnd.google-apps.folder",
+                    "parents": [ID_CARPETA_RAIZ]
+                }
+                carpeta = service.files().create(body=metadata, fields="id").execute()
+                carpeta_id = carpeta.get("id")
+                enlace = f"https://drive.google.com/drive/folders/{carpeta_id}"
+                worksheet.update_cell(idx + 2, df.columns.get_loc("carpeta_privada") + 1, enlace)
+                df.at[idx, "carpeta_privada"] = enlace
+                time.sleep(1)  # Evitar límites de tasa de Google
+            except Exception as e:
+                st.warning(f"No se pudo crear carpeta para {nombre_carpeta}: {str(e)}")
+
+if 'carpetas_creadas' not in st.session_state:
+    crear_carpetas_drive()
+    st.session_state.carpetas_creadas = True
+
+# ===== FUNCIONES AUXILIARES =====
 def to_float(value):
     try:
         cleaned = ''.join(c for c in str(value) if c.isdigit() or c == '.')
@@ -426,7 +444,6 @@ promo_tappo_col = "Promoción 3x10 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
 promo_tappo_2x1_col = "2+1 TAPPO"
 total_promos_col = "TOTAL PROMOS"
-
 # ============ ÁREA PRIVADA ============
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
@@ -456,8 +473,8 @@ if "auth_email" in st.session_state:
 
         if termino:
             resultados = df[df.apply(lambda row: termino in str(row.get("telefono", "")).lower()
-                                                or termino in str(row.get("usuario", "")).lower()
-                                                or termino in str(row.get("expendiduria", "")).lower(), axis=1)]
+                                            or termino in str(row.get("usuario", "")).lower()
+                                            or termino in str(row.get("expendiduria", "")).lower(), axis=1)]
             if not resultados.empty:
                 opciones = [f"{row['usuario']} - {row['expendiduria']} - {row['telefono']}" for _, row in resultados.iterrows()]
                 seleccion = st.selectbox("Selecciona un punto para editar:", opciones, key="buscador_admin")
@@ -480,7 +497,6 @@ if "auth_email" in st.session_state:
             else:
                 st.warning("No se encontró ningún punto con ese dato.")
 
-        # ===== SECCIÓN DE MENSAJES MASIVOS =====
         st.markdown('<div class="seccion">ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)
         with st.expander("Enviar mensaje a todos los clientes"):
             mensaje = st.text_area("Escribe tu mensaje para todos los clientes:")
@@ -707,51 +723,3 @@ else:
                 <button onclick="window.streamlitSessionState.set({recover_password: true})" 
                    style="background: none; border: none; color: var(--color-primary); text-decoration: none; font-size: 14px; cursor: pointer;">
                    ¿Olvidaste tu contraseña?
-                </button>
-            </div>
-            """, unsafe_allow_html=True)
-
-        if submit:
-            user = buscar_usuario(correo)
-            if not correo or not clave:
-                st.warning("⚠️ Debes completar ambos campos.")
-            elif user is None:
-                st.error("❌ Correo no encontrado.")
-            else:
-                password_guardada = str(user.get("contraseña", "")).strip()
-                password_introducida = clave.strip()
-                if not password_guardada:
-                    st.error("❌ No hay contraseña configurada para este usuario.")
-                elif password_guardada != password_introducida:
-                    st.error("❌ Contraseña incorrecta.")
-                else:
-                    st.session_state["auth_email"] = correo
-                    st.rerun()
-    else:
-        # ===== PANTALLA DE RECUPERACIÓN DE CONTRASEÑA =====
-        with st.form("recover_form"):
-            st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primary);">RECUPERAR CONTRASEÑA</div>', unsafe_allow_html=True)
-            
-            recover_email = st.text_input("Ingresa tu correo electrónico", key="recover_email").strip().lower()
-            
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                submit_recover = st.form_submit_button("ENVIAR ENLACE")
-            with col2:
-                if st.form_submit_button("VOLVER AL LOGIN"):
-                    st.session_state.recover_password = False
-                    st.rerun()
-            
-            if submit_recover:
-                try:
-                    user = buscar_usuario(recover_email)
-                    if user is not None:
-                        # Aquí deberías implementar el envío real del correo
-                        st.success("Se ha enviado un enlace de recuperación a tu correo")
-                        st.session_state.recover_password = False
-                        time.sleep(2)
-                        st.rerun()
-                    else:
-                        st.error("Correo no encontrado")
-                except Exception as e:
-                    st.error(f"Error al procesar la recuperación: {str(e)}")
