@@ -723,7 +723,12 @@ else:
                 <button onclick="window.streamlitSessionState.set({recover_password: true})" 
                    style="background: none; border: none; color: var(--color-primary); text-decoration: none; font-size: 14px; cursor: pointer;">
                    ¿Olvidaste tu contraseña?
-</a>
+            st.markdown("""
+            <div style="text-align: center; margin: 20px 0;">
+                <button onclick="window.streamlitSessionState.set({recover_password: true})" 
+                   style="background: none; border: none; color: var(--color-primary); text-decoration: none; font-size: 14px; cursor: pointer;">
+                   ¿Olvidaste tu contraseña?
+                </button>
             </div>
             """, unsafe_allow_html=True)
 
@@ -734,8 +739,8 @@ else:
             elif user is None:
                 st.error("❌ Correo no encontrado.")
             else:
-                password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
-                password_introducida = clave.strip().replace(",", "")
+                password_guardada = str(user.get("contraseña", "")).strip()
+                password_introducida = clave.strip()
                 if not password_guardada:
                     st.error("❌ No hay contraseña configurada para este usuario.")
                 elif password_guardada != password_introducida:
@@ -744,15 +749,29 @@ else:
                     st.session_state["auth_email"] = correo
                     st.rerun()
     else:
+        # ===== PANTALLA DE RECUPERACIÓN DE CONTRASEÑA =====
         with st.form("recover_form"):
             st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primary);">RECUPERAR CONTRASEÑA</div>', unsafe_allow_html=True)
+            
             recover_email = st.text_input("Ingresa tu correo electrónico", key="recover_email").strip().lower()
-            submit_recover = st.form_submit_button("ENVIAR ENLACE")
+            
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                submit_recover = st.form_submit_button("ENVIAR ENLACE")
+            with col2:
+                if st.form_submit_button("VOLVER AL LOGIN"):
+                    st.session_state.recover_password = False
+                    st.rerun()
             
             if submit_recover:
-                user = buscar_usuario(recover_email)
-                if user is not None:
-                    st.success("Se ha enviado un enlace de recuperación a tu correo")
-                    st.session_state.recover_password = False
-                else:
-                    st.error("Correo no encontrado")
+                try:
+                    user = buscar_usuario(recover_email)
+                    if user is not None:
+                        st.success("Se ha enviado un enlace de recuperación a tu correo")
+                        st.session_state.recover_password = False
+                        time.sleep(2)
+                        st.rerun()
+                    else:
+                        st.error("Correo no encontrado")
+                except Exception as e:
+                    st.error(f"Error al procesar la recuperación: {str(e)}")
