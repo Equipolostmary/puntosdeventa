@@ -723,3 +723,36 @@ else:
                 <button onclick="window.streamlitSessionState.set({recover_password: true})" 
                    style="background: none; border: none; color: var(--color-primary); text-decoration: none; font-size: 14px; cursor: pointer;">
                    ¿Olvidaste tu contraseña?
+</a>
+            </div>
+            """, unsafe_allow_html=True)
+
+        if submit:
+            user = buscar_usuario(correo)
+            if not correo or not clave:
+                st.warning("⚠️ Debes completar ambos campos.")
+            elif user is None:
+                st.error("❌ Correo no encontrado.")
+            else:
+                password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
+                password_introducida = clave.strip().replace(",", "")
+                if not password_guardada:
+                    st.error("❌ No hay contraseña configurada para este usuario.")
+                elif password_guardada != password_introducida:
+                    st.error("❌ Contraseña incorrecta.")
+                else:
+                    st.session_state["auth_email"] = correo
+                    st.rerun()
+    else:
+        with st.form("recover_form"):
+            st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primary);">RECUPERAR CONTRASEÑA</div>', unsafe_allow_html=True)
+            recover_email = st.text_input("Ingresa tu correo electrónico", key="recover_email").strip().lower()
+            submit_recover = st.form_submit_button("ENVIAR ENLACE")
+            
+            if submit_recover:
+                user = buscar_usuario(recover_email)
+                if user is not None:
+                    st.success("Se ha enviado un enlace de recuperación a tu correo")
+                    st.session_state.recover_password = False
+                else:
+                    st.error("Correo no encontrado")
