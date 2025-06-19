@@ -29,7 +29,7 @@ enlaces = {
     "PRECIO BM600": "https://docs.google.com/spreadsheets/d/1F-TyJSI32sIBvZtXUkfFQ5P2rQQeXHNISx1u95vi4o/edit?gid=0#gid=0",
     "REALIZAR PEDIDO": "https://docs.google.com/spreadsheets/d/1IUeYNQg3Dx4NK45K6vrikRWNq3vkM8HXplH8Ymb8h3tI/edit?gid=2078407623#gid=2078407623",
     "REGISTRAR PUNTO DE VENTA": "https://docs.google.com/forms/d/e/1FAIpQLScTNcjTq0DU2xIjB1EcqbVpcVXWlKurBiNBZFDngN3fhmYb1_A/viewform",
-    "RESPUESTAS FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR2X76MQdEy3-Fj1WfVQX",
+    "RESPUESTAS FORMULARIOS": "https://drive.google.com/drive/folders/1eNhwJQBf6ZqkR76MQdEy3-Fj1WfVQX",
     "VIDEOS": "https://sites.google.com/u/0/d/11uRx7ac0-qOavsKwF27n-YPxpn22EL6g/p/1hzXetHR3hVMwCE-Z7A0GGsMmI7q3hqjT/preview?authuser=0",
     "VINILOS": "https://docs.google.com/spreadsheets/d/112hSu3vSu0wBMCvAuMGFsANoAV7v2vfskI0Xm4ArX3Oc/edit?gid=0#gid=0",
     "VISUALES": "https://drive.google.com/drive/folders/1qzXCVrBcAuebu2kpen9sQ8X85ZIDh68C",
@@ -444,6 +444,7 @@ promo_tappo_col = "Promoción 3x10 TAPPO"
 promo_bm1000_col = "Promoción 3×21 BM1000"
 promo_tappo_2x1_col = "2+1 TAPPO"
 total_promos_col = "TOTAL PROMOS"
+
 # ============ ÁREA PRIVADA ============
 if "auth_email" in st.session_state:
     correo_usuario = st.session_state["auth_email"]
@@ -585,9 +586,9 @@ if "auth_email" in st.session_state:
                 promo2 = st.number_input("Promos 3×21 BM1000", min_value=0, key=st.session_state.widget_key_promos + "_2")
                 promo3 = st.number_input("Promos 2+1 TAPPO", min_value=0, key=st.session_state.widget_key_promos + "_3")
                 imagenes = st.file_uploader("Sube los tickets o imágenes de comprobante", 
-                                           type=["jpg", "png", "jpeg"], 
-                                           accept_multiple_files=True, 
-                                           key=st.session_state.widget_key_imgs)
+                                         type=["jpg", "png", "jpeg"], 
+                                         accept_multiple_files=True, 
+                                         key=st.session_state.widget_key_imgs)
 
                 if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):
                     if not imagenes:
@@ -659,12 +660,12 @@ if "auth_email" in st.session_state:
 
             with st.form("formulario_ventas", clear_on_submit=True):
                 cantidad = st.number_input("¿Cuántos dispositivos has vendido este mes?", 
-                                         min_value=0, step=1, 
-                                         key=st.session_state.widget_key_ventas + "_cantidad")
+                                        min_value=0, step=1, 
+                                        key=st.session_state.widget_key_ventas + "_cantidad")
                 fotos = st.file_uploader("Sube fotos como comprobante (tickets, vitrinas...)", 
-                                        type=["jpg", "png"], 
-                                        accept_multiple_files=True, 
-                                        key=st.session_state.widget_key_fotos)
+                                      type=["jpg", "png"], 
+                                      accept_multiple_files=True, 
+                                      key=st.session_state.widget_key_fotos)
                 enviar = st.form_submit_button("ENVIAR REPORTE")
 
             if enviar:
@@ -723,11 +724,6 @@ else:
                 <button onclick="window.streamlitSessionState.set({recover_password: true})" 
                    style="background: none; border: none; color: var(--color-primary); text-decoration: none; font-size: 14px; cursor: pointer;">
                    ¿Olvidaste tu contraseña?
-            st.markdown("""
-            <div style="text-align: center; margin: 20px 0;">
-                <button onclick="window.streamlitSessionState.set({recover_password: true})" 
-                   style="background: none; border: none; color: var(--color-primary); text-decoration: none; font-size: 14px; cursor: pointer;">
-                   ¿Olvidaste tu contraseña?
                 </button>
             </div>
             """, unsafe_allow_html=True)
@@ -739,8 +735,8 @@ else:
             elif user is None:
                 st.error("❌ Correo no encontrado.")
             else:
-                password_guardada = str(user.get("contraseña", "")).strip()
-                password_introducida = clave.strip()
+                password_guardada = str(user.get("Contraseña", "")).strip().replace(",", "")
+                password_introducida = clave.strip().replace(",", "")
                 if not password_guardada:
                     st.error("❌ No hay contraseña configurada para este usuario.")
                 elif password_guardada != password_introducida:
@@ -749,29 +745,15 @@ else:
                     st.session_state["auth_email"] = correo
                     st.rerun()
     else:
-        # ===== PANTALLA DE RECUPERACIÓN DE CONTRASEÑA =====
         with st.form("recover_form"):
             st.markdown('<div style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; color: var(--color-primary);">RECUPERAR CONTRASEÑA</div>', unsafe_allow_html=True)
-            
             recover_email = st.text_input("Ingresa tu correo electrónico", key="recover_email").strip().lower()
-            
-            col1, col2 = st.columns([1, 2])
-            with col1:
-                submit_recover = st.form_submit_button("ENVIAR ENLACE")
-            with col2:
-                if st.form_submit_button("VOLVER AL LOGIN"):
-                    st.session_state.recover_password = False
-                    st.rerun()
+            submit_recover = st.form_submit_button("ENVIAR ENLACE")
             
             if submit_recover:
-                try:
-                    user = buscar_usuario(recover_email)
-                    if user is not None:
-                        st.success("Se ha enviado un enlace de recuperación a tu correo")
-                        st.session_state.recover_password = False
-                        time.sleep(2)
-                        st.rerun()
-                    else:
-                        st.error("Correo no encontrado")
-                except Exception as e:
-                    st.error(f"Error al procesar la recuperación: {str(e)}")
+                user = buscar_usuario(recover_email)
+                if user is not None:
+                    st.success("Se ha enviado un enlace de recuperación a tu correo")
+                    st.session_state.recover_password = False
+                else:
+                    st.error("Correo no encontrado")
