@@ -2,15 +2,10 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2 import service_account
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
+from drive_upload import conectar_drive, subir_archivo_a_drive
 import time
 import uuid
 import re
-import io
-import os
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered", initial_sidebar_state="collapsed")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
@@ -354,64 +349,11 @@ button[kind="primary"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ===== FUNCIONES PARA GOOGLE DRIVE (MODIFICADAS PARA USAR OAUTH) =====
-def conectar_drive():
-    """Conecta a Google Drive usando OAuth 2.0"""
-    creds = None
-    # El archivo token.json almacena los tokens de acceso y actualización del usuario
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', ['https://www.googleapis.com/auth/drive.file'])
-    
-    # Si no hay credenciales válidas disponibles, permite al usuario iniciar sesión
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            # Usamos las credenciales del secrets de Streamlit
-            client_config = {
-                "installed": {
-                    "client_id": st.secrets["google_oauth"]["client_id"],
-                    "project_id": st.secrets["google_oauth"]["project_id"],
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                    "client_secret": st.secrets["google_oauth"]["client_secret"],
-                    "redirect_uris": ["http://localhost"]
-                }
-            }
-            flow = InstalledAppFlow.from_client_config(client_config, ['https://www.googleapis.com/auth/drive.file'])
-            creds = flow.run_local_server(port=0)
-        
-        # Guarda las credenciales para la próxima ejecución
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-    
-    return build('drive', 'v3', credentials=creds)
-
-def subir_archivo_a_drive(service, archivo, nombre_archivo, carpeta_id=None):
-    """Sube un archivo a Google Drive"""
-    file_metadata = {
-        'name': nombre_archivo,
-        'parents': [carpeta_id] if carpeta_id else None
-    }
-    
-    # Usa io.BytesIO para manejar datos en memoria
-    file_stream = io.BytesIO(archivo.getvalue())
-    media = MediaIoBaseUpload(file_stream, 
-                            mimetype=archivo.type, 
-                            resumable=True)
-    
-    file = service.files().create(body=file_metadata,
-                                media_body=media,
-                                fields='id').execute()
-    
-    return file.get('id')
-
 # ============ AUTENTICACIÓN Y DATOS ============
 scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-creds_sheets = service_account.Credentials.from_service_account_info(
+creds = service_account.Credentials.from_service_account_info(
     st.secrets["gcp_service_account"], scopes=scopes)
-client = gspread.authorize(creds_sheets)
+client = gspread.authorize(creds)
 
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
 worksheet = sheet.worksheet("Registro")
@@ -420,7 +362,7 @@ df.columns = df.columns.str.strip()
 
 # ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
 ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
-service = conectar_drive()
+service = conectar_drive(st.secrets["gcp_service_account"])
 for idx, row in df.iterrows():
     enlace_actual = str(row.get("Carpeta privada", "")).strip()
     if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
@@ -471,18 +413,18 @@ if "auth_email" in st.session_state:
     nombre_usuario = user["Expendiduría"] if user is not None else correo_usuario
 
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_container_width=True)  # Cambiado de use_column_width a use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     st.markdown(f'<div class="titulo">ÁREA PRIVADA – {nombre_usuario}</div>', unsafe_allow_html=True)
 
     if correo_usuario == ADMIN_EMAIL:
         # ===== PANEL DE ADMINISTRADOR =====
-        st.markdown('<div class="seccion">RECURSOS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">RECURSOS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         opcion = st.selectbox("Selecciona un recurso para abrir:", sorted(enlaces.keys()), key="recursos_maestro")
         if opcion:
             st.markdown(f'<a href="{enlaces[opcion]}" target="_blank" style="text-decoration: none; color: var(--color-primary); font-weight: 500;">Ir al recurso seleccionado →</a>', unsafe_allow_html=True)
 
-        st.markdown('<div class="seccion">BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">BUSCAR Y EDITAR PUNTOS DE VENTA</div>', unsafe_allow_html=True)  # Eliminado el emoji
         termino = st.text_input("Buscar por teléfono, correo, expendiduría o usuario", key="busqueda_admin").strip().lower()
 
         if termino:
@@ -512,7 +454,7 @@ if "auth_email" in st.session_state:
                 st.warning("No se encontró ningún punto con ese dato.")
 
         # ===== SECCIÓN DE MENSAJES MASIVOS =====
-        st.markdown('<div class="seccion">ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">ENVIAR MENSAJES MASIVOS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         with st.expander("Enviar mensaje a todos los clientes"):
             mensaje = st.text_area("Escribe tu mensaje para todos los clientes:")
             if st.button("Enviar mensaje masivo"):
@@ -525,7 +467,7 @@ if "auth_email" in st.session_state:
 
     else:
         # ===== PANEL DE USUARIO =====
-        with st.expander("MIS DATOS", expanded=False):
+        with st.expander("MIS DATOS", expanded=False):  # Eliminado el emoji
             columnas_visibles = list(df.columns[:df.columns.get_loc("Carpeta privada")+1])
             for col in columnas_visibles:
                 if "contraseña" not in col.lower() and "marca temporal" not in col.lower():
@@ -545,7 +487,7 @@ if "auth_email" in st.session_state:
                 """, unsafe_allow_html=True)
 
         # ===== SECCIÓN DE PROMOCIONES =====
-        st.markdown('<div class="seccion">PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">PROMOCIONES ACUMULADAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         
         def val(col): return int(user.get(col, 0)) if str(user.get(col)).replace('.', '').isdigit() else 0
         tappo = val(promo_tappo_col)
@@ -555,6 +497,7 @@ if "auth_email" in st.session_state:
         entregados = val("REPUESTOS") if "REPUESTOS" in df.columns else 0
         pendientes = val("PENDIENTE DE REPONER") if "PENDIENTE DE REPONER" in df.columns else 0
 
+        # Nuevo diseño con columnas para mejor alineación
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -581,6 +524,7 @@ if "auth_email" in st.session_state:
             </div>
             """, unsafe_allow_html=True)
 
+        # Resumen de promociones con mejor espaciado
         st.markdown(f"""
         <div class="promo-total">
             <div style="margin-bottom: 8px;"><strong>Total promociones acumuladas:</strong> {total}</div>
@@ -590,7 +534,7 @@ if "auth_email" in st.session_state:
         """, unsafe_allow_html=True)
 
         # ===== FORMULARIO PARA SUBIR PROMOCIONES =====
-        with st.expander("SUBIR NUEVAS PROMOCIONES", expanded=False):
+        with st.expander("SUBIR NUEVAS PROMOCIONES", expanded=False):  # Eliminado el emoji
             if "widget_key_promos" not in st.session_state:
                 st.session_state.widget_key_promos = str(uuid.uuid4())
             if "widget_key_imgs" not in st.session_state:
@@ -605,37 +549,34 @@ if "auth_email" in st.session_state:
                                            accept_multiple_files=True, 
                                            key=st.session_state.widget_key_imgs)
 
-                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):
+                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):  # Eliminado el emoji
                     if not imagenes:
                         st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
                     else:
-                        try:
-                            service = conectar_drive()
-                            carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-                            ok = 0
-                            for img in imagenes:
-                                try:
-                                    subir_archivo_a_drive(service, img, img.name, carpeta_id)
-                                    ok += 1
-                                except Exception as e:
-                                    st.error(f"Error al subir {img.name}: {e}")
-                            if ok:
-                                row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                                worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
-                                worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
-                                worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
-                                nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
-                                worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
-                                st.session_state.widget_key_promos = str(uuid.uuid4())
-                                st.session_state.widget_key_imgs = str(uuid.uuid4())
-                                st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
-                                time.sleep(2)
-                                st.rerun()
-                        except Exception as e:
-                            st.error(f"Error de conexión con Google Drive: {e}")
+                        service = conectar_drive(st.secrets["gcp_service_account"])
+                        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+                        ok = 0
+                        for img in imagenes:
+                            try:
+                                subir_archivo_a_drive(service, img, img.name, carpeta_id)
+                                ok += 1
+                            except Exception as e:
+                                st.error(f"Error al subir {img.name}: {e}")
+                        if ok:
+                            row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+                            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
+                            worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
+                            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
+                            nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
+                            worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
+                            st.session_state.widget_key_promos = str(uuid.uuid4())
+                            st.session_state.widget_key_imgs = str(uuid.uuid4())
+                            st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
+                            time.sleep(2)
+                            st.rerun()
 
         # ===== SECCIÓN COMBINADA: COMPENSACIONES Y VENTAS =====
-        st.markdown('<div class="seccion">COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)
+        st.markdown('<div class="seccion">COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
         
         objetivo = str(user.get("OBJETIVO", "0")).strip()
         compensacion = str(user.get("COMPENSACION", "0")).strip()
@@ -670,7 +611,7 @@ if "auth_email" in st.session_state:
         """, unsafe_allow_html=True)
 
         # ===== FORMULARIO DE REPORTE DE VENTAS =====
-        with st.expander("REPORTAR VENTAS MENSUALES", expanded=False):
+        with st.expander("REPORTAR VENTAS MENSUALES", expanded=False):  # Eliminado el emoji
             if "widget_key_ventas" not in st.session_state:
                 st.session_state.widget_key_ventas = str(uuid.uuid4())
             if "widget_key_fotos" not in st.session_state:
@@ -684,7 +625,7 @@ if "auth_email" in st.session_state:
                                         type=["jpg", "png"], 
                                         accept_multiple_files=True, 
                                         key=st.session_state.widget_key_fotos)
-                enviar = st.form_submit_button("ENVIAR REPORTE")
+                enviar = st.form_submit_button("ENVIAR REPORTE")  # Eliminado el emoji
 
             if enviar:
                 if not fotos:
@@ -702,7 +643,7 @@ if "auth_email" in st.session_state:
                         match = re.search(r'/folders/([a-zA-Z0-9_-]+)', user["Carpeta privada"])
                         carpeta_id = match.group(1) if match else None
                         if carpeta_id:
-                            service = conectar_drive()
+                            service = conectar_drive(st.secrets["gcp_service_account"])
                             for archivo in fotos:
                                 subir_archivo_a_drive(service, archivo, archivo.name, carpeta_id)
 
@@ -724,7 +665,7 @@ if "auth_email" in st.session_state:
 else:
     # ===== PANTALLA DE LOGIN =====
     st.markdown('<div class="logo-container"><div class="logo-frame">', unsafe_allow_html=True)
-    st.image("logo.png", use_container_width=True)
+    st.image("logo.png", use_container_width=True)  # Cambiado de use_column_width a use_container_width
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     if "recover_password" not in st.session_state:
