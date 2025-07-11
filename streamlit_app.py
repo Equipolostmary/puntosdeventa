@@ -551,9 +551,9 @@ if "auth_email" in st.session_state:
                                            accept_multiple_files=True, 
                                            key=st.session_state.widget_key_imgs)
 
-                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):
+    if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):
     if not imagenes:
-        st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
+    st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
     else:
         service = conectar_drive()
         carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
