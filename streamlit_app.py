@@ -16,7 +16,7 @@ creds = service_account.Credentials.from_service_account_info(
 )
 client = gspread.authorize(creds)
 sheet = client.open_by_key(st.secrets["gcp_service_account"]["sheet_id"])
-worksheet = sheet.worksheet("Puntos")
+worksheet = sheet.worksheet("Registro")
 df = pd.DataFrame(worksheet.get_all_records())
 
 # Login de usuario
