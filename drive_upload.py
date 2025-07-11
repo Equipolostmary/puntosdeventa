@@ -4,11 +4,16 @@ from googleapiclient.http import MediaIoBaseUpload
 from mimetypes import guess_type
 import io
 import streamlit as st
+import json
 
-# Conexión a Google Drive usando los secrets de Streamlit
-def conectar_drive(secret_dict):
+# Conexión a Google Drive usando los secrets temporales
+def conectar_drive():
     SCOPES = ["https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_info(secret_dict, scopes=SCOPES)
+
+    # Usamos los secretos de la nueva cuenta de servicio temporal
+    service_account_info = json.loads(st.secrets["google_service_account_temp"])
+
+    creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
     service = build("drive", "v3", credentials=creds)
     return service
 
@@ -33,14 +38,14 @@ def subir_archivo_a_drive(service, archivo, nombre_archivo, carpeta_id):
 
 # Función directa para usar desde la app con archivo de Streamlit
 def subir_archivo_a_drive_con_idcarpeta(file_streamlit, carpeta_id):
-    service = conectar_drive(st.secrets["gcp_service_account"])
+    service = conectar_drive()
     file_bytes = io.BytesIO(file_streamlit.read())
     file_bytes.seek(0)
     subir_archivo_a_drive(service, file_bytes, file_streamlit.name, carpeta_id)
 
 # Crear carpeta nueva y guardar el enlace en Excel (columna L)
 def crear_carpeta_y_guardar_en_excel(nombre_carpeta, id_padre, worksheet, fila_index):
-    service = conectar_drive(st.secrets["gcp_service_account"])
+    service = conectar_drive()
 
     # Crear la carpeta en Drive
     metadata = {
