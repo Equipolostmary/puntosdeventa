@@ -554,7 +554,7 @@ if "auth_email" in st.session_state:
                         st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
                     else:
                        service = conectar_drive()
-                        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+                       carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
                         ok = 0
                         for img in imagenes:
                             try:
