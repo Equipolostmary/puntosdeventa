@@ -362,7 +362,7 @@ df.columns = df.columns.str.strip()
 
 # ===== CREAR CARPETAS AUTOMÁTICAMENTE SI FALTAN =====
 ID_CARPETA_RAIZ = "1YgVIv7j_u38UuDpWnDzgGiqAvxpE-XXc"
-service = conectar_drive(st.secrets["gcp_service_account"])
+service = conectar_drive()
 for idx, row in df.iterrows():
     enlace_actual = str(row.get("Carpeta privada", "")).strip()
     if not enlace_actual.startswith("https://drive.google.com/drive/folders/"):
