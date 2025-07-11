@@ -29,7 +29,7 @@ if st.button("Entrar"):
         fila_usuario = df[df["Usuario"] == usuario].index[0]
         if str(df.loc[fila_usuario, "Contraseña"]) == clave:
             st.success("Bienvenido, " + usuario)
-            carpeta_drive = df.loc[fila_usuario, "CARPETA"]
+            carpeta_drive = df.loc[fila_usuario, "Carpeta privada"]
             contador_actual = df.loc[fila_usuario, "Promos 3x13 TAPPO"] if "Promos 3x13 TAPPO" in df.columns else 0
 
             st.markdown("<hr>", unsafe_allow_html=True)
