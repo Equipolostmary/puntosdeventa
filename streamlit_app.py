@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2 import service_account
-from drive_upload import conectar_drive, subir_archivo_a_drive
+from drive_upload import conectar_drive, subir_archivo_a_carpeta
 import time
 import uuid
 import re
