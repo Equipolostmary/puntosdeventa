@@ -6,6 +6,8 @@ from drive_upload import conectar_drive, subir_archivo_a_carpeta as subir_archiv
 import time
 import uuid
 import re
+import tempfile
+import os
 
 st.set_page_config(page_title="Lost Mary - Área Privada", layout="centered", initial_sidebar_state="collapsed")
 ADMIN_EMAIL = "equipolostmary@gmail.com"
@@ -549,31 +551,42 @@ if "auth_email" in st.session_state:
                                            accept_multiple_files=True, 
                                            key=st.session_state.widget_key_imgs)
 
-                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):  # Eliminado el emoji
-                    if not imagenes:
-                        st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
-                    else:
-                       service = conectar_drive()
-                       carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-                       ok = 0
-                       for img in imagenes:
-                            try:
-                                subir_archivo_a_drive(service, img, img.name, carpeta_id)
-                                ok += 1
-                            except Exception as e:
-                                st.error(f"Error al subir {img.name}: {e}")
-                    if ok:
-                            row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
-                            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
-                            worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
-                            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
-                            nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
-                            worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
-                            st.session_state.widget_key_promos = str(uuid.uuid4())
-                            st.session_state.widget_key_imgs = str(uuid.uuid4())
-                            st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
-                            time.sleep(2)
-                            st.rerun()
+                if st.button("SUBIR PROMOCIONES", key="subir_promos_btn"):
+    if not imagenes:
+        st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
+    else:
+        service = conectar_drive()
+        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
+        ok = 0
+        for img in imagenes:
+            try:
+                # Guardar imagen en archivo temporal
+                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(img.name)[1]) as tmp_file:
+                    tmp_file.write(img.getbuffer())
+                    tmp_path = tmp_file.name
+                
+                # Subir archivo a Drive (parámetros en orden correcto)
+                subir_archivo_a_drive(service, carpeta_id, tmp_path, img.name)
+                ok += 1
+
+                # Eliminar archivo temporal
+                os.remove(tmp_path)
+
+            except Exception as e:
+                st.error(f"Error al subir {img.name}: {e}")
+
+        if ok:
+            row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
+            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
+            worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
+            worksheet.update_cell(row, df.columns.get_loc(promo_tappo_2x1_col)+1, str(tappo_2x1 + promo3))
+            nuevo_total = tappo + promo1 + bm1000 + promo2 + tappo_2x1 + promo3
+            worksheet.update_cell(row, df.columns.get_loc(total_promos_col)+1, str(nuevo_total))
+            st.session_state.widget_key_promos = str(uuid.uuid4())
+            st.session_state.widget_key_imgs = str(uuid.uuid4())
+            st.success("✅ Imágenes subidas correctamente y contadores actualizados.")
+            time.sleep(2)
+            st.rerun()
 
         # ===== SECCIÓN COMBINADA: COMPENSACIONES Y VENTAS =====
         st.markdown('<div class="seccion">COMPENSACIONES & VENTAS</div>', unsafe_allow_html=True)  # Eliminado el emoji
