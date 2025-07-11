@@ -553,7 +553,7 @@ if "auth_email" in st.session_state:
                     if not imagenes:
                         st.warning("⚠️ Por favor, selecciona al menos una imagen como comprobante.")
                     else:
-                        service = conectar_drive(st.secrets["gcp_service_account"])
+                       service = conectar_drive()
                         carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
                         ok = 0
                         for img in imagenes:
