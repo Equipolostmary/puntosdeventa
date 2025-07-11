@@ -4,14 +4,13 @@ from googleapiclient.http import MediaIoBaseUpload
 from mimetypes import guess_type
 import io
 import streamlit as st
-import json
 
-# Conexión a Google Drive usando los secrets temporales
+# Conexión a Google Drive usando los secrets temporales ya cargados como dict
 def conectar_drive():
     SCOPES = ["https://www.googleapis.com/auth/drive"]
 
-    # Usamos los secretos de la nueva cuenta de servicio temporal
-    service_account_info = json.loads(st.secrets["google_service_account_temp"])
+    # Usamos directamente el secret (ya es dict, no hace falta json.loads)
+    service_account_info = st.secrets["google_service_account_temp"]
 
     creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
     service = build("drive", "v3", credentials=creds)
