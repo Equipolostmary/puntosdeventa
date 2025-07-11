@@ -555,8 +555,8 @@ if "auth_email" in st.session_state:
                     else:
                        service = conectar_drive()
                        carpeta_id = str(user["Carpeta privada"]).split("/")[-1]
-                        ok = 0
-                        for img in imagenes:
+                       ok = 0
+                       for img in imagenes:
                             try:
                                 subir_archivo_a_drive(service, img, img.name, carpeta_id)
                                 ok += 1
