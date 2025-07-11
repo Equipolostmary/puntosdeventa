@@ -562,7 +562,7 @@ if "auth_email" in st.session_state:
                                 ok += 1
                             except Exception as e:
                                 st.error(f"Error al subir {img.name}: {e}")
-                        if ok:
+                    if ok:
                             row = df[df["Usuario"] == user["Usuario"]].index[0] + 2
                             worksheet.update_cell(row, df.columns.get_loc(promo_tappo_col)+1, str(tappo + promo1))
                             worksheet.update_cell(row, df.columns.get_loc(promo_bm1000_col)+1, str(bm1000 + promo2))
